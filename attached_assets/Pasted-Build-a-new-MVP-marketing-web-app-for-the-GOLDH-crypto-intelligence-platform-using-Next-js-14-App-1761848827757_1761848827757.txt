@@ -1,0 +1,148 @@
+Build a new MVP marketing web app for the GOLDH crypto intelligence platform using:
+
+Next.js 14 (App Router)
+
+TypeScript
+
+Tailwind CSS
+
+NextAuth for email sign-in (password + magic link)
+
+wagmi/viem for optional wallet connection (MetaMask)
+
+This app is intended for both experienced users and crypto-curious beginners. Design must be clean, modern, elegant — with simple language and strong FOMO appeal. It’s being built for a crypto convention launch.
+
+🖼️ Assets to Use
+
+The GOLDH logo file will be uploaded separately as logo.png. Do not just drop it in as an image — integrate it visually into the layout/header.
+
+🎨 Design System
+
+Use this black-gold brand palette:
+
+Color	Use
+#C7AE6A	Primary GOLD highlight
+#d5c28f	Soft gold accent
+#b99a45	Strong gold
+#e3d6b4	Off-gold background
+#1a1a1a	Dark section background
+#000000	Base background
+
+Font should feel fintech/professional but clean — use Tailwind defaults.
+
+🧱 Pages and Features to Build
+1. / — Landing Page
+
+Hero section with the logo on the left and tagline + CTA buttons on the right
+
+Primary buttons:
+
+“Start Free” → goes to /signin
+
+“Learn More” → smooth-scrolls to Features section (not jumps)
+
+Include the following sections:
+
+✅ “GOLDH Token Launching Soon” box with FOMO text
+
+✅ “Early User Status” box: “Sign up early and get exclusive benefits. More soon.”
+
+✅ “Features” section: short, simple tiles for each platform benefit
+
+✅ “Latest Crypto News” strip: a horizontally auto-scrolling feed of real or mock headlines with clickable links
+
+✨ Logo must be styled into the layout (not just dropped as an image block)
+
+Copy must be simple, aimed at crypto beginners
+
+2. /signin — Sign In Page
+
+Sign in with email + password
+
+Also support magic link fallback via NextAuth (console log OK in dev)
+
+Wallet connection (via MetaMask) should be optional
+
+If user skips it, allow them to continue
+
+If they do connect wallet, mark them as “Premium” if their GOLDH token balance ≥ 5000
+
+After login, redirect to /dashboard
+
+3. /dashboard — Dashboard Page
+
+Must be gated (auth required)
+
+✅ Remove:
+
+Claim tokens section
+
+Token address display
+
+✅ Add:
+
+“GOLDH Features Coming Soon” teaser block (FOMO style)
+
+“Crypto News Feed” section with linkable headlines
+
+Show “Premium” badge if wallet is connected & has enough GOLDH (mockable)
+
+4. /learn — Learning Hub Page (Revamped)
+
+Build a full knowledge center for crypto beginners, not just a few definitions.
+
+Structure:
+
+🔍 Search bar at the top: user types any crypto/blockchain term, and it scrolls to (or expands) the relevant topic.
+
+📚 Topic sections below: each is a collapsible dropdown/accordion (can use headless UI).
+
+Topics to include (you can stub these out with dummy content to start):
+
+What is Blockchain?
+
+What is a Wallet?
+
+What is an Airdrop?
+
+What is a Token (vs Coin)?
+
+What is Staking?
+
+What is TVL (Total Value Locked)?
+
+What is APY?
+
+What is a Smart Contract?
+
+What is the BNB Smart Chain?
+
+What is the GOLDH platform?
+
+UX Requirements:
+
+Clicking a topic in search automatically scrolls and expands that section.
+
+Must be clean, mobile-friendly, and visually aligned with the rest of the site.
+
+Tone must be non-technical and welcoming, like an onboarding assistant.
+
+Bonus (optional): consider showing a “You might also like” link at the bottom of each section that leads to a related term.✅ Extra Requirements
+
+Ensure all anchor links (e.g. “Features” in nav) scroll smoothly on the page
+
+Use tailwind.config.ts to define the brand color palette
+
+Use app/layout.tsx for global fonts, <Header />, and consistent layout
+
+Implement all pages under app/ directory using App Router
+
+Use dotenv and create a .env.local.example file for:
+
+NEXTAUTH_SECRET
+
+NEXTAUTH_URL
+
+NEXT_PUBLIC_API_URL
+
+NEXT_PUBLIC_BSC_RPC
