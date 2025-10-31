@@ -53,10 +53,11 @@ Preferred communication style: Simple, everyday language.
 
 **Authentication System**
 - Bcrypt for password hashing (10 salt rounds)
-- Custom session management using in-memory Map storage
+- Database-backed session management using PostgreSQL sessions table
 - 7-day session expiration
 - Bearer token authentication via Authorization headers
 - Support for both email/password and wallet-based authentication
+- Magic link functionality that validates account existence before sending links
 
 **Development Environment**
 - Vite middleware integration for HMR in development
@@ -72,21 +73,22 @@ Preferred communication style: Simple, everyday language.
 - Schema-first approach with TypeScript types generated from schema
 
 **Schema Design**
-- Users table: id (UUID), email (unique), password (hashed), walletAddress (nullable), isPremium (boolean), createdAt (timestamp)
+- Users table: id (varchar UUID), email (unique), password (hashed), walletAddress (nullable), isPremium (boolean), createdAt (timestamp)
+- Sessions table: id (varchar), userId (foreign key to users.id), expiresAt (timestamp), createdAt (timestamp)
 - Interface definitions for NewsArticle and LearningTopic entities
 - Zod schemas for runtime validation of user inputs
 
 **Storage Strategy**
-- In-memory storage implementation (`MemStorage`) for development/testing
-- Interface-based storage abstraction (`IStorage`) for easy migration to PostgreSQL
-- Session storage in-memory Map (suitable for single-instance deployment)
+- PostgreSQL database storage implementation (`DatabaseStorage`) for persistent data
+- Interface-based storage abstraction (`IStorage`) for consistent API across storage backends
+- Database-backed session management using sessions table with automatic cleanup
+- All user data and sessions persisted to PostgreSQL via Drizzle ORM
 
-**Migration to PostgreSQL**
-The application is currently using in-memory storage but is architecturally prepared for PostgreSQL:
-- Drizzle configuration points to PostgreSQL dialect
-- Schema defined in `shared/schema.ts` using Drizzle pg-core
-- Storage interface allows swapping implementations without changing business logic
-- Migration scripts configured to output to `./migrations` directory
+**Database Management**
+- Active PostgreSQL database connected via DATABASE_URL environment variable
+- Schema migrations managed through Drizzle with `npm run db:push`
+- Database-first approach with type safety from Drizzle schema
+- Automatic session cleanup for expired sessions
 
 ### External Dependencies
 
@@ -140,7 +142,30 @@ The application is currently using in-memory storage but is architecturally prep
 
 ## Recent Changes
 
-**Landing Page Enhancements (Latest)**
+**Database & Authentication Migration (Latest)**
+- **PostgreSQL Integration**: Migrated from in-memory storage to PostgreSQL database
+  - Created users table with id, email, password, walletAddress, isPremium, createdAt
+  - Created sessions table with id, userId (foreign key), expiresAt, createdAt
+  - Updated DatabaseStorage implementation with Drizzle ORM for all CRUD operations
+  - All user accounts and sessions now persist across server restarts
+- **Session Management**: Database-backed session storage with automatic cleanup
+  - SessionManager now uses PostgreSQL sessions table instead of in-memory Map
+  - All session methods converted to async operations
+  - 7-day session expiration maintained
+- **Authentication Flow Updates**:
+  - Restructured sign-in/sign-up page: removed MetaMask wallet connection from sign-in
+  - Moved wallet connection to dashboard (only displays when wallet not connected)
+  - Implemented magic link account validation: checks if account exists before sending
+    - Existing users: Shows success message "Check your email for the sign-in link"
+    - Non-existent users: Shows error "No account found with this email. Please sign up with a password first."
+  - Added TypeScript type guards for window.ethereum to prevent LSP errors
+- **Premium Access Messaging**: Updated all premium-related copy across platform
+  - Landing page: Added "Premium Access Coming Soon" promotional box
+  - Dashboard: Updated teaser to mention "tokens OR subscription"
+  - FAQ: Updated to reflect dual pathway (5000+ GOLDH tokens OR subscription)
+  - Flexible access pathways for all users
+
+**Landing Page Enhancements (Previous)**
 - **Logo Update**: Switched to transparent PNG (goldh-logo_1761896683515.png) for cleaner integration, removed all glow effects
 - **Vertical Depth**: Increased spacing around Features section (py-24, gap-8, mb-20) with strategic dark backgrounds
 - **Enhanced CTA Section**: Added gradient backgrounds, dual action buttons, trust indicators, and "Limited Time Offer" badge
@@ -152,7 +177,7 @@ The application is currently using in-memory storage but is architecturally prep
   - Strategic use of dark backgrounds (#1a1a1a, #000000) for contrast
   - Gold accents (#C7AE6A, #b99a45) throughout for premium feel
 
-**Authentication System (Previous)**
+**Authentication System (Earlier)**
 - Fixed session persistence bug by properly parsing API responses (.json())
 - Unified signin/signup flow that auto-creates accounts for new users
 - Session management with localStorage and automatic fallback
