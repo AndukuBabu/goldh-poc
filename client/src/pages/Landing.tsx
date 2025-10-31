@@ -7,6 +7,8 @@ import { FOMABox } from "@/components/FOMABox";
 import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
 import logoImage from "@assets/goldh-logo_1761848842384.png";
 
+import goldh_logo from "@assets/goldh-logo.png";
+
 const mockNews = [
   { id: "1", title: "Bitcoin surges past $50K as institutional adoption grows", url: "#" },
   { id: "2", title: "Ethereum 2.0 staking rewards reach new highs", url: "#" },
@@ -60,7 +62,6 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
       {/* Hero Section */}
       <section className="pt-24 pb-16 px-6">
         <div className="container mx-auto">
@@ -74,7 +75,7 @@ export default function Landing() {
                 
                 {/* Logo with blend mode to remove dark background */}
                 <img
-                  src={logoImage}
+                  src={goldh_logo}
                   alt="GOLDH - Golden Horizon"
                   className="relative w-full max-w-md h-auto mix-blend-lighten drop-shadow-2xl"
                   style={{
@@ -117,7 +118,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* FOMO Boxes */}
       <section className="py-12 px-6 bg-card/30">
         <div className="container mx-auto">
@@ -135,7 +135,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* News Scroller */}
       <section className="py-8">
         <div className="container mx-auto px-6 mb-4">
@@ -143,7 +142,6 @@ export default function Landing() {
         </div>
         <NewsScroller articles={mockNews} />
       </section>
-
       {/* Features Section */}
       <section id="features" className="py-24 px-6 scroll-mt-16 bg-[#1a1a1a]">
         <div className="container mx-auto">
@@ -168,7 +166,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#C7AE6A]/10 via-background to-[#b99a45]/10"></div>
@@ -224,7 +221,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* FAQ Section */}
       <section className="py-24 px-6 bg-[#1a1a1a]">
         <div className="container mx-auto max-w-4xl">
@@ -289,7 +285,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* Footer */}
       <footer className="py-16 px-6 border-t border-border bg-black">
         <div className="container mx-auto">
