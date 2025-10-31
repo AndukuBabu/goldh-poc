@@ -1,5 +1,8 @@
 import { compare, hash } from "bcryptjs";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { sessions, type Session } from "@shared/schema";
+import { eq, lt } from "drizzle-orm";
 
 const SALT_ROUNDS = 10;
 
@@ -15,40 +18,45 @@ export function generateSessionId(): string {
   return randomUUID();
 }
 
-export interface Session {
-  id: string;
-  userId: string;
-  expiresAt: Date;
-}
-
 export class SessionManager {
-  private sessions: Map<string, Session> = new Map();
-
-  createSession(userId: string): Session {
+  async createSession(userId: string): Promise<Session> {
     const sessionId = generateSessionId();
-    const session: Session = {
-      id: sessionId,
-      userId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    };
-    this.sessions.set(sessionId, session);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    
+    const [session] = await db
+      .insert(sessions)
+      .values({
+        id: sessionId,
+        userId,
+        expiresAt,
+      })
+      .returning();
+    
     return session;
   }
 
-  getSession(sessionId: string): Session | undefined {
-    const session = this.sessions.get(sessionId);
+  async getSession(sessionId: string): Promise<Session | undefined> {
+    const [session] = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId));
+    
     if (!session) return undefined;
     
     if (session.expiresAt < new Date()) {
-      this.sessions.delete(sessionId);
+      await db.delete(sessions).where(eq(sessions.id, sessionId));
       return undefined;
     }
     
     return session;
   }
 
-  deleteSession(sessionId: string): void {
-    this.sessions.delete(sessionId);
+  async deleteSession(sessionId: string): Promise<void> {
+    await db.delete(sessions).where(eq(sessions.id, sessionId));
+  }
+
+  async cleanupExpiredSessions(): Promise<void> {
+    await db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
   }
 }
 

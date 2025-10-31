@@ -20,7 +20,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({ email, password: hashedPassword });
       
-      const session = sessionManager.createSession(user.id);
+      const session = await sessionManager.createSession(user.id);
       
       res.json({
         user: {
@@ -58,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      const session = sessionManager.createSession(user.id);
+      const session = await sessionManager.createSession(user.id);
       
       res.json({
         user: {
@@ -83,9 +83,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Email required" });
       }
 
-      console.log(`Magic link would be sent to: ${email}`);
+      const existingUser = await storage.getUserByEmail(email);
       
-      res.json({ message: "Magic link sent! Check your email." });
+      if (existingUser) {
+        console.log(`Magic link would be sent to existing user: ${email}`);
+        res.json({ 
+          isExistingUser: true,
+          message: "Check your email for the sign-in link." 
+        });
+      } else {
+        console.log(`No account found for: ${email}. Please sign up with password first.`);
+        res.json({ 
+          isExistingUser: false,
+          message: "No account found with this email. Please sign up with a password first." 
+        });
+      }
     } catch (error) {
       console.error("Magic link error:", error);
       res.status(500).json({ error: "Failed to send magic link" });
@@ -94,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/signout", requireAuth, async (req: Request, res: Response) => {
     const sessionId = (req as any).sessionId;
-    sessionManager.deleteSession(sessionId);
+    await sessionManager.deleteSession(sessionId);
     res.json({ message: "Signed out successfully" });
   });
 

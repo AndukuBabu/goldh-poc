@@ -8,12 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 import { Header } from "@/components/Header";
-import { Wallet, Mail, Sparkles } from "lucide-react";
+import { Mail } from "lucide-react";
 
 export default function SignIn() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { signin, connectWallet } = useAuth();
+  const { signin } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -80,63 +80,26 @@ export default function SignIn() {
     setIsLoading(true);
     try {
       const res = await apiRequest("POST", "/api/auth/magic-link", { email });
-      await res.json();
+      const data = await res.json();
       
-      toast({
-        title: "Magic Link Sent!",
-        description: "Check your email for the sign-in link.",
-      });
-      
-      console.log("Magic link sent to:", email);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send magic link.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleWalletConnect = async () => {
-    setIsLoading(true);
-    try {
-      if (typeof window.ethereum !== 'undefined') {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const walletAddress = accounts[0];
-        
-        const mockBalance = Math.floor(Math.random() * 10000);
-        
-        try {
-          await connectWallet(walletAddress, mockBalance);
-          
-          toast({
-            title: "Wallet Connected!",
-            description: mockBalance >= 5000 
-              ? `Premium status activated! Balance: ${mockBalance} GOLDH` 
-              : `Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`,
-          });
-        } catch (err) {
-          console.log("Not logged in, just showing wallet connection");
-          toast({
-            title: "Wallet Connected!",
-            description: `Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`,
-          });
-        }
-        
-        setLocation("/dashboard");
+      if (data.isExistingUser) {
+        toast({
+          title: "Magic Link Sent!",
+          description: data.message,
+        });
       } else {
         toast({
-          title: "MetaMask Not Found",
-          description: "Please install MetaMask to connect your wallet.",
+          title: "Account Not Found",
+          description: data.message,
           variant: "destructive",
         });
+        setShowMagicLink(false);
       }
     } catch (error) {
       toast({
-        title: "Connection Failed",
-        description: "Failed to connect wallet. You can continue without it.",
+        title: "Error",
+        description: "Failed to process request.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -228,46 +191,6 @@ export default function SignIn() {
                   Send Magic Link
                 </Button>
               )}
-
-              {/* Wallet Connection */}
-              <div className="space-y-3">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Optional</span>
-                  </div>
-                </div>
-
-                <Button
-                  variant="secondary"
-                  className="w-full border-primary/30"
-                  onClick={handleWalletConnect}
-                  disabled={isLoading}
-                  data-testid="button-wallet-connect"
-                >
-                  <Wallet className="mr-2 h-4 w-4" />
-                  Connect MetaMask Wallet
-                </Button>
-
-                <div className="flex items-start gap-2 p-3 rounded-md bg-primary/5 border border-primary/20">
-                  <Sparkles className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Connect your wallet to unlock Premium features. Users with 5000+ GOLDH tokens get exclusive benefits!
-                  </p>
-                </div>
-              </div>
-
-              {/* Skip Option */}
-              <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => setLocation("/dashboard")}
-                data-testid="button-skip-wallet"
-              >
-                Continue without wallet
-              </Button>
             </CardContent>
           </Card>
         </div>

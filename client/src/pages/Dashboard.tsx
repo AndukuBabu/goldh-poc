@@ -4,8 +4,11 @@ import { useAuth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { NewsScroller } from "@/components/NewsScroller";
-import { Sparkles, TrendingUp, Clock, ExternalLink, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Sparkles, TrendingUp, Clock, ExternalLink, Loader2, Wallet, Rocket } from "lucide-react";
+import { useState } from "react";
 
 const newsArticles = [
   {
@@ -39,17 +42,57 @@ const newsArticles = [
 ];
 
 export default function Dashboard() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, connectWallet } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isConnecting, setIsConnecting] = useState(false);
   const { data: newsData, isLoading: newsLoading } = useQuery({
     queryKey: ["/api/news"],
   });
 
   const isPremium = user?.isPremium || false;
-  const mockNews = newsData || [
-    { id: "1", title: "DeFi protocols see massive growth in user adoption", url: "#" },
-    { id: "2", title: "Layer 2 solutions reduce gas fees by 90%", url: "#" },
-    { id: "3", title: "Institutional investors increase crypto holdings", url: "#" },
+  const hasWallet = !!user?.walletAddress;
+
+  const handleWalletConnect = async () => {
+    setIsConnecting(true);
+    try {
+      const ethereum = (window as any).ethereum;
+      if (typeof ethereum !== 'undefined') {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        const walletAddress = accounts[0];
+        
+        const mockBalance = Math.floor(Math.random() * 10000);
+        
+        await connectWallet(walletAddress, mockBalance);
+        
+        toast({
+          title: "Wallet Connected!",
+          description: mockBalance >= 5000 
+            ? `Premium status activated! Balance: ${mockBalance} GOLDH` 
+            : `Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`,
+        });
+      } else {
+        toast({
+          title: "MetaMask Not Found",
+          description: "Please install MetaMask to connect your wallet.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Connection Failed",
+        description: "Failed to connect wallet. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+  
+  const mockNews = (Array.isArray(newsData) && newsData.length > 0) ? newsData : [
+    { id: "1", title: "DeFi protocols see massive growth in user adoption", url: "#", publishedAt: new Date().toISOString() },
+    { id: "2", title: "Layer 2 solutions reduce gas fees by 90%", url: "#", publishedAt: new Date().toISOString() },
+    { id: "3", title: "Institutional investors increase crypto holdings", url: "#", publishedAt: new Date().toISOString() },
   ];
 
   if (authLoading) {
@@ -90,17 +133,51 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* GOLDH Features Coming Soon */}
+          {/* Wallet Connection Card - Only shown if not connected */}
+          {!hasWallet && (
+            <Card className="mb-8 border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10" data-testid="card-wallet-connect">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Wallet className="w-6 h-6 text-primary" />
+                      Connect Your Wallet
+                    </CardTitle>
+                    <CardDescription className="text-base">
+                      Unlock Premium features by connecting your MetaMask wallet
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Connect your wallet to access Premium features. Hold 5000+ GOLDH tokens to automatically unlock Premium status and get exclusive benefits!
+                </p>
+                <Button
+                  size="lg"
+                  onClick={handleWalletConnect}
+                  disabled={isConnecting}
+                  className="w-full md:w-auto"
+                  data-testid="button-connect-wallet"
+                >
+                  <Wallet className="mr-2 h-4 w-4" />
+                  {isConnecting ? "Connecting..." : "Connect MetaMask"}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Premium Access Teaser */}
           <Card className="mb-8 border-2 border-primary bg-primary/5">
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2">
                   <CardTitle className="text-2xl flex items-center gap-2">
-                    <Sparkles className="w-6 h-6 text-primary" />
-                    GOLDH Features Coming Soon
+                    <Rocket className="w-6 h-6 text-primary" />
+                    Premium Access Coming Soon
                   </CardTitle>
                   <CardDescription className="text-base">
-                    Exciting new features are on the way!
+                    Multiple ways to unlock premium features
                   </CardDescription>
                 </div>
               </div>
@@ -148,8 +225,8 @@ export default function Dashboard() {
               {!isPremium && (
                 <div className="mt-6 p-4 rounded-md bg-background/50 border border-border">
                   <p className="text-sm text-muted-foreground">
-                    <Sparkles className="w-4 h-4 inline mr-2 text-primary" />
-                    Connect your wallet with 5000+ GOLDH tokens to unlock Premium status and get early access to these features!
+                    <Rocket className="w-4 h-4 inline mr-2 text-primary" />
+                    Unlock Premium via tokens or subscription! Hold 5000+ GOLDH tokens in your wallet OR subscribe when subscriptions launch. Flexible access for everyone.
                   </p>
                 </div>
               )}

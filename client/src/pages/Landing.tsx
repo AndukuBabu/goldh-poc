@@ -116,10 +116,15 @@ export default function Landing() {
       {/* FOMO Boxes */}
       <section className="py-12 px-6 bg-card/30">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <FOMABox
               title="GOLDH Token Launching Soon"
               description="Be among the first to access the GOLDH token. Early supporters get exclusive benefits and premium platform features. Don't miss this opportunity!"
+              variant="premium"
+            />
+            <FOMABox
+              title="Premium Access Coming Soon"
+              description="Hold tokens or subscribe. Flexible for everyone. Multiple pathways to unlock premium features and exclusive benefits!"
               variant="premium"
             />
             <FOMABox
@@ -240,11 +245,11 @@ export default function Landing() {
               },
               {
                 question: "Is GOLDH free to use?",
-                answer: "Yes! GOLDH offers a free forever plan with access to essential features. Premium members with 5000+ GOLDH tokens get exclusive features, early access to new tools, and enhanced analytics."
+                answer: "Yes! GOLDH offers a free forever plan with access to essential features. Premium members get exclusive features, early access to new tools, and enhanced analytics through token holdings or subscription."
               },
               {
                 question: "How do I become a premium member?",
-                answer: "Premium status is automatically granted when you hold 5000 or more GOLDH tokens in your connected wallet. You can acquire GOLDH tokens during our upcoming token launch or through community rewards."
+                answer: "We offer flexible Premium access! Hold 5000+ GOLDH tokens in your connected wallet for automatic Premium status, OR subscribe when subscriptions launch. Choose the pathway that works best for you!"
               },
               {
                 question: "Is my wallet safe with GOLDH?",
