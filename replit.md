@@ -141,7 +141,7 @@ The application is currently using in-memory storage but is architecturally prep
 ## Recent Changes
 
 **Landing Page Enhancements (Latest)**
-- **Logo Integration**: Applied mix-blend-lighten with layered gold gradient glow effects for professional appearance
+- **Logo Update**: Switched to transparent PNG (goldh-logo_1761896683515.png) for cleaner integration, removed all glow effects
 - **Vertical Depth**: Increased spacing around Features section (py-24, gap-8, mb-20) with strategic dark backgrounds
 - **Enhanced CTA Section**: Added gradient backgrounds, dual action buttons, trust indicators, and "Limited Time Offer" badge
 - **FAQ Section**: New section with 6 frequently asked questions, hover effects, and support CTA

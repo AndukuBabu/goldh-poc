@@ -5,7 +5,7 @@ import { NewsScroller } from "@/components/NewsScroller";
 import { FeatureCard } from "@/components/FeatureCard";
 import { FOMABox } from "@/components/FOMABox";
 import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
-import logoImage from "@assets/goldh-logo_1761848842384.png";
+import logoImage from "@assets/goldh-logo_1761896683515.png";
 
 const mockNews = [
   { id: "1", title: "Bitcoin surges past $50K as institutional adoption grows", url: "#" },
@@ -67,22 +67,12 @@ export default function Landing() {
           <div className="grid md:grid-cols-2 gap-12 items-center min-h-[600px]">
             {/* Logo Side */}
             <div className="flex items-center justify-center">
-              <div className="relative">
-                {/* Gold glow effect behind logo */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#C7AE6A] via-[#b99a45] to-[#C7AE6A] opacity-30 blur-3xl rounded-full scale-110"></div>
-                <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse"></div>
-                
-                {/* Logo with blend mode to remove dark background */}
-                <img
-                  src={logoImage}
-                  alt="GOLDH - Golden Horizon"
-                  className="relative w-full max-w-md h-auto mix-blend-lighten drop-shadow-2xl"
-                  style={{
-                    filter: 'drop-shadow(0 0 40px rgba(199, 174, 106, 0.4)) drop-shadow(0 0 80px rgba(185, 154, 69, 0.2))'
-                  }}
-                  data-testid="img-hero-logo"
-                />
-              </div>
+              <img
+                src={logoImage}
+                alt="GOLDH - Golden Horizon"
+                className="w-full max-w-md h-auto"
+                data-testid="img-hero-logo"
+              />
             </div>
 
             {/* Content Side */}
