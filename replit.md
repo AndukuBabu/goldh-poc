@@ -30,10 +30,12 @@ Preferred communication style: Simple, everyday language.
 - Local component state using React hooks
 
 **Design System**
-- Black-gold color palette defined in CSS variables
+- Black-gold color palette (#C7AE6A, #d5c28f, #b99a45, #e3d6b4) with dark backgrounds (#1a1a1a, #000000)
 - Professional fintech aesthetic targeting beginner-friendly UX
 - Responsive design with mobile-first approach
 - Custom spacing primitives and elevation classes (hover-elevate, active-elevate-2)
+- Enhanced visual polish with shadows, gradients, and hover effects throughout
+- Logo integration using blend modes (mix-blend-lighten) with layered gold glow effects
 
 ### Backend Architecture
 
@@ -135,3 +137,22 @@ The application is currently using in-memory storage but is architecturally prep
 - GOLDH logo stored in attached_assets directory
 - Design guidelines documenting brand colors and component patterns
 - Favicon configured in HTML
+
+## Recent Changes
+
+**Landing Page Enhancements (Latest)**
+- **Logo Integration**: Applied mix-blend-lighten with layered gold gradient glow effects for professional appearance
+- **Vertical Depth**: Increased spacing around Features section (py-24, gap-8, mb-20) with strategic dark backgrounds
+- **Enhanced CTA Section**: Added gradient backgrounds, dual action buttons, trust indicators, and "Limited Time Offer" badge
+- **FAQ Section**: New section with 6 frequently asked questions, hover effects, and support CTA
+- **Visual Polish**: 
+  - FeatureCard components with gradient borders, icon scaling on hover, and enhanced shadows
+  - FOMABox components with gold gradients, shadow effects, and animated sparkle icons
+  - Expanded footer with multi-column navigation links
+  - Strategic use of dark backgrounds (#1a1a1a, #000000) for contrast
+  - Gold accents (#C7AE6A, #b99a45) throughout for premium feel
+
+**Authentication System (Previous)**
+- Fixed session persistence bug by properly parsing API responses (.json())
+- Unified signin/signup flow that auto-creates accounts for new users
+- Session management with localStorage and automatic fallback
