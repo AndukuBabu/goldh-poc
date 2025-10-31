@@ -66,26 +66,6 @@ export default function Landing() {
       <section className="pt-24 pb-16 px-6">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center min-h-[600px]">
-            {/* Logo Side */}
-            <div className="flex items-center justify-center">
-              <div className="relative">
-                {/* Gold glow effect behind logo */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#C7AE6A] via-[#b99a45] to-[#C7AE6A] opacity-30 blur-3xl rounded-full scale-110"></div>
-                <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse"></div>
-                
-                {/* Logo with blend mode to remove dark background */}
-                <img
-                  src={goldh_logo}
-                  alt="GOLDH - Golden Horizon"
-                  className="relative w-full max-w-md h-auto mix-blend-lighten drop-shadow-2xl"
-                  style={{
-                    filter: 'drop-shadow(0 0 40px rgba(199, 174, 106, 0.4)) drop-shadow(0 0 80px rgba(185, 154, 69, 0.2))'
-                  }}
-                  data-testid="img-hero-logo"
-                />
-              </div>
-            </div>
-
             {/* Content Side */}
             <div className="space-y-8">
               <div className="space-y-4">
