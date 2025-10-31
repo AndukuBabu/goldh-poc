@@ -78,11 +78,16 @@ export default function Landing() {
             {/* Content Side */}
             <div className="space-y-8">
               <div className="space-y-4">
-                <h1 className="text-5xl md:text-6xl font-bold text-foreground leading-tight">
-                  Building Wealth,<br />
-                  <span className="text-primary">Bridging Worlds</span>
+                <h1 className="text-5xl md:text-6xl font-bold leading-tight">
+                  <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent drop-shadow-lg">
+                    Building Wealth,
+                  </span>
+                  <br />
+                  <span className="bg-gradient-to-r from-[#e3d6b4] via-[#C7AE6A] to-[#b99a45] bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(199,174,106,0.3)]">
+                    Bridging Worlds
+                  </span>
                 </h1>
-                <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
+                <p className="text-xl leading-relaxed max-w-lg bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 bg-clip-text text-transparent drop-shadow-md">
                   Your gateway to crypto intelligence. Track, analyze, and grow your digital assets with confidence.
                 </p>
               </div>
