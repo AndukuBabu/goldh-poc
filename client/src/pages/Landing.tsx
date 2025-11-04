@@ -4,8 +4,7 @@ import { Header } from "@/components/Header";
 import { NewsScroller } from "@/components/NewsScroller";
 import { FeatureCard } from "@/components/FeatureCard";
 import { FOMABox } from "@/components/FOMABox";
-import { TrendingUp, Shield, Zap, Bell, Globe, Users, ChevronDown } from "lucide-react";
-import { TypeAnimation } from "react-type-animation";
+import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
 
 const mockNews = [
@@ -63,47 +62,54 @@ export default function Landing() {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative h-screen flex flex-col items-center justify-center px-6">
-        {/* Centered Content */}
-        <div className="flex-1 flex flex-col items-center justify-center space-y-12 max-w-4xl mx-auto">
-          {/* Logo */}
-          <img
-            src={logoImage}
-            alt="GOLDH - Golden Horizon"
-            className="w-full max-w-2xl h-auto"
-            data-testid="img-hero-logo"
-          />
-
-          {/* Typing Animation */}
-          <div className="min-h-[80px] flex items-center justify-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-center">
-              <TypeAnimation
-                sequence={[
-                  'Where Intelligence Builds Trust',
-                  2000,
-                  'This is just the beginning.',
-                  2000,
-                  'Even tigers start with curiosity.',
-                  2000,
-                ]}
-                wrapper="span"
-                speed={50}
-                className="bg-gradient-to-r from-[#e3d6b4] via-[#C7AE6A] to-[#b99a45] bg-clip-text text-transparent"
-                repeat={Infinity}
-                cursor={true}
-                data-testid="text-typing-animation"
+      <section className="pt-24 pb-16 px-6">
+        <div className="container mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center min-h-[600px]">
+            {/* Logo Side */}
+            <div className="flex items-center justify-center">
+              <img
+                src={logoImage}
+                alt="GOLDH - Golden Horizon"
+                className="w-full h-auto"
+                data-testid="img-hero-logo"
               />
-            </h2>
-          </div>
-        </div>
+            </div>
 
-        {/* Animated Arrow at Bottom */}
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-          <span className="text-sm text-[#C7AE6A] font-medium tracking-wide">Explore</span>
-          <ChevronDown 
-            className="w-8 h-8 text-[#C7AE6A]" 
-            data-testid="icon-scroll-arrow"
-          />
+            {/* Content Side */}
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h1 className="text-5xl md:text-6xl font-bold leading-tight">
+                  <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent drop-shadow-lg">
+                    Building Wealth,
+                  </span>
+                  <br />
+                  <span className="bg-gradient-to-r from-[#e3d6b4] via-[#C7AE6A] to-[#b99a45] bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(199,174,106,0.3)]">
+                    Bridging Worlds
+                  </span>
+                </h1>
+                <p className="text-xl leading-relaxed max-w-lg bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 bg-clip-text text-transparent drop-shadow-md">
+                  Your gateway to crypto intelligence. Track, analyze, and grow your digital assets with confidence.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                <Link href="/signin">
+                  <Button size="lg" className="text-lg px-8" data-testid="button-hero-start">
+                    Start Free
+                  </Button>
+                </Link>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-lg px-8"
+                  onClick={scrollToFeatures}
+                  data-testid="button-hero-learn"
+                >
+                  Learn More
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
