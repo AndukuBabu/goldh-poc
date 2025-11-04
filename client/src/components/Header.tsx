@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import logoImage from "@assets/goldh-logo_1761896683515.png";
+import logoImage from "@assets/goldh-logo_1762272901250.png";
 
 export function Header() {
   const scrollToSection = (id: string) => {

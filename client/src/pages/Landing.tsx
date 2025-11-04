@@ -5,7 +5,7 @@ import { NewsScroller } from "@/components/NewsScroller";
 import { FeatureCard } from "@/components/FeatureCard";
 import { FOMABox } from "@/components/FOMABox";
 import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
-import logoImage from "@assets/goldh-logo_1761896683515.png";
+import logoImage from "@assets/goldh-logo_1762272901250.png";
 
 const mockNews = [
   { id: "1", title: "Bitcoin surges past $50K as institutional adoption grows", url: "#" },
