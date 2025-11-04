@@ -64,9 +64,9 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="pt-24 pb-16 px-6">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-5 gap-12 items-center min-h-[600px]">
+          <div className="grid md:grid-cols-2 gap-12 items-center min-h-[600px]">
             {/* Logo Side */}
-            <div className="md:col-span-3 flex items-center justify-center">
+            <div className="flex items-center justify-center">
               <img
                 src={logoImage}
                 alt="GOLDH - Golden Horizon"
@@ -76,7 +76,7 @@ export default function Landing() {
             </div>
 
             {/* Content Side */}
-            <div className="md:col-span-2 space-y-8">
+            <div className="space-y-8">
               <div className="space-y-4">
                 <h1 className="text-5xl md:text-6xl font-bold leading-tight">
                   <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent drop-shadow-lg">
