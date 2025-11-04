@@ -142,7 +142,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**Database & Authentication Migration (Latest)**
+**Logo Update (Latest)**
+- **Brand Refresh**: Updated to new official logo (goldh-logo_1762272901250.png)
+  - Features "golden horizon" text with "BUILDING WEALTH, BRIDGING WORLDS" tagline
+  - Black/transparent background blends seamlessly with dark theme
+  - Applied across Landing page hero and Header component
+  - Maintains proper proportions with responsive sizing (h-auto, w-auto)
+  - Verified visually with no white box or stretching issues
+
+**Database & Authentication Migration (Previous)**
 - **PostgreSQL Integration**: Migrated from in-memory storage to PostgreSQL database
   - Created users table with id, email, password, walletAddress, isPremium, createdAt
   - Created sessions table with id, userId (foreign key), expiresAt, createdAt
@@ -165,8 +173,8 @@ Preferred communication style: Simple, everyday language.
   - FAQ: Updated to reflect dual pathway (5000+ GOLDH tokens OR subscription)
   - Flexible access pathways for all users
 
-**Landing Page Enhancements (Previous)**
-- **Logo Update**: Switched to transparent PNG (goldh-logo_1761896683515.png) for cleaner integration, removed all glow effects
+**Landing Page Enhancements (Earlier)**
+- **Logo Update**: Switched to transparent PNG (goldh-logo_1761896683515.png) for cleaner integration, removed all glow effects (now superseded by latest logo update)
 - **Vertical Depth**: Increased spacing around Features section (py-24, gap-8, mb-20) with strategic dark backgrounds
 - **Enhanced CTA Section**: Added gradient backgrounds, dual action buttons, trust indicators, and "Limited Time Offer" badge
 - **FAQ Section**: New section with 6 frequently asked questions, hover effects, and support CTA
