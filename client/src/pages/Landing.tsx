@@ -4,7 +4,6 @@ import { Header } from "@/components/Header";
 import { NewsScroller } from "@/components/NewsScroller";
 import { FeatureCard } from "@/components/FeatureCard";
 import { FOMABox } from "@/components/FOMABox";
-import { TypingAnimation } from "@/components/TypingAnimation";
 import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
 
@@ -79,20 +78,11 @@ export default function Landing() {
             {/* Content Side */}
             <div className="space-y-8">
               <div className="space-y-6">
-                <h1 className="text-5xl md:text-6xl font-bold leading-tight min-h-[120px]">
-                  <TypingAnimation
-                    phrases={[
-                      "Where Intelligence Builds Trust",
-                      "This is just the beginning.",
-                      "Even tigers start with curiosity."
-                    ]}
-                    typingSpeed={80}
-                    deletingSpeed={40}
-                    pauseDuration={2000}
-                  />
+                <h1 className="text-5xl md:text-6xl font-bold leading-tight bg-gradient-to-r from-[#e3d6b4] via-[#C7AE6A] to-[#b99a45] bg-clip-text text-transparent">
+                  Your Crypto Intelligence Platform
                 </h1>
-                <p className="text-xl leading-relaxed max-w-lg bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 bg-clip-text text-transparent drop-shadow-md">
-                  Your gateway to crypto intelligence. Track, analyze, and grow your digital assets with confidence.
+                <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
+                  Track, analyze, and grow your digital assets with real-time market intelligence and secure wallet integration.
                 </p>
               </div>
 

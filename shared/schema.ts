@@ -50,7 +50,14 @@ export const signUpSchema = z.object({
 });
 
 // Server-side sign up schema (omits confirmPassword for database insertion)
-export const serverSignUpSchema = signUpSchema.omit({ confirmPassword: true });
+export const serverSignUpSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().email(),
+  password: z.string().min(6),
+  phone: z.string().optional(),
+  experienceLevel: z.string().optional(),
+  agreeToUpdates: z.boolean().optional().default(false),
+});
 
 export type InsertUser = z.infer<typeof fullInsertUserSchema>;
 export type SignUpData = z.infer<typeof signUpSchema>;
