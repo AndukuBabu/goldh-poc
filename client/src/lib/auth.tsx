@@ -13,7 +13,7 @@ interface AuthContextType {
   sessionId: string | null;
   isLoading: boolean;
   signin: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  setSession: (user: User, sessionId: string) => void;
   signout: () => Promise<void>;
   connectWallet: (walletAddress: string, tokenBalance: number) => Promise<void>;
 }
@@ -58,46 +58,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signin = async (email: string, password: string) => {
-    try {
-      const res = await apiRequest("POST", "/api/auth/signin", { email, password });
-      const data = await res.json();
-      
-      if (!data.sessionId) {
-        throw new Error("Invalid credentials");
-      }
-      
-      setUser(data.user);
-      setSessionId(data.sessionId);
-      localStorage.setItem("sessionId", data.sessionId);
-    } catch (error: any) {
-      if (error.message?.includes("401") || error.message?.includes("Invalid credentials")) {
-        const signupRes = await apiRequest("POST", "/api/auth/signup", { email, password });
-        const signupData = await signupRes.json();
-        
-        if (!signupData.sessionId) {
-          throw new Error("Failed to create account");
-        }
-        
-        setUser(signupData.user);
-        setSessionId(signupData.sessionId);
-        localStorage.setItem("sessionId", signupData.sessionId);
-      } else {
-        throw error;
-      }
-    }
-  };
-
-  const signup = async (email: string, password: string) => {
-    const res = await apiRequest("POST", "/api/auth/signup", { email, password });
+    const res = await apiRequest("POST", "/api/auth/signin", { email, password });
     const data = await res.json();
     
     if (!data.sessionId) {
-      throw new Error("Failed to create account");
+      throw new Error("Invalid credentials");
     }
     
     setUser(data.user);
     setSessionId(data.sessionId);
     localStorage.setItem("sessionId", data.sessionId);
+  };
+
+  const setSession = (userData: User, sid: string) => {
+    setUser(userData);
+    setSessionId(sid);
+    localStorage.setItem("sessionId", sid);
   };
 
   const signout = async () => {
@@ -141,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, sessionId, isLoading, signin, signup, signout, connectWallet }}>
+    <AuthContext.Provider value={{ user, sessionId, isLoading, signin, setSession, signout, connectWallet }}>
       {children}
     </AuthContext.Provider>
   );

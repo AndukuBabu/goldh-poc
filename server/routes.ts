@@ -3,22 +3,29 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, verifyPassword, sessionManager } from "./auth";
 import { requireAuth } from "./middleware";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, serverSignUpSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post("/api/auth/signup", async (req: Request, res: Response) => {
     try {
-      const { email, password } = insertUserSchema.parse(req.body);
+      const validatedData = serverSignUpSchema.parse(req.body);
       
-      const existingUser = await storage.getUserByEmail(email);
+      const existingUser = await storage.getUserByEmail(validatedData.email);
       if (existingUser) {
         return res.status(400).json({ error: "Email already registered" });
       }
 
-      const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser({ email, password: hashedPassword });
+      const hashedPassword = await hashPassword(validatedData.password);
+      const user = await storage.createUser({ 
+        email: validatedData.email, 
+        password: hashedPassword,
+        name: validatedData.name,
+        phone: validatedData.phone,
+        experienceLevel: validatedData.experienceLevel,
+        agreeToUpdates: validatedData.agreeToUpdates,
+      });
       
       const session = await sessionManager.createSession(user.id);
       

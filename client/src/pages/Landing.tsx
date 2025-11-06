@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { NewsScroller } from "@/components/NewsScroller";
 import { FeatureCard } from "@/components/FeatureCard";
 import { FOMABox } from "@/components/FOMABox";
+import { TypingAnimation } from "@/components/TypingAnimation";
 import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
 
@@ -62,9 +63,9 @@ export default function Landing() {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-16 px-6">
+      <section className="h-screen flex items-center justify-center px-6">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center min-h-[600px]">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Logo Side */}
             <div className="flex items-center justify-center">
               <img
@@ -77,15 +78,18 @@ export default function Landing() {
 
             {/* Content Side */}
             <div className="space-y-8">
-              <div className="space-y-4">
-                <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-                  <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent drop-shadow-lg">
-                    Building Wealth,
-                  </span>
-                  <br />
-                  <span className="bg-gradient-to-r from-[#e3d6b4] via-[#C7AE6A] to-[#b99a45] bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(199,174,106,0.3)]">
-                    Bridging Worlds
-                  </span>
+              <div className="space-y-6">
+                <h1 className="text-5xl md:text-6xl font-bold leading-tight min-h-[120px]">
+                  <TypingAnimation
+                    phrases={[
+                      "Where Intelligence Builds Trust",
+                      "This is just the beginning.",
+                      "Even tigers start with curiosity."
+                    ]}
+                    typingSpeed={80}
+                    deletingSpeed={40}
+                    pauseDuration={2000}
+                  />
                 </h1>
                 <p className="text-xl leading-relaxed max-w-lg bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 bg-clip-text text-transparent drop-shadow-md">
                   Your gateway to crypto intelligence. Track, analyze, and grow your digital assets with confidence.

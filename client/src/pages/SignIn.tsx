@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,9 +33,12 @@ export default function SignIn() {
       
       setLocation("/dashboard");
     } catch (error: any) {
+      // Clear any stale session on signin failure
+      localStorage.removeItem("sessionId");
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to sign in or create account. Please try again.",
+        description: error.message || "Failed to sign in. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -43,29 +46,6 @@ export default function SignIn() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      await signin(email, password);
-      
-      toast({
-        title: "Welcome!",
-        description: "Your account has been created successfully.",
-      });
-      
-      setLocation("/dashboard");
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create account. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleMagicLink = async () => {
     if (!email) {
@@ -154,7 +134,7 @@ export default function SignIn() {
                   disabled={isLoading}
                   data-testid="button-signin"
                 >
-                  {isLoading ? "Processing..." : "Sign In / Sign Up"}
+                  {isLoading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
 
@@ -191,6 +171,14 @@ export default function SignIn() {
                   Send Magic Link
                 </Button>
               )}
+
+              {/* Sign Up Link */}
+              <div className="text-center text-sm text-muted-foreground">
+                Don't have an account?{" "}
+                <Link href="/signup" className="text-primary hover:underline font-semibold" data-testid="link-signup">
+                  SIGN UP!
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>

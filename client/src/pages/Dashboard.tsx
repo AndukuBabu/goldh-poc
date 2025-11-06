@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { NewsScroller } from "@/components/NewsScroller";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, TrendingUp, Clock, ExternalLink, Loader2, Wallet, Rocket } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const newsArticles = [
   {
@@ -95,6 +95,15 @@ export default function Dashboard() {
     { id: "3", title: "Institutional investors increase crypto holdings", url: "#", publishedAt: new Date().toISOString() },
   ];
 
+  // Redirect to signin if not authenticated (using useEffect to avoid render-time state updates)
+  useEffect(() => {
+    // Check both user state and localStorage sessionId to handle timing issues
+    const storedSessionId = localStorage.getItem("sessionId");
+    if (!authLoading && !user && !storedSessionId) {
+      setLocation("/signin");
+    }
+  }, [authLoading, user, setLocation]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -107,7 +116,6 @@ export default function Dashboard() {
   }
 
   if (!user) {
-    setLocation("/signin");
     return null;
   }
 

@@ -73,10 +73,10 @@ Preferred communication style: Simple, everyday language.
 - Schema-first approach with TypeScript types generated from schema
 
 **Schema Design**
-- Users table: id (varchar UUID), email (unique), password (hashed), walletAddress (nullable), isPremium (boolean), createdAt (timestamp)
+- Users table: id (varchar UUID), name (text, optional), email (unique), password (hashed), phone (text, optional), experienceLevel (text, optional), agreeToUpdates (boolean, default false), walletAddress (nullable), isPremium (boolean), createdAt (timestamp)
 - Sessions table: id (varchar), userId (foreign key to users.id), expiresAt (timestamp), createdAt (timestamp)
 - Interface definitions for NewsArticle and LearningTopic entities
-- Zod schemas for runtime validation of user inputs
+- Zod schemas for runtime validation: `insertUserSchema` (basic auth), `signUpSchema` (comprehensive waitlist registration)
 
 **Storage Strategy**
 - PostgreSQL database storage implementation (`DatabaseStorage`) for persistent data
@@ -142,7 +142,31 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**Logo Update (Latest)**
+**Authentication Redesign (Latest)**
+- **Separate Sign-In and Sign-Up Flows**: Split authentication into distinct pages
+  - **SignIn page** (`/signin`): Existing users only, no auto-account creation
+    - Email/password sign-in form
+    - Magic link option (validates account existence)
+    - "Don't have an account? SIGN UP!" link to `/signup`
+  - **SignUp page** (`/signup`): Comprehensive waitlist registration
+    - Fields: name (optional), email, phone (optional), experience level dropdown, agree to updates checkbox
+    - Password and confirm password with client-side validation
+    - Full-screen hero layout matching Landing page aesthetic
+- **Database Schema Updates**: Extended users table with profile fields
+  - Added: `name`, `phone`, `experienceLevel`, `agreeToUpdates`
+  - Updated `signUpSchema` with comprehensive validation
+  - Backend routes updated to handle extended user profile data
+- **User Experience**: Clear separation between signin (quick access) and signup (comprehensive onboarding)
+
+**Full-Screen Hero with Typing Animation (Previous)**
+- **100vh Hero Section**: Transformed landing page to immersive full-screen experience
+  - 50/50 grid layout: Logo on left, typing animation on right
+  - Cycling phrases: "Where Intelligence Builds Trust", "This is just the beginning.", "Even tigers start with curiosity."
+  - Backspace effect and blinking cursor via custom TypingAnimation component
+  - Adjusted logo to ~584px width for optimal 50/50 balance
+  - Responsive design with mobile-first approach
+
+**Logo Update (Earlier)**
 - **Brand Refresh**: Updated to new official logo (goldh-logo_1762272901250.png)
   - Features "golden horizon" text with "BUILDING WEALTH, BRIDGING WORLDS" tagline
   - Black/transparent background blends seamlessly with dark theme
