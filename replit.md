@@ -140,7 +140,28 @@ Preferred communication style: Simple, everyday language.
 - Design guidelines documenting brand colors and component patterns
 - Favicon configured in HTML
 
+**Firebase/Firestore Integration**
+- Firebase SDK for Firestore database (client-side)
+- Configuration in `client/src/lib/firebase.ts`
+- Used for Guru & Insider Digest feature data storage
+- Collection: `guruDigest` with fields: title, summary, link, date
+
+**Data Management Scripts**
+- `scripts/uploadGuruDigest.ts`: Utility script to populate Firestore with mock digest entries
+  - Run manually with: `npx tsx scripts/uploadGuruDigest.ts`
+  - Uploads 5 sample entries for testing and development
+
 ## Recent Changes
+
+**Firebase Integration & Guru Digest Script (Latest)**
+- **Firestore Setup**: Integrated Firebase Firestore for content management
+  - Configuration added to `client/src/lib/firebase.ts`
+  - Firestore database initialized for guruDigest collection
+- **Upload Script**: Created `scripts/uploadGuruDigest.ts`
+  - TypeScript script to populate Firestore with mock digest entries
+  - 5 sample entries covering whale movements, institutional purchases, DeFi activity
+  - Includes auto-generated ISO timestamps for each entry
+  - Run with: `npx tsx scripts/uploadGuruDigest.ts`
 
 **Landing Page & Auth Improvements (Latest)**
 - **Removed Typing Animation**: Simplified hero section with static headline
