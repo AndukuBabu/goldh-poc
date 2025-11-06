@@ -31,15 +31,19 @@ export default function Features() {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card key={index} className="hover-elevate" data-testid={`card-feature-${index}`}>
-                  <CardHeader>
-                    <div className="mb-4 flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
-                      <Icon className="w-6 h-6 text-primary" />
+                <Card 
+                  key={index} 
+                  className="hover-elevate active-elevate-2 transition-all group hover:shadow-xl hover:shadow-primary/10 border-border hover:border-primary/30" 
+                  data-testid={`card-feature-${index}`}
+                >
+                  <CardHeader className="space-y-4">
+                    <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all">
+                      <Icon className="w-7 h-7 text-primary group-hover:scale-110 transition-transform" />
                     </div>
-                    <CardTitle>{feature.title}</CardTitle>
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-base">
+                    <CardDescription className="text-base leading-relaxed">
                       {feature.description}
                     </CardDescription>
                   </CardContent>
