@@ -79,7 +79,7 @@ export default function Landing() {
             <div className="space-y-8">
               <div className="space-y-6">
                 <h1 className="text-5xl md:text-6xl font-bold leading-tight bg-gradient-to-r from-[#e3d6b4] via-[#C7AE6A] to-[#b99a45] bg-clip-text text-transparent">
-                  Your Crypto Intelligence Platform
+                  Building Wealth, Bridging Worlds
                 </h1>
                 <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
                   Track, analyze, and grow your digital assets with real-time market intelligence and secure wallet integration.
