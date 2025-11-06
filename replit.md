@@ -142,7 +142,26 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**Authentication Redesign (Latest)**
+**Landing Page & Auth Improvements (Latest)**
+- **Removed Typing Animation**: Simplified hero section with static headline
+  - Hero now displays "Your Crypto Intelligence Platform" with gold gradient styling
+  - Cleaner, faster loading experience without animation complexity
+  - Maintains 100vh hero with 50/50 grid layout (logo left, content right)
+- **Schema Validation Split**: Separated client/server signup validation
+  - Client schema (`signUpSchema`): Includes `confirmPassword` field for form validation
+  - Server schema (`serverSignUpSchema`): Explicit Zod object without `confirmPassword` for database insertion
+  - Prevents TypeError from `.omit()` method incompatibility
+  - Ensures type-safe data flow from form → API → database
+- **AuthProvider Cleanup**: Removed deprecated signup method
+  - SignUp page now calls API directly and uses `setSession` helper
+  - Prevents duplicate HTTP requests (signup → signin)
+  - Cleaner interface with only essential auth methods
+- **Session Clearing on Signin Failure**: Enhanced error handling
+  - Failed signin attempts now clear stale `sessionId` from localStorage
+  - Prevents auth state bugs where user appears logged in after failed signin
+  - Consistent local/server state management
+
+**Authentication Redesign (Previous)**
 - **Separate Sign-In and Sign-Up Flows**: Split authentication into distinct pages
   - **SignIn page** (`/signin`): Existing users only, no auto-account creation
     - Email/password sign-in form
@@ -157,14 +176,6 @@ Preferred communication style: Simple, everyday language.
   - Updated `signUpSchema` with comprehensive validation
   - Backend routes updated to handle extended user profile data
 - **User Experience**: Clear separation between signin (quick access) and signup (comprehensive onboarding)
-
-**Full-Screen Hero with Typing Animation (Previous)**
-- **100vh Hero Section**: Transformed landing page to immersive full-screen experience
-  - 50/50 grid layout: Logo on left, typing animation on right
-  - Cycling phrases: "Where Intelligence Builds Trust", "This is just the beginning.", "Even tigers start with curiosity."
-  - Backspace effect and blinking cursor via custom TypingAnimation component
-  - Adjusted logo to ~584px width for optimal 50/50 balance
-  - Responsive design with mobile-first approach
 
 **Logo Update (Earlier)**
 - **Brand Refresh**: Updated to new official logo (goldh-logo_1762272901250.png)
