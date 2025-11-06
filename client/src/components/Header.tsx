@@ -3,13 +3,6 @@ import { Button } from "@/components/ui/button";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
 
 export function Header() {
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
@@ -24,14 +17,11 @@ export function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-2">
-          <Button
-            variant="ghost"
-            onClick={() => scrollToSection("features")}
-            data-testid="button-nav-features"
-            className="text-foreground"
-          >
-            Features
-          </Button>
+          <Link href="/features">
+            <Button variant="ghost" data-testid="button-nav-features" className="text-foreground">
+              Features
+            </Button>
+          </Link>
           <Link href="/learn">
             <Button variant="ghost" data-testid="button-nav-learn" className="text-foreground">
               Learn
