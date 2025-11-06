@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NewsScroller } from "@/components/NewsScroller";
+import GuruDigestList from "@/components/GuruDigestList";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, TrendingUp, Clock, ExternalLink, Loader2, Wallet, Rocket } from "lucide-react";
+import { Sparkles, TrendingUp, Clock, ExternalLink, Loader2, Wallet, Rocket, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const newsArticles = [
@@ -238,6 +239,26 @@ export default function Dashboard() {
                   </p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Guru & Insider Digest */}
+          <Card className="mb-8 border-2 border-primary/30">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <Zap className="w-6 h-6 text-primary" />
+                    Guru & Insider Digest
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    Real-time whale movements, institutional activity, and smart money signals
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <GuruDigestList />
             </CardContent>
           </Card>
 
