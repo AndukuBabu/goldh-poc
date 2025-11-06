@@ -26,7 +26,7 @@ export default function Features() {
       <Header />
       
       {/* Hero Section - Feature Cards */}
-      <section className="pt-32 pb-24 px-6">
+      <section className="min-h-screen flex items-center justify-center px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => {
