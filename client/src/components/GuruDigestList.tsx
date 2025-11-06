@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { getGuruDigest } from "../lib/getGuruDigest";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExternalLink, Loader2, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, Loader2, TrendingUp, ArrowRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useLocation } from "wouter";
 
 interface DigestEntry {
   title: string;
@@ -11,9 +13,15 @@ interface DigestEntry {
   date: string;
 }
 
-export default function GuruDigestList() {
+interface GuruDigestListProps {
+  showAll?: boolean;
+  truncateSummary?: boolean;
+}
+
+export default function GuruDigestList({ showAll = false, truncateSummary = false }: GuruDigestListProps) {
   const [digests, setDigests] = useState<DigestEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     getGuruDigest()
@@ -44,12 +52,14 @@ export default function GuruDigestList() {
     );
   }
 
+  const displayedDigests = showAll ? digests : digests.slice(0, 5);
+
   return (
     <div className="space-y-3">
-      {digests.map((item, idx) => (
+      {displayedDigests.map((item, idx) => (
         <Card
           key={idx}
-          className="hover-elevate active-elevate-2 transition-all border border-primary/20 hover:border-primary/40"
+          className="group hover:scale-[1.02] active-elevate-2 transition-all duration-300 border border-primary/20 hover:border-primary/60 hover:shadow-lg hover:shadow-primary/20"
           data-testid={`card-digest-${idx}`}
         >
           <CardContent className="p-4">
@@ -61,23 +71,45 @@ export default function GuruDigestList() {
               data-testid={`link-digest-${idx}`}
             >
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base font-semibold text-primary leading-tight flex-1">
+                <h3 className="text-base font-semibold text-primary leading-tight flex-1 group-hover:text-primary/90 transition-colors">
                   {item.title}
                 </h3>
-                <ExternalLink className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                <ExternalLink className="w-4 h-4 text-primary flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className={`text-sm text-muted-foreground leading-relaxed ${truncateSummary ? 'line-clamp-2' : ''}`}>
                 {item.summary}
               </p>
-              {item.date && (
-                <p className="text-xs text-muted-foreground/70">
-                  {formatDistanceToNow(new Date(item.date), { addSuffix: true })}
-                </p>
-              )}
+              {item.date && (() => {
+                try {
+                  const parsedDate = new Date(item.date);
+                  if (!isNaN(parsedDate.getTime())) {
+                    return (
+                      <p className="text-xs text-muted-foreground/70">
+                        {formatDistanceToNow(parsedDate, { addSuffix: true })}
+                      </p>
+                    );
+                  }
+                } catch (e) {
+                  return null;
+                }
+                return null;
+              })()}
             </a>
           </CardContent>
         </Card>
       ))}
+      
+      {!showAll && digests.length > 5 && (
+        <Button
+          onClick={() => setLocation("/features/guru")}
+          variant="outline"
+          className="w-full mt-4 border-primary/30 hover:border-primary/60 text-primary hover:bg-primary/10"
+          data-testid="button-view-all-digest"
+        >
+          View All Digest Entries
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }

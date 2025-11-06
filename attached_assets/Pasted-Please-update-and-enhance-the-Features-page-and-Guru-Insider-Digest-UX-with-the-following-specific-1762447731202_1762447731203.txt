@@ -1,0 +1,67 @@
+Please update and enhance the Features page and Guru & Insider Digest UX with the following specifications:
+
+🔧 Features Page Enhancements
+
+General Design & Navigation Behavior:
+
+When I’m on the /features page, highlight “Features” in the top navigation bar to indicate it’s the current route.
+
+Replace all placeholder lorem ipsum text with actual descriptions (see content section below).
+
+Each feature card (Digest, UMF, Economic Calendar) must have:
+
+A button or clickable area that navigates to a dedicated fullscreen view of the selected feature (route-based: e.g., /features/guru, /features/umf, /features/calendar).
+
+Smooth transitions when navigating between feature summaries and fullscreen views.
+
+Interactive Feature Cards (Digest, UMF, Calendar):
+
+On hover:
+
+Apply a glow effect using Tailwind (soft gold border glow).
+
+Slight scale-up animation for the hovered card (e.g., transform scale-105).
+
+Add a “Full View” icon or button on each card for desktop and mobile.
+
+📰 Guru & Insider Digest (GID) Changes
+
+Component Behavior:
+
+Truncate digest preview list in the dashboard.
+
+Add a “Full View” button in the GID component. On click, expand GID to fullscreen mode (route: /features/guru or modal-style).
+
+When user hovers over any individual digest item, apply:
+
+A highlight border glow (same gold brand color).
+
+A slight vertical expansion of that card only.
+
+Maintain mobile responsiveness.
+
+🧠 Features Page Copy Content (Replace Lorem Ipsum)
+
+Use the following actual text for the cards and their full-width sections:
+
+📅 Economic Calendar
+
+"Global crypto-relevant macroeconomic events delivered in real time — with intelligent summaries, live countdowns, and impact signals powered by AI. From Fed decisions to inflation releases, never get blindsided again."
+
+📚 Guru & Insider Digest
+
+"Whale alerts. Smart wallet movements. Institutional fund flows. This isn’t your average crypto news feed — this is the insider edge. Curated with machine learning and driven by real blockchain data."
+
+📊 Universal Market Financials (UMF)
+
+"One page to track everything. Token prices, market caps, daily volumes, and trend summaries across the top 100 assets. Built for context-first investing and supported by beautiful, responsive UX."
+
+✅ Implementation Requirements
+
+Use Tailwind for all styling effects (hover, animations).
+
+Implement feature expansion behavior using either route navigation or fullscreen modal logic (your discretion based on routing strategy).
+
+Ensure all sections are fully mobile optimized and consistent with dark fintech design.
+
+Integrate these enhancements cleanly into the current /features page and reuse the existing GID component logic from the dashboard where relevant.

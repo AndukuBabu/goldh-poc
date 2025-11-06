@@ -1,8 +1,17 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
 
 export function Header() {
+  const [location] = useLocation();
+  
+  const isActive = (path: string) => {
+    if (path === "/features") {
+      return location === path || location.startsWith("/features/");
+    }
+    return location === path;
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
@@ -18,17 +27,29 @@ export function Header() {
 
         <nav className="hidden md:flex items-center gap-2">
           <Link href="/features">
-            <Button variant="ghost" data-testid="button-nav-features" className="text-foreground">
+            <Button 
+              variant={isActive("/features") ? "default" : "ghost"} 
+              data-testid="button-nav-features" 
+              className={isActive("/features") ? "" : "text-foreground"}
+            >
               Features
             </Button>
           </Link>
           <Link href="/learn">
-            <Button variant="ghost" data-testid="button-nav-learn" className="text-foreground">
+            <Button 
+              variant={isActive("/learn") ? "default" : "ghost"} 
+              data-testid="button-nav-learn" 
+              className={isActive("/learn") ? "" : "text-foreground"}
+            >
               Learn
             </Button>
           </Link>
           <Link href="/dashboard">
-            <Button variant="ghost" data-testid="button-nav-dashboard" className="text-foreground">
+            <Button 
+              variant={isActive("/dashboard") ? "default" : "ghost"} 
+              data-testid="button-nav-dashboard" 
+              className={isActive("/dashboard") ? "" : "text-foreground"}
+            >
               Dashboard
             </Button>
           </Link>

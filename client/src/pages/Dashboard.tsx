@@ -258,7 +258,7 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <GuruDigestList />
+              <GuruDigestList truncateSummary={true} />
             </CardContent>
           </Card>
 
