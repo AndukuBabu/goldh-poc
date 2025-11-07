@@ -4,7 +4,7 @@ import { XMLParser } from 'fast-xml-parser';
 
 
 // Firebase init (make sure admin is already initialized in another file you import here)
-import { db } from './firebase'; // adjust this import if needed
+import { db } from 'client/src/lib/firebase.ts'; // adjust this import if needed
 
 export async function updateGuruDigest() {
   const rssFeeds = [
