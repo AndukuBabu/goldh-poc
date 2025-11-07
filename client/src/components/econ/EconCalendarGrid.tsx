@@ -2,15 +2,18 @@
  * Economic Calendar - Grid View Controller
  * Main orchestrator for the monthly calendar grid view
  * Manages state, data fetching, event bucketing, and user interactions
+ * Enhanced with keyboard navigation and accessibility
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getEconEventsMock, type EconEvent } from "@/lib/econ";
 import {
   getMonthMatrixUTC,
   getMonthBoundsUTC,
-  isSameUTCDate,
+  getPreviousMonthUTC,
+  getNextMonthUTC,
+  getTodayUTC,
 } from "@/lib/econDate";
 import {
   MonthHeader,
@@ -29,6 +32,9 @@ export function EconCalendarGrid({ filters = {} }: EconCalendarGridProps) {
   
   // State: Currently focused date (for keyboard navigation)
   const [focusedISO, setFocusedISO] = useState<string | null>(null);
+  
+  // State: Focused day index (preserved across month changes)
+  const [focusedDayIndex, setFocusedDayIndex] = useState<number>(0);
   
   // State: Mobile drawer
   const [drawerDateISO, setDrawerDateISO] = useState<string | null>(null);
@@ -87,15 +93,62 @@ export function EconCalendarGrid({ filters = {} }: EconCalendarGridProps) {
     return map;
   }, [events]);
 
+  // Initialize focus to today when component mounts
+  useEffect(() => {
+    if (!focusedISO && matrix.length > 0) {
+      const today = getTodayUTC();
+      const flatDates = matrix.flat();
+      const todayIndex = flatDates.indexOf(today);
+      
+      if (todayIndex >= 0) {
+        setFocusedISO(today);
+        setFocusedDayIndex(todayIndex);
+      } else {
+        // Today not in view, focus first day of current month
+        const firstDayOfMonth = matrix.flat().find(date => {
+          const [year, month] = date.split('-').map(Number);
+          const anchorYear = anchorDate.getUTCFullYear();
+          const anchorMonth = anchorDate.getUTCMonth() + 1;
+          return year === anchorYear && month === anchorMonth;
+        });
+        
+        if (firstDayOfMonth) {
+          const index = flatDates.indexOf(firstDayOfMonth);
+          setFocusedISO(firstDayOfMonth);
+          setFocusedDayIndex(index);
+        }
+      }
+    }
+  }, [matrix, anchorDate, focusedISO]);
+
   // Handle month navigation
   const handleNavigate = (newDate: Date) => {
     setAnchorDate(newDate);
-    setFocusedISO(null); // Reset focus when changing months
+    // Keep focus on same day index when changing months
+    const newMatrix = getMonthMatrixUTC(newDate);
+    const flatDates = newMatrix.flat();
+    const newFocusIndex = Math.min(focusedDayIndex, flatDates.length - 1);
+    setFocusedISO(flatDates[newFocusIndex]);
+  };
+
+  // Handle month change from keyboard (PageUp/PageDown)
+  const handleMonthChange = (direction: 'prev' | 'next') => {
+    const newDate = direction === 'prev' 
+      ? getPreviousMonthUTC(anchorDate) 
+      : getNextMonthUTC(anchorDate);
+    
+    handleNavigate(newDate);
   };
 
   // Handle day cell focus (keyboard navigation)
   const handleDayFocus = (dateISO: string) => {
     setFocusedISO(dateISO);
+    // Update focused day index
+    const flatDates = matrix.flat();
+    const index = flatDates.indexOf(dateISO);
+    if (index >= 0) {
+      setFocusedDayIndex(index);
+    }
   };
 
   // Handle day cell click
@@ -179,7 +232,16 @@ export function EconCalendarGrid({ filters = {} }: EconCalendarGridProps) {
         focusedDate={focusedISO}
         onDayFocus={handleDayFocus}
         onDayClick={handleDayClick}
+        onMonthChange={handleMonthChange}
       />
+
+      {/* Keyboard Shortcuts Help */}
+      <div className="text-xs text-muted-foreground text-center space-y-1 pt-2">
+        <p>
+          <span className="font-semibold">Keyboard shortcuts:</span>{' '}
+          Arrow keys to navigate • Enter/Space to open • Home/End for week start/end • PageUp/PageDown to change months
+        </p>
+      </div>
 
       {/* Mobile Day Drawer */}
       <DayDrawer

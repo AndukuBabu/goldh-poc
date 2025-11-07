@@ -1,6 +1,7 @@
 /**
  * Economic Calendar Grid - Day Cell
  * Individual cell in the calendar grid showing date and event indicators
+ * Enhanced with keyboard navigation and accessibility
  */
 
 import { cn } from "@/lib/utils";
@@ -14,8 +15,10 @@ interface DayCellProps {
   isToday: boolean;
   isCurrentMonth: boolean;
   isFocused: boolean;
+  tabIndex: number;
   onFocus: () => void;
   onClick: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
 }
 
 export function DayCell({
@@ -24,8 +27,10 @@ export function DayCell({
   isToday,
   isCurrentMonth,
   isFocused,
+  tabIndex,
   onFocus,
   onClick,
+  onKeyDown,
 }: DayCellProps) {
   // Extract day number from ISO date (YYYY-MM-DD)
   const dayNumber = parseInt(dateISO.split('-')[2], 10);
@@ -48,21 +53,25 @@ export function DayCell({
     ? visibleEvents.map(e => `${e.importance} importance: ${e.title}`).join(', ')
     : 'No events';
   
-  const ariaLabel = `${toLocalTooltip(dateISO)}, ${events.length} events. ${eventSummary}. ${remainingCount > 0 ? `${remainingCount} more events.` : ''} Press Enter to view details.`;
+  const ariaLabel = `${toLocalTooltip(dateISO)}, ${events.length} event${events.length !== 1 ? 's' : ''}. ${eventSummary}. ${remainingCount > 0 ? `${remainingCount} more event${remainingCount !== 1 ? 's' : ''}.` : ''} Press Enter to view details.`;
 
   return (
     <div
       role="gridcell"
-      tabIndex={0}
+      tabIndex={tabIndex}
       aria-selected={isFocused}
       aria-label={ariaLabel}
       onClick={onClick}
       onFocus={onFocus}
       onKeyDown={(e) => {
+        // Handle Enter/Space to open drawer
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onClick();
+          return;
         }
+        // Pass other keys to parent for navigation
+        onKeyDown(e);
       }}
       className={cn(
         "min-h-[80px] sm:min-h-[100px] lg:min-h-[120px] p-2 border-r border-b border-border last:border-r-0",
@@ -88,8 +97,13 @@ export function DayCell({
 
       {/* Event Indicators */}
       <div className="space-y-1">
-        {visibleEvents.map((event) => (
-          <EventDot key={event.id} event={event} />
+        {visibleEvents.map((event, index) => (
+          <EventDot 
+            key={event.id} 
+            event={event}
+            tabIndex={isFocused ? 0 : -1}
+            cellDateISO={dateISO}
+          />
         ))}
       </div>
 
