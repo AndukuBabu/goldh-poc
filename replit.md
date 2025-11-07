@@ -152,8 +152,13 @@ Preferred communication style: Simple, everyday language.
 
 ### UMF Feature Implementation
 - **Data Layer**: 
-  - Live schemas: `UmfSnapshotLive` and `UmfAssetLive` with nullable fields (changePct24h, volume24h, marketCap)
-  - Mock schemas: `UmfSnapshot`, `UmfMover`, `UmfBrief`, `UmfAlert`
+  - Live schemas: `UmfSnapshotLive` and `UmfAssetLive` with comprehensive CoinGecko data capture:
+    - Core fields: id, symbol, name, class, price, changePct24h, volume24h, marketCap, updatedAt_utc
+    - Image: Logo URLs from CoinGecko for visual display
+    - Market data: marketCapRank (1 = largest), high24h/low24h (24h price range)
+    - Supply metrics: circulatingSupply, totalSupply, maxSupply (null if unlimited)
+    - All new fields are nullable/optional to handle missing data gracefully
+  - Mock schemas: `UmfSnapshot`, `UmfMover`, `UmfBrief`, `UmfAlert` (extended with image field)
   - 5 asset classes: crypto, index, forex, commodity, etf
 - **React Hooks**: 4 TanStack Query hooks in `client/src/hooks/useUmf.ts` with multi-tier fallback architecture:
   - `useUmfSnapshot()` - Returns `UmfSnapshotExtended` with `{ data, degraded, sourceUi, ageMinutes }`
@@ -168,9 +173,10 @@ Preferred communication style: Simple, everyday language.
   - 6 derived selectors (useCryptoByMarketCap, useIndices, useDXY, useBtcEth, useAssetBySymbol, useAssetsByClass)
 - **UI Components**: 
   - `UmfMorningBrief.tsx` - Displays headline, 3-5 bullets, timestamp, copy-to-clipboard button with toast feedback
-  - `UmfSnapshot.tsx` - Asset grid with hover elevation, keyboard-accessible tooltips showing UTC/local timestamps, 2-wide mobile grid
-  - `UmfTopMovers.tsx` - Clickable gainers/losers that open detail sheets/drawers with asset info, market context, and timestamps
+  - `UmfSnapshot.tsx` - Asset grid with coin logos (5px circular), hover elevation, keyboard-accessible tooltips showing UTC/local timestamps, 2-wide mobile grid
+  - `UmfTopMovers.tsx` - Clickable gainers/losers with coin logos (6px circular) that open detail sheets/drawers with asset info, market context, and timestamps
   - `UmfAlertCard.tsx` - Severity-styled alert banners (info/warn/high) with optional dismiss functionality
+  - All logos display with graceful error handling (hide on load failure) and accessibility (alt text)
 - **Page**: `/features/umf` - Full-screen responsive layout (mobile stacked, desktop 2-column) with loading/empty states
 - **Interactive Features**:
   - Copy morning brief to clipboard with formatted text
