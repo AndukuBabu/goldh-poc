@@ -30,20 +30,38 @@ interface UmfSnapshotProps {
 
 /**
  * Priority assets to display in snapshot grid
- * Filters snapshot to show only these key assets
+ * Updated to show top cryptocurrencies fetched from CoinGecko
+ * Note: Traditional assets (SPX, NDX, DXY, GOLD, WTI) require different data providers
  */
-const PRIORITY_SYMBOLS = ['BTC', 'ETH', 'SOL', 'SPX', 'NDX', 'DXY', 'GOLD', 'WTI'];
+const PRIORITY_SYMBOLS = [
+  'BTC', 'ETH', 'SOL', 'BNB', 'ADA', 'MATIC', 
+  'TRX', 'LINK', 'TON', 'DOGE', 'DOT', 'LTC',
+  'NEAR', 'APT', 'AVAX'
+];
 
 export function UmfSnapshot({ assets, className }: UmfSnapshotProps) {
-  // Filter to priority assets only
-  const priorityAssets = assets.filter(asset => 
-    PRIORITY_SYMBOLS.includes(asset.symbol)
-  );
+  // Filter to priority assets (if specified), otherwise show all
+  const displayAssets = PRIORITY_SYMBOLS.length > 0
+    ? assets.filter(asset => PRIORITY_SYMBOLS.includes(asset.symbol))
+    : assets;
 
-  // Sort by priority order
-  const sortedAssets = priorityAssets.sort((a, b) => 
-    PRIORITY_SYMBOLS.indexOf(a.symbol) - PRIORITY_SYMBOLS.indexOf(b.symbol)
-  );
+  // Sort by priority order (or market cap if not in priority list)
+  const sortedAssets = displayAssets.sort((a, b) => {
+    const aIndex = PRIORITY_SYMBOLS.indexOf(a.symbol);
+    const bIndex = PRIORITY_SYMBOLS.indexOf(b.symbol);
+    
+    // Both in priority list - sort by priority
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex;
+    }
+    
+    // Only one in priority list - prioritized one comes first
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    
+    // Neither in priority list - sort by market cap (descending)
+    return (b.marketCap || 0) - (a.marketCap || 0);
+  });
 
   return (
     <Card 
