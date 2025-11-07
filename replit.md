@@ -42,7 +42,8 @@ Preferred communication style: Simple, everyday language.
 ### Feature Specifications
 - **Real-time Market Intelligence**: Display of crypto-relevant macroeconomic events and market data.
 - **Guru & Insider Digest**: Provides whale alerts, smart wallet movements, and institutional fund flows. Data is stored in Firestore.
-- **Universal Market Financials (UMF)**: A unified page to track token prices, market caps, and daily volumes.
+- **Universal Market Financials (UMF)**: A unified dashboard displaying live market snapshot (Top-20 crypto + indices + DXY), top movers (gainers/losers), morning intelligence briefs, and optional market alerts. UI-only MVP powered by Firestore mock data with planned migration to REST API. Features include asset tiles with prices/24h changes, two-column responsive layout, and severity-based alert cards. Located at `/features/umf`.
+- **Economic Calendar**: Full-featured economic events calendar with grid/list views, filtering by country/category/importance, and performance monitoring (<500ms first paint target).
 - **Educational Resources**: Content related to learning topics in cryptocurrency.
 - **Premium Access**: Pathways to premium features through GOLDH tokens or subscription.
 
@@ -91,7 +92,25 @@ Preferred communication style: Simple, everyday language.
 
 ### Firebase/Firestore Integration
 - Firebase SDK for Firestore database (client-side)
-- `guruDigest` collection for Guru & Insider Digest feature data.
+- `guruDigest` collection for Guru & Insider Digest feature data
+- `umf_snapshot_mock` collection (25 assets: BTC, ETH, SOL, SPX, NDX, DXY, GOLD, WTI, etc.)
+- `umf_movers_mock` collection (10 movers: 5 gainers, 5 losers)
+- `umf_brief_mock` collection (daily morning intelligence briefs)
+- `umf_alerts_mock` collection (market alerts with info/warn/high severity)
 
 ### Data Management Scripts
-- `scripts/uploadGuruDigest.ts` (utility to populate Firestore with mock digest entries).
+- `scripts/uploadGuruDigest.ts` - Populates Firestore with mock Guru Digest entries
+- `scripts/uploadUmfMock.ts` - Seeds UMF Firestore collections with realistic mock market data
+
+### UMF Feature Implementation
+- **Data Layer**: 5 TypeScript/Zod schemas in `shared/schema.ts` (UmfAsset with 5 asset classes, UmfSnapshot, UmfMover, UmfBrief, UmfAlert)
+- **React Hooks**: 4 TanStack Query hooks in `client/src/hooks/useUmf.ts` (useUmfSnapshot with 30s staleTime, useUmfMovers, useUmfBrief, useUmfAlerts) + 6 derived selectors
+- **UI Components**: 
+  - `UmfMorningBrief.tsx` - Displays headline, 3-5 bullets, timestamp with "why it moved" tone
+  - `UmfSnapshot.tsx` - Asset grid showing BTC, ETH, SOL, SPX, NDX, DXY, GOLD, WTI with prices, 24h %, sparkline placeholders
+  - `UmfTopMovers.tsx` - Side-by-side lists of gainers/losers with badges
+  - `UmfAlertCard.tsx` - Severity-styled alert banners (info/warn/high)
+- **Page**: `/features/umf` - Full-screen responsive layout (mobile stacked, desktop 2-column) with loading/empty states
+- **Performance**: First paint <2s target, optimized caching (30s for prices, 5min for briefs)
+- **Accessibility**: All components have data-testid attributes, ARIA labels, keyboard navigation support
+- **Future Migration**: Designed for seamless API migration from Firestore to `/api/umf/*` endpoints without UI refactor

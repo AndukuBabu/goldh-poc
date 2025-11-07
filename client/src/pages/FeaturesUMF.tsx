@@ -17,7 +17,7 @@ import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, ArrowLeft, Database } from "lucide-react";
+import { TrendingUp, ArrowLeft, Database, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   useUmfSnapshot,
@@ -25,17 +25,27 @@ import {
   useUmfBrief,
   useUmfAlerts,
 } from "@/hooks/useUmf";
+import {
+  UmfMorningBrief,
+  UmfSnapshot,
+  UmfTopMovers,
+  UmfAlertList,
+} from "@/components/umf";
 
 export default function FeaturesUMF() {
   const [, setLocation] = useLocation();
   
-  // Fetch UMF data
-  const { data: snapshot, isLoading: snapshotLoading } = useUmfSnapshot();
-  const { data: movers = [], isLoading: moversLoading } = useUmfMovers();
-  const { data: brief, isLoading: briefLoading } = useUmfBrief();
-  const { data: alerts = [], isLoading: alertsLoading } = useUmfAlerts();
+  // Fetch UMF data with loading states
+  const { data: snapshot, isLoading: snapshotLoading, error: snapshotError } = useUmfSnapshot();
+  const { data: movers = [], isLoading: moversLoading, error: moversError } = useUmfMovers();
+  const { data: brief, isLoading: briefLoading, error: briefError } = useUmfBrief();
+  const { data: alerts = [], isLoading: alertsLoading, error: alertsError } = useUmfAlerts();
   
+  // Combined loading state
   const isLoading = snapshotLoading || moversLoading || briefLoading || alertsLoading;
+  
+  // Check if any critical data failed to load
+  const hasError = snapshotError || moversError || briefError || alertsError;
 
   return (
     <div className="min-h-screen bg-background" data-testid="umf-page">
@@ -91,10 +101,32 @@ export default function FeaturesUMF() {
             </p>
           </div>
 
-          {/* Loading State */}
+          {/* Error State */}
+          {hasError && !isLoading && (
+            <Card className="bg-red-500/10 border-red-500/30 mb-6">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-red-500 mb-1">
+                      Failed to Load Market Data
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Some market data could not be loaded. Please refresh the page to try again.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Loading State - Skeleton Screens */}
           {isLoading && (
-            <div className="space-y-6">
-              <div className="h-32 bg-[#111] border border-[#2a2a2a] rounded-lg animate-pulse" />
+            <div className="space-y-6" data-testid="umf-loading">
+              {/* Morning Brief Skeleton */}
+              <div className="h-40 bg-[#111] border border-[#C7AE6A]/20 rounded-lg animate-pulse" />
+              
+              {/* Two-Column Grid Skeleton */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="h-96 bg-[#111] border border-[#2a2a2a] rounded-lg animate-pulse" />
                 <div className="h-96 bg-[#111] border border-[#2a2a2a] rounded-lg animate-pulse" />
@@ -102,250 +134,60 @@ export default function FeaturesUMF() {
             </div>
           )}
 
-          {/* Main Layout */}
+          {/* Main Content - Show when data is loaded */}
           {!isLoading && (
             <div className="space-y-6" data-testid="umf-content">
-              {/* Section 1: Morning Intelligence Banner (Full Width) */}
-              <section data-testid="section-morning-intelligence">
+              {/* Section 1: Morning Intelligence Brief (Full Width) */}
+              {brief ? (
+                <UmfMorningBrief brief={brief} />
+              ) : (
                 <Card className="bg-[#111] border-[#C7AE6A]/20 shadow-lg">
-                  <CardContent className="p-6">
-                    {brief ? (
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 rounded-full bg-[#C7AE6A]/20 flex items-center justify-center flex-shrink-0">
-                            <TrendingUp className="w-5 h-5 text-[#C7AE6A]" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-semibold text-[#C7AE6A] mb-2">
-                              Morning Intelligence
-                            </h2>
-                            <p className="text-base text-foreground font-medium mb-3">
-                              {brief.headline}
-                            </p>
-                            <ul className="space-y-2 text-sm text-muted-foreground">
-                              {brief.bullets.map((bullet, idx) => (
-                                <li key={idx} className="flex items-start gap-2">
-                                  <span className="text-[#C7AE6A] mt-1">•</span>
-                                  <span>{bullet}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No morning intelligence available
-                      </div>
-                    )}
+                  <CardContent className="p-12">
+                    <div className="text-center text-muted-foreground">
+                      <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                      <p className="text-sm">No morning intelligence available</p>
+                    </div>
                   </CardContent>
                 </Card>
-              </section>
+              )}
 
               {/* Sections 2 & 3: Two-Column Layout (Market Snapshot + Top Movers) */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Section 2: Market Snapshot */}
-                <section data-testid="section-market-snapshot">
-                  <Card className="bg-[#111] border-[#2a2a2a] shadow-lg h-full">
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-semibold text-foreground mb-4">
-                        Market Snapshot
-                      </h3>
-                      {snapshot && snapshot.assets.length > 0 ? (
-                        <div className="space-y-3">
-                          {/* Preview: Show first 10 assets */}
-                          {snapshot.assets.slice(0, 10).map((asset) => (
-                            <div 
-                              key={asset.id} 
-                              className="flex items-center justify-between p-3 rounded-md bg-[#0a0a0a] border border-[#2a2a2a] hover-elevate transition-all"
-                              data-testid={`asset-${asset.symbol}`}
-                            >
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-semibold text-foreground">
-                                    {asset.symbol}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground truncate">
-                                    {asset.name}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <div className="text-sm font-mono text-foreground">
-                                    ${asset.price.toLocaleString()}
-                                  </div>
-                                  <div className={`text-xs font-medium ${
-                                    asset.changePct24h >= 0 
-                                      ? 'text-green-500' 
-                                      : 'text-red-500'
-                                  }`}>
-                                    {asset.changePct24h >= 0 ? '+' : ''}
-                                    {asset.changePct24h.toFixed(2)}%
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          
-                          {/* Show count of remaining assets */}
-                          {snapshot.assets.length > 10 && (
-                            <div className="text-center pt-2 text-sm text-muted-foreground">
-                              + {snapshot.assets.length - 10} more assets
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12 text-muted-foreground">
-                          No market data available
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </section>
-
-                {/* Section 3: Top Movers */}
-                <section data-testid="section-top-movers">
-                  <Card className="bg-[#111] border-[#2a2a2a] shadow-lg h-full">
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-semibold text-foreground mb-4">
-                        Top Movers
-                      </h3>
-                      {movers.length > 0 ? (
-                        <div className="space-y-6">
-                          {/* Gainers */}
-                          <div>
-                            <h4 className="text-sm font-medium text-green-500 mb-3 flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-green-500" />
-                              Top Gainers
-                            </h4>
-                            <div className="space-y-2">
-                              {movers
-                                .filter(m => m.direction === 'gainer')
-                                .slice(0, 5)
-                                .map((mover) => (
-                                  <div 
-                                    key={`gainer-${mover.symbol}`}
-                                    className="flex items-center justify-between p-2 rounded bg-[#0a0a0a] border border-[#2a2a2a]"
-                                    data-testid={`mover-gainer-${mover.symbol}`}
-                                  >
-                                    <div className="flex flex-col">
-                                      <span className="text-sm font-semibold text-foreground">
-                                        {mover.symbol}
-                                      </span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {mover.name}
-                                      </span>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="text-sm font-mono text-foreground">
-                                        ${mover.price.toLocaleString()}
-                                      </div>
-                                      <div className="text-xs font-bold text-green-500">
-                                        +{mover.changePct24h.toFixed(2)}%
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-
-                          {/* Losers */}
-                          <div>
-                            <h4 className="text-sm font-medium text-red-500 mb-3 flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-red-500" />
-                              Top Losers
-                            </h4>
-                            <div className="space-y-2">
-                              {movers
-                                .filter(m => m.direction === 'loser')
-                                .slice(0, 5)
-                                .map((mover) => (
-                                  <div 
-                                    key={`loser-${mover.symbol}`}
-                                    className="flex items-center justify-between p-2 rounded bg-[#0a0a0a] border border-[#2a2a2a]"
-                                    data-testid={`mover-loser-${mover.symbol}`}
-                                  >
-                                    <div className="flex flex-col">
-                                      <span className="text-sm font-semibold text-foreground">
-                                        {mover.symbol}
-                                      </span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {mover.name}
-                                      </span>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="text-sm font-mono text-foreground">
-                                        ${mover.price.toLocaleString()}
-                                      </div>
-                                      <div className="text-xs font-bold text-red-500">
-                                        {mover.changePct24h.toFixed(2)}%
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-12 text-muted-foreground">
-                          No movers data available
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </section>
-              </div>
-
-              {/* Section 4: Alerts (Optional) */}
-              {alerts.length > 0 && (
-                <section data-testid="section-alerts">
+                {snapshot && snapshot.assets.length > 0 ? (
+                  <UmfSnapshot assets={snapshot.assets} />
+                ) : (
                   <Card className="bg-[#111] border-[#2a2a2a] shadow-lg">
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-semibold text-foreground mb-4">
-                        Market Alerts
-                      </h3>
-                      <div className="space-y-3">
-                        {alerts.map((alert) => (
-                          <div
-                            key={alert.id}
-                            className={`p-4 rounded-lg border ${
-                              alert.severity === 'high'
-                                ? 'bg-red-500/10 border-red-500/30'
-                                : alert.severity === 'warn'
-                                ? 'bg-yellow-500/10 border-yellow-500/30'
-                                : 'bg-blue-500/10 border-blue-500/30'
-                            }`}
-                            data-testid={`alert-${alert.id}`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div
-                                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                  alert.severity === 'high'
-                                    ? 'bg-red-500/20'
-                                    : alert.severity === 'warn'
-                                    ? 'bg-yellow-500/20'
-                                    : 'bg-blue-500/20'
-                                }`}
-                              >
-                                <span className="text-sm font-bold">
-                                  {alert.severity === 'high' ? '!' : alert.severity === 'warn' ? '⚠' : 'i'}
-                                </span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-semibold text-foreground mb-1">
-                                  {alert.title}
-                                </h4>
-                                <p className="text-sm text-muted-foreground">
-                                  {alert.body}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                    <CardContent className="p-12">
+                      <div className="text-center text-muted-foreground">
+                        <Database className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                        <p className="text-sm font-medium mb-1">No Market Data</p>
+                        <p className="text-xs">Snapshot data is currently unavailable</p>
                       </div>
                     </CardContent>
                   </Card>
+                )}
+
+                {/* Section 3: Top Movers */}
+                {movers.length > 0 ? (
+                  <UmfTopMovers movers={movers} />
+                ) : (
+                  <Card className="bg-[#111] border-[#2a2a2a] shadow-lg">
+                    <CardContent className="p-12">
+                      <div className="text-center text-muted-foreground">
+                        <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                        <p className="text-sm font-medium mb-1">No Movers Data</p>
+                        <p className="text-xs">Top movers data is currently unavailable</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Section 4: Market Alerts (Conditional) */}
+              {alerts.length > 0 && (
+                <section data-testid="section-alerts">
+                  <UmfAlertList alerts={alerts} />
                 </section>
               )}
             </div>
