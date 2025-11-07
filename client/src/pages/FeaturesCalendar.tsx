@@ -3,8 +3,9 @@ import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ArrowLeft, AlertCircle, Database } from "lucide-react";
-import { useLocation } from "wouter";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Calendar, ArrowLeft, AlertCircle, Database, List, Grid3x3 } from "lucide-react";
+import { useLocation, useSearch } from "wouter";
 import { useEconEvents } from "@/hooks/useEcon";
 import { 
   EconSummary, 
@@ -19,6 +20,22 @@ const isDev = import.meta.env.DEV;
 
 export default function FeaturesCalendar() {
   const [, setLocation] = useLocation();
+  const searchParams = useSearch();
+  
+  // Parse view from URL query parameter (default to 'list')
+  const currentView = useMemo(() => {
+    const params = new URLSearchParams(searchParams);
+    const view = params.get('view');
+    return view === 'grid' ? 'grid' : 'list';
+  }, [searchParams]);
+  
+  // Handle view toggle
+  const handleViewChange = (newView: string) => {
+    if (!newView) return; // Prevent deselecting both options
+    const params = new URLSearchParams(searchParams);
+    params.set('view', newView);
+    setLocation(`/features/calendar?${params.toString()}`);
+  };
   
   // Performance: Mark component mount start
   useEffect(() => {
@@ -117,18 +134,48 @@ export default function FeaturesCalendar() {
 
           {/* Page Header */}
           <div className="mb-8 space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center">
-                <Calendar className="w-8 h-8 text-primary" />
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center">
+                  <Calendar className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold text-foreground">
+                    Economic Calendar
+                  </h1>
+                  <p className="text-muted-foreground text-lg mt-2">
+                    Never miss a market-moving event.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-4xl font-bold text-foreground">
-                  Economic Calendar
-                </h1>
-                <p className="text-muted-foreground text-lg mt-2">
-                  Never miss a market-moving event.
-                </p>
-              </div>
+              
+              {/* View Toggle */}
+              <ToggleGroup 
+                type="single" 
+                value={currentView} 
+                onValueChange={handleViewChange}
+                className="border border-border rounded-lg p-1 bg-card"
+                data-testid="view-toggle"
+              >
+                <ToggleGroupItem 
+                  value="list" 
+                  aria-label="List view"
+                  className="px-4 h-9 gap-2"
+                  data-testid="button-view-list"
+                >
+                  <List className="w-4 h-4" />
+                  <span className="hidden sm:inline">List</span>
+                </ToggleGroupItem>
+                <ToggleGroupItem 
+                  value="grid" 
+                  aria-label="Grid view"
+                  className="px-4 h-9 gap-2"
+                  data-testid="button-view-grid"
+                >
+                  <Grid3x3 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Grid</span>
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-4xl">
               Track global macroeconomic events that impact crypto markets. From Fed rate decisions to employment reports, 
@@ -153,39 +200,94 @@ export default function FeaturesCalendar() {
             data-testid="econ-section"
             className="space-y-6"
           >
-            {/* Summary KPIs */}
+            {/* Summary KPIs - Shared across both views */}
             <EconSummary events={events} isLoading={isLoading} />
 
-            {/* Filters */}
+            {/* Filters - Shared across both views */}
             <EconFilters 
               filters={filters} 
               onFiltersChange={setFilters}
               activeFilterCount={activeFilterCount}
             />
 
-            {/* Two-column layout: Legend (sidebar) + Events (main) */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Legend - Left sidebar (1 column on large screens) */}
-              <div className="lg:col-span-1">
-                <EconLegend />
-              </div>
+            {/* Conditional rendering based on view */}
+            {currentView === 'list' ? (
+              /* LIST VIEW - Existing implementation */
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Legend - Left sidebar (1 column on large screens) */}
+                <div className="lg:col-span-1">
+                  <EconLegend />
+                </div>
 
-              {/* Event List - Main content (3 columns on large screens) */}
-              <div className="lg:col-span-3">
-                {error ? (
-                  <EconErrorState 
-                    error={error} 
-                    onRetry={() => window.location.reload()} 
-                  />
-                ) : (
-                  <EconList 
-                    events={events} 
-                    isLoading={isLoading}
-                    pageSize={20}
-                  />
-                )}
+                {/* Event List - Main content (3 columns on large screens) */}
+                <div className="lg:col-span-3">
+                  {error ? (
+                    <EconErrorState 
+                      error={error} 
+                      onRetry={() => window.location.reload()} 
+                    />
+                  ) : (
+                    <EconList 
+                      events={events} 
+                      isLoading={isLoading}
+                      pageSize={20}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              /* GRID VIEW - Placeholder for upcoming implementation */
+              <div className="min-h-[400px]">
+                <Card className="border-primary/20">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Grid3x3 className="w-5 h-5 text-primary" />
+                      Grid View Coming Soon
+                    </CardTitle>
+                    <CardDescription>
+                      The monthly calendar grid view is currently under development.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4 text-sm text-muted-foreground">
+                      <p>
+                        The Grid View will provide an interactive monthly calendar similar to Google Calendar, 
+                        with economic events displayed in a visual 7×6 day matrix.
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
+                          <span>Navigate months with Previous/Today/Next</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
+                          <span>See up to 3 events per day with "+N more"</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
+                          <span>Hover popover for event details (desktop)</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
+                          <span>Bottom drawer for events (mobile)</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
+                          <span>Keyboard navigation with arrow keys</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
+                          <span>Full accessibility (ARIA, screen readers)</span>
+                        </div>
+                      </div>
+                      <p className="pt-2 text-primary/80">
+                        For now, please use the List View to explore economic events.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Future Features Teaser */}
             <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
@@ -230,18 +332,18 @@ export default function FeaturesCalendar() {
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
                     <div>
-                      <p className="font-semibold text-foreground">Calendar Grid View</p>
+                      <p className="font-semibold text-foreground">Personalized Filters</p>
                       <p className="text-muted-foreground">
-                        Interactive monthly calendar with event previews and drill-downs
+                        Save filter preferences and get custom event feeds by asset class
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
                     <div>
-                      <p className="font-semibold text-foreground">Personalized Filters</p>
+                      <p className="font-semibold text-foreground">Event Alerts & Watchlists</p>
                       <p className="text-muted-foreground">
-                        Save filter preferences and get custom event feeds by asset class
+                        Set custom alerts for specific events and track your favorite indicators
                       </p>
                     </div>
                   </div>
