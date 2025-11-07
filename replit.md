@@ -110,6 +110,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Quality Assurance
 - `qa/UMF-UI-Manual.md` - Comprehensive manual QA checklist for UMF feature with 9 test cases covering performance, functionality, accessibility, and responsive design
+- `qa/UMF-1ph-Policy.md` - QA & Operations policy for UMF live integration testing. Covers 6 test scenarios: scheduler setup, rate limiting validation, hourly tick behavior, degraded mode testing, history cleanup, and performance targets. Includes monitoring checklists, troubleshooting guide, and rollback procedures.
 
 ### Performance Documentation
 - `docs/UMF-Perf-Notes.md` - Performance targets, optimization strategies, and observed bottlenecks. Targets: initial render < 2s, re-render < 300ms. Guards: memoized selectors, minimal DOM, lazy drawers, efficient caching. Bundle: ~88KB total.
