@@ -14,6 +14,7 @@ import {
   EconList,
   EconErrorState
 } from "@/components/econ";
+import { EconCalendarGrid } from "@/components/econ/EconCalendarGrid";
 import type { EconEventFilters } from "@/lib/econ";
 
 const isDev = import.meta.env.DEV;
@@ -236,57 +237,8 @@ export default function FeaturesCalendar() {
                 </div>
               </div>
             ) : (
-              /* GRID VIEW - Placeholder for upcoming implementation */
-              <div className="min-h-[400px]">
-                <Card className="border-primary/20">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Grid3x3 className="w-5 h-5 text-primary" />
-                      Grid View Coming Soon
-                    </CardTitle>
-                    <CardDescription>
-                      The monthly calendar grid view is currently under development.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4 text-sm text-muted-foreground">
-                      <p>
-                        The Grid View will provide an interactive monthly calendar similar to Google Calendar, 
-                        with economic events displayed in a visual 7×6 day matrix.
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="flex items-start gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                          <span>Navigate months with Previous/Today/Next</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                          <span>See up to 3 events per day with "+N more"</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                          <span>Hover popover for event details (desktop)</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                          <span>Bottom drawer for events (mobile)</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                          <span>Keyboard navigation with arrow keys</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                          <span>Full accessibility (ARIA, screen readers)</span>
-                        </div>
-                      </div>
-                      <p className="pt-2 text-primary/80">
-                        For now, please use the List View to explore economic events.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              /* GRID VIEW - Monthly calendar grid */
+              <EconCalendarGrid filters={filters} />
             )}
 
             {/* Future Features Teaser */}
