@@ -111,6 +111,12 @@ Preferred communication style: Simple, everyday language.
 ### Quality Assurance
 - `qa/UMF-UI-Manual.md` - Comprehensive manual QA checklist for UMF feature with 9 test cases covering performance, functionality, accessibility, and responsive design
 
+### API Migration Placeholders (Future Implementation)
+- `client/src/lib/umf.client.ts` - API client functions (currently TODOs) for future REST API migration
+- `server/routes.ts` - Commented API endpoint stubs for GET /api/umf/snapshot, /movers, /brief, /alerts (lines 316-425)
+- `server/openapi/umf.draft.yaml` - Complete OpenAPI 3.0 specification for UMF REST API endpoints
+- `docs/UMF-UI-MVP.md` - Updated with detailed API migration guide (Section 17)
+
 ### UMF Feature Implementation
 - **Data Layer**: 5 TypeScript/Zod schemas in `shared/schema.ts` (UmfAsset with 5 asset classes, UmfSnapshot, UmfMover, UmfBrief, UmfAlert)
 - **React Hooks**: 4 TanStack Query hooks in `client/src/hooks/useUmf.ts` (useUmfSnapshot with 30s staleTime, useUmfMovers, useUmfBrief, useUmfAlerts) + 6 derived selectors

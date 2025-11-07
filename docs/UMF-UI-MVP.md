@@ -508,5 +508,300 @@ After MVP completion:
 ---
 
 **Document Owner:** Development Team  
-**Last Updated:** January 7, 2025  
-**Next Review:** After MVP implementation
+**Last Updated:** November 7, 2025  
+**Next Review:** Before API migration
+
+---
+
+## 17. API Migration Guide: Firestore → REST API
+
+**Status:** Ready for migration  
+**Timeline:** Estimated 7-8 days  
+**Target Date:** Q1 2026
+
+### 17.1 Migration Overview
+
+The UMF MVP currently uses Firestore mock data. This section documents how to migrate to REST API endpoints without changing UI components.
+
+**Files to Modify:**
+- `client/src/lib/umf.client.ts` - Implement API client functions (currently placeholders)
+- `client/src/hooks/useUmf.ts` - Update hooks to use API clients instead of Firestore
+- `server/routes.ts` - Uncomment and implement 4 UMF endpoints (lines 316-425)
+
+**Files for Reference:**
+- `server/openapi/umf.draft.yaml` - Complete OpenAPI 3.0 specification
+- `shared/schema.ts` - Shared TypeScript/Zod types
+
+---
+
+### 17.2 Step-by-Step Migration
+
+#### Step 1: Implement Backend Endpoints (2-3 days)
+
+**File:** `server/routes.ts` (lines 316-425)
+
+Uncomment and implement these 4 endpoints:
+
+**1. GET /api/umf/snapshot**
+```typescript
+app.get("/api/umf/snapshot", async (req: Request, res: Response) => {
+  try {
+    // Fetch from market data provider (CoinGecko, Alpha Vantage, etc.)
+    const rawData = await marketDataProvider.getAssets([
+      'bitcoin', 'ethereum', 'solana', 'sp500', 'nasdaq', 'dxy', 'gold', 'crude-oil'
+    ]);
+    
+    // Transform to UmfSnapshot schema
+    const snapshot: UmfSnapshot = {
+      timestamp_utc: new Date().toISOString(),
+      assets: rawData.map(transformToUmfAsset),
+    };
+    
+    // Cache for 30 seconds
+    res.set('Cache-Control', 'public, max-age=30');
+    res.json(snapshot);
+  } catch (error) {
+    console.error("UMF snapshot error:", error);
+    res.status(500).json({ error: "Failed to fetch market snapshot" });
+  }
+});
+```
+
+**2. GET /api/umf/movers** (query: `?limit=10`)  
+**3. GET /api/umf/brief** (query: `?date=YYYY-MM-DD`)  
+**4. GET /api/umf/alerts** (query: `?severity=info,warn,high&active=true`)
+
+**Implementation Notes:**
+- Use caching (Redis or in-memory) to avoid rate limits
+- Snapshot: 30s cache, Movers: 1min cache, Brief: 5min cache
+- Validate query params with Zod
+- Return proper error responses (400, 404, 500)
+
+---
+
+#### Step 2: Implement Client Functions (1 day)
+
+**File:** `client/src/lib/umf.client.ts`
+
+Replace the TODO placeholders with actual `fetch` calls:
+
+```typescript
+export async function fetchUmfSnapshot(): Promise<UmfSnapshot> {
+  const response = await fetch('/api/umf/snapshot');
+  if (!response.ok) {
+    throw new Error(`Failed to fetch snapshot: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function fetchUmfMovers(limit = 10): Promise<UmfMover[]> {
+  const response = await fetch(`/api/umf/movers?limit=${limit}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch movers: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function fetchUmfBrief(date?: string): Promise<UmfBrief> {
+  const dateParam = date ? `?date=${date}` : '';
+  const response = await fetch(`/api/umf/brief${dateParam}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch brief: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function fetchUmfAlerts(options?: {
+  severity?: ('info' | 'warn' | 'high')[];
+  activeOnly?: boolean;
+}): Promise<UmfAlert[]> {
+  const params = new URLSearchParams();
+  if (options?.severity) {
+    params.set('severity', options.severity.join(','));
+  }
+  if (options?.activeOnly !== undefined) {
+    params.set('active', String(options.activeOnly));
+  }
+  
+  const response = await fetch(`/api/umf/alerts?${params}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch alerts: ${response.statusText}`);
+  }
+  return response.json();
+}
+```
+
+---
+
+#### Step 3: Update Frontend Hooks (1 day)
+
+**File:** `client/src/hooks/useUmf.ts`
+
+Replace Firestore queries with API client calls:
+
+**Before (Firestore):**
+```typescript
+import { db } from '@/lib/firebase';
+import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
+
+export function useUmfSnapshot() {
+  return useQuery({
+    queryKey: ['/umf/snapshot'],
+    queryFn: async () => {
+      const snapshot = await getDoc(doc(db, 'umf_snapshot_mock', 'current'));
+      // ... Firestore transformation logic
+    },
+    staleTime: 30000,
+  });
+}
+```
+
+**After (REST API):**
+```typescript
+import { 
+  fetchUmfSnapshot, 
+  fetchUmfMovers, 
+  fetchUmfBrief, 
+  fetchUmfAlerts 
+} from '@/lib/umf.client';
+
+export function useUmfSnapshot() {
+  return useQuery({
+    queryKey: ['/api/umf/snapshot'],
+    queryFn: fetchUmfSnapshot,
+    staleTime: 30000,
+    refetchInterval: 30000, // Auto-refresh every 30s
+  });
+}
+
+export function useUmfMovers() {
+  return useQuery({
+    queryKey: ['/api/umf/movers'],
+    queryFn: () => fetchUmfMovers(5), // 5 per direction
+    staleTime: 60000,
+  });
+}
+
+export function useUmfBrief() {
+  return useQuery({
+    queryKey: ['/api/umf/brief'],
+    queryFn: () => fetchUmfBrief(),
+    staleTime: 300000, // 5 minutes
+  });
+}
+
+export function useUmfAlerts() {
+  return useQuery({
+    queryKey: ['/api/umf/alerts'],
+    queryFn: () => fetchUmfAlerts({ activeOnly: true }),
+    staleTime: 60000,
+  });
+}
+```
+
+**Important:** Update all 4 hooks + 6 derived selectors.
+
+---
+
+#### Step 4: Remove Firestore Dependencies (1 day)
+
+1. Remove Firebase imports from `useUmf.ts`
+2. Remove Firestore query logic
+3. Optionally uninstall `firebase` package if not used elsewhere:
+   ```bash
+   npm uninstall firebase
+   ```
+
+---
+
+#### Step 5: Test & Deploy (2 days)
+
+**Testing Checklist:**
+- [ ] All endpoints return correct data
+- [ ] Cache headers present
+- [ ] Error states work (500, 404, 400)
+- [ ] Frontend loading states work
+- [ ] Auto-refresh works (snapshot every 30s)
+- [ ] Page loads < 2s
+- [ ] No console errors
+
+**Deployment:**
+1. Test on staging environment
+2. Monitor API rate limits
+3. Set up error tracking
+4. Configure cache invalidation
+
+---
+
+### 17.3 Market Data Provider Recommendations
+
+**Hybrid Approach (Recommended):**
+- **CoinGecko** (free tier): Crypto data (BTC, ETH, SOL, etc.)
+- **Alpha Vantage** (free tier): Indices (SPX, NDX), forex (DXY)
+- **Trading Economics** (paid): Commodities (GOLD, WTI)
+
+**Implementation:**
+```typescript
+const snapshot = await Promise.all([
+  coinGecko.getCrypto(['bitcoin', 'ethereum', 'solana']),
+  alphaVantage.getIndices(['SPX', 'NDX']),
+  alphaVantage.getForex(['DXY']),
+  tradingEconomics.getCommodities(['GOLD', 'WTI']),
+]);
+```
+
+---
+
+### 17.4 Database Schema (Future - Optional)
+
+If storing briefs/alerts in database:
+
+```sql
+-- Morning Intelligence Briefs
+CREATE TABLE umf_briefs (
+  id SERIAL PRIMARY KEY,
+  date DATE NOT NULL UNIQUE,
+  headline TEXT NOT NULL,
+  bullets JSONB NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Market Alerts
+CREATE TABLE umf_alerts (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  severity VARCHAR(10) NOT NULL CHECK (severity IN ('info', 'warn', 'high')),
+  title VARCHAR(100) NOT NULL,
+  body TEXT NOT NULL,
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_alerts_active ON umf_alerts(active, created_at DESC);
+```
+
+---
+
+### 17.5 Migration Timeline
+
+| Phase | Tasks | Time |
+|-------|-------|------|
+| Backend | Implement 4 endpoints + caching | 2-3 days |
+| Client | Implement 4 client functions | 1 day |
+| Hooks | Update 4 hooks + selectors | 1 day |
+| Testing | E2E tests + QA checklist | 2 days |
+| Cleanup | Remove Firestore, docs | 1 day |
+| **Total** | | **7-8 days** |
+
+---
+
+### 17.6 Reference Files
+
+- **API Spec:** `server/openapi/umf.draft.yaml` (Complete OpenAPI 3.0 specification)
+- **Client Stubs:** `client/src/lib/umf.client.ts` (4 TODO functions)
+- **Server Stubs:** `server/routes.ts` (4 commented endpoints, lines 316-425)
+- **Schema:** `shared/schema.ts` (UmfAsset, UmfSnapshot, UmfMover, UmfBrief, UmfAlert)
+- **QA Checklist:** `qa/UMF-UI-Manual.md`
+
+---
+
+**End of Document**

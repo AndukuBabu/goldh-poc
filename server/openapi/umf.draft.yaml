@@ -1,0 +1,481 @@
+openapi: 3.0.3
+info:
+  title: GOLDH UMF API
+  description: |
+    Universal Market Financials (UMF) REST API specification.
+    
+    This API will replace Firestore queries for production deployment.
+    
+    **Current Status:** DRAFT - Not yet implemented
+    **MVP Phase:** Using Firestore mock data
+    **Migration Target:** Q1 2026
+  version: 1.0.0-draft
+  contact:
+    name: GOLDH Development Team
+    email: dev@goldh.io
+
+servers:
+  - url: http://localhost:5000/api
+    description: Development server
+  - url: https://goldh.replit.app/api
+    description: Production server
+
+tags:
+  - name: snapshot
+    description: Market snapshot endpoints
+  - name: movers
+    description: Top movers endpoints
+  - name: brief
+    description: Morning intelligence brief endpoints
+  - name: alerts
+    description: Market alerts endpoints
+
+paths:
+  /umf/snapshot:
+    get:
+      summary: Get market snapshot
+      description: |
+        Returns current market snapshot containing all tracked assets with latest prices,
+        24h changes, volume, and market cap data.
+        
+        Includes:
+        - Top-20 cryptocurrencies (BTC, ETH, SOL, XRP, etc.)
+        - Major indices (SPX, NDX, DAX, etc.)
+        - Forex (DXY, EUR/USD, etc.)
+        - Commodities (GOLD, WTI, etc.)
+        - Select ETFs (SPY, QQQ, etc.)
+        
+        **Cache:** 30 seconds
+      operationId: getUmfSnapshot
+      tags:
+        - snapshot
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UmfSnapshot'
+              example:
+                timestamp_utc: "2025-11-07T14:30:00.000Z"
+                assets:
+                  - id: "btc-usd"
+                    symbol: "BTC"
+                    name: "Bitcoin"
+                    class: "crypto"
+                    price: 45678.90
+                    changePct24h: 3.45
+                    volume24h: 28500000000
+                    marketCap: 890000000000
+                    updatedAt_utc: "2025-11-07T14:30:00.000Z"
+                  - id: "spy"
+                    symbol: "SPY"
+                    name: "S&P 500 ETF"
+                    class: "etf"
+                    price: 456.78
+                    changePct24h: 0.85
+                    volume24h: 85000000
+                    marketCap: null
+                    updatedAt_utc: "2025-11-07T14:30:00.000Z"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /umf/movers:
+    get:
+      summary: Get top market movers
+      description: |
+        Returns top gainers and losers based on 24h percentage change.
+        
+        Default behavior:
+        - Returns top 5 gainers and top 5 losers
+        - Sorted by absolute percentage change (highest first)
+        - Includes price, change %, and basic asset info
+        
+        **Cache:** 1 minute
+      operationId: getUmfMovers
+      tags:
+        - movers
+      parameters:
+        - name: limit
+          in: query
+          description: Number of movers to return per direction (gainers/losers)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 5
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UmfMover'
+              example:
+                - symbol: "BTC"
+                  name: "Bitcoin"
+                  class: "crypto"
+                  direction: "gainer"
+                  changePct24h: 8.45
+                  price: 47200.00
+                  updatedAt_utc: "2025-11-07T14:30:00.000Z"
+                - symbol: "ETH"
+                  name: "Ethereum"
+                  class: "crypto"
+                  direction: "loser"
+                  changePct24h: -4.23
+                  price: 2340.50
+                  updatedAt_utc: "2025-11-07T14:30:00.000Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /umf/brief:
+    get:
+      summary: Get morning intelligence brief
+      description: |
+        Returns AI-generated daily market intelligence brief with headline and key insights.
+        
+        Brief includes:
+        - Headline summarizing overall market sentiment
+        - 3-5 bullet points explaining "why markets moved"
+        - Date of brief generation
+        - Focus on narrative and context
+        
+        **Cache:** 5 minutes (briefs are daily, rarely change)
+      operationId: getUmfBrief
+      tags:
+        - brief
+      parameters:
+        - name: date
+          in: query
+          description: Date for brief in YYYY-MM-DD format (defaults to today)
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2025-11-07"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UmfBrief'
+              example:
+                date_utc: "2025-11-07T00:00:00.000Z"
+                headline: "Markets rally on strong tech earnings and easing inflation concerns"
+                bullets:
+                  - "Tech stocks led gains with NASDAQ up 2.1% after strong quarterly results from major companies"
+                  - "CPI data came in below expectations, supporting Fed rate cut speculation"
+                  - "Bitcoin surged 5% as institutional adoption continues to accelerate"
+                  - "Oil prices stabilized after volatile week, settling near $82/barrel"
+                  - "Dollar index weakened slightly as investors rotate into risk assets"
+        '404':
+          description: Brief not found for specified date
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /umf/alerts:
+    get:
+      summary: Get market alerts
+      description: |
+        Returns active market alerts filtered by severity and status.
+        
+        Alert types:
+        - **info**: General market information (blue)
+        - **warn**: Important market developments (yellow/orange)
+        - **high**: Critical market events (red)
+        
+        Default behavior:
+        - Returns only active alerts
+        - All severity levels included
+        - Sorted by timestamp (newest first)
+      operationId: getUmfAlerts
+      tags:
+        - alerts
+      parameters:
+        - name: severity
+          in: query
+          description: Filter by severity levels (comma-separated)
+          required: false
+          schema:
+            type: string
+            pattern: '^(info|warn|high)(,(info|warn|high))*$'
+            example: "warn,high"
+        - name: active
+          in: query
+          description: Filter by active status
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UmfAlert'
+              example:
+                - id: "alert-001"
+                  severity: "high"
+                  title: "Flash Crash Alert"
+                  body: "BTC dropped 8% in 15 minutes on high volume. Monitoring for stabilization."
+                  createdAt_utc: "2025-11-07T14:25:00.000Z"
+                - id: "alert-002"
+                  severity: "info"
+                  title: "Market Update"
+                  body: "SPX approaching all-time highs. Tech sector leading with +1.5% gains."
+                  createdAt_utc: "2025-11-07T14:20:00.000Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    UmfAsset:
+      type: object
+      required:
+        - id
+        - symbol
+        - name
+        - class
+        - price
+        - changePct24h
+        - volume24h
+        - marketCap
+        - updatedAt_utc
+      properties:
+        id:
+          type: string
+          description: Unique asset identifier (e.g., "btc-usd", "spy")
+          example: "btc-usd"
+        symbol:
+          type: string
+          description: Trading symbol/ticker (e.g., "BTC", "SPY", "GC=F")
+          example: "BTC"
+        name:
+          type: string
+          description: Full asset name
+          example: "Bitcoin"
+        class:
+          type: string
+          enum: [crypto, index, forex, commodity, etf]
+          description: Asset classification
+          example: "crypto"
+        price:
+          type: number
+          format: double
+          description: Current spot price in USD
+          minimum: 0
+          example: 45678.90
+        changePct24h:
+          type: number
+          format: double
+          description: 24-hour percentage change (e.g., 3.45 for +3.45%)
+          example: 3.45
+        volume24h:
+          type: number
+          format: double
+          nullable: true
+          description: 24-hour trading volume in USD (null for indices/forex)
+          example: 28500000000
+        marketCap:
+          type: number
+          format: double
+          nullable: true
+          description: Total market capitalization in USD (null for forex/commodities)
+          example: 890000000000
+        updatedAt_utc:
+          type: string
+          format: date-time
+          description: Last price update timestamp (ISO 8601 UTC)
+          example: "2025-11-07T14:30:00.000Z"
+
+    UmfSnapshot:
+      type: object
+      required:
+        - timestamp_utc
+        - assets
+      properties:
+        timestamp_utc:
+          type: string
+          format: date-time
+          description: Snapshot creation timestamp (ISO 8601 UTC)
+          example: "2025-11-07T14:30:00.000Z"
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/UmfAsset'
+          description: Array of all tracked assets
+          minItems: 1
+
+    UmfMover:
+      type: object
+      required:
+        - symbol
+        - name
+        - class
+        - direction
+        - changePct24h
+        - price
+        - updatedAt_utc
+      properties:
+        symbol:
+          type: string
+          description: Trading symbol
+          example: "BTC"
+        name:
+          type: string
+          description: Full asset name
+          example: "Bitcoin"
+        class:
+          type: string
+          enum: [crypto, index, forex, commodity, etf]
+          description: Asset classification
+          example: "crypto"
+        direction:
+          type: string
+          enum: [gainer, loser]
+          description: Movement direction
+          example: "gainer"
+        changePct24h:
+          type: number
+          format: double
+          description: 24-hour percentage change
+          example: 8.45
+        price:
+          type: number
+          format: double
+          description: Current spot price in USD
+          minimum: 0
+          example: 47200.00
+        updatedAt_utc:
+          type: string
+          format: date-time
+          description: Last update timestamp (ISO 8601 UTC)
+          example: "2025-11-07T14:30:00.000Z"
+
+    UmfBrief:
+      type: object
+      required:
+        - date_utc
+        - headline
+        - bullets
+      properties:
+        date_utc:
+          type: string
+          format: date-time
+          description: Brief date (ISO 8601 UTC, time set to 00:00:00)
+          example: "2025-11-07T00:00:00.000Z"
+        headline:
+          type: string
+          description: Main headline summarizing market sentiment
+          minLength: 10
+          maxLength: 200
+          example: "Markets rally on strong tech earnings and easing inflation concerns"
+        bullets:
+          type: array
+          items:
+            type: string
+          description: 3-5 key market drivers explaining movements
+          minItems: 3
+          maxItems: 5
+          example:
+            - "Tech stocks led gains with NASDAQ up 2.1%"
+            - "CPI data below expectations supports rate cut speculation"
+            - "Bitcoin surged 5% on institutional adoption news"
+
+    UmfAlert:
+      type: object
+      required:
+        - id
+        - severity
+        - title
+        - body
+        - createdAt_utc
+      properties:
+        id:
+          type: string
+          description: Unique alert identifier
+          example: "alert-001"
+        severity:
+          type: string
+          enum: [info, warn, high]
+          description: Alert severity level
+          example: "high"
+        title:
+          type: string
+          description: Alert title/headline
+          minLength: 5
+          maxLength: 100
+          example: "Flash Crash Alert"
+        body:
+          type: string
+          description: Alert body text with details
+          minLength: 10
+          maxLength: 500
+          example: "BTC dropped 8% in 15 minutes on high volume."
+        createdAt_utc:
+          type: string
+          format: date-time
+          description: Alert creation timestamp (ISO 8601 UTC)
+          example: "2025-11-07T14:25:00.000Z"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Failed to fetch market snapshot"
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Invalid query parameters"
+            details:
+              limit: "Must be between 1 and 50"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Failed to fetch market snapshot"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Session Token
+      description: Session-based authentication (optional for public endpoints)
+
+# Note: UMF endpoints are public and don't require authentication
+# Security can be added later for premium features
+security: []

@@ -310,6 +310,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   */
 
+  // ============================================================================
+  // UMF (Universal Market Financials) API Routes - FUTURE IMPLEMENTATION
+  // ============================================================================
+  // TODO: Implement these endpoints to replace Firestore queries
+  // See: server/openapi/umf.draft.yaml for API specification
+  // See: client/src/lib/umf.client.ts for client functions
+  
+  /**
+   * GET /api/umf/snapshot
+   * 
+   * Returns current market snapshot with all tracked assets
+   * Response: { timestamp_utc: string, assets: UmfAsset[] }
+   * 
+   * Implementation notes:
+   * - Fetch latest prices from market data provider (e.g., CoinGecko, Alpha Vantage)
+   * - Calculate 24h changes
+   * - Include crypto (BTC, ETH, SOL, etc.), indices (SPX, NDX), forex (DXY), commodities (GOLD, WTI)
+   * - Cache results for 30 seconds to reduce API calls
+   */
+  // app.get("/api/umf/snapshot", async (req: Request, res: Response) => {
+  //   try {
+  //     // TODO: Fetch from market data provider
+  //     // TODO: Transform to UmfSnapshot schema
+  //     // TODO: Return with proper caching headers
+  //     res.status(501).json({ error: "Not implemented yet" });
+  //   } catch (error) {
+  //     console.error("UMF snapshot error:", error);
+  //     res.status(500).json({ error: "Failed to fetch market snapshot" });
+  //   }
+  // });
+
+  /**
+   * GET /api/umf/movers
+   * 
+   * Returns top market movers (gainers and losers)
+   * Query params: ?limit=10 (default: 10, max: 50)
+   * Response: UmfMover[]
+   * 
+   * Implementation notes:
+   * - Calculate 24h percentage changes for all tracked assets
+   * - Sort by absolute percentage change
+   * - Return top N gainers and top N losers
+   * - Cache results for 1 minute
+   */
+  // app.get("/api/umf/movers", async (req: Request, res: Response) => {
+  //   try {
+  //     // const limit = Math.min(Number(req.query.limit) || 10, 50);
+  //     // TODO: Fetch from market data provider
+  //     // TODO: Calculate and sort by 24h change
+  //     // TODO: Return top gainers and losers
+  //     res.status(501).json({ error: "Not implemented yet" });
+  //   } catch (error) {
+  //     console.error("UMF movers error:", error);
+  //     res.status(500).json({ error: "Failed to fetch market movers" });
+  //   }
+  // });
+
+  /**
+   * GET /api/umf/brief
+   * 
+   * Returns daily morning intelligence brief
+   * Query params: ?date=YYYY-MM-DD (optional, defaults to today)
+   * Response: UmfBrief
+   * 
+   * Implementation notes:
+   * - Generate or fetch AI-generated market summary
+   * - Include headline and 3-5 key bullet points
+   * - Focus on "why markets moved" narrative
+   * - Cache results for 5 minutes (briefs don't change frequently)
+   */
+  // app.get("/api/umf/brief", async (req: Request, res: Response) => {
+  //   try {
+  //     // const date = req.query.date as string || new Date().toISOString().split('T')[0];
+  //     // TODO: Generate or fetch from AI service
+  //     // TODO: Return brief with proper date
+  //     res.status(501).json({ error: "Not implemented yet" });
+  //   } catch (error) {
+  //     console.error("UMF brief error:", error);
+  //     res.status(500).json({ error: "Failed to fetch market brief" });
+  //   }
+  // });
+
+  /**
+   * GET /api/umf/alerts
+   * 
+   * Returns active market alerts
+   * Query params: 
+   *   ?severity=info,warn,high (optional filter)
+   *   ?active=true (optional, defaults to true)
+   * Response: UmfAlert[]
+   * 
+   * Implementation notes:
+   * - Fetch from alerts database or monitoring service
+   * - Filter by severity level if requested
+   * - Return only active alerts by default
+   * - Include timestamp and severity-based styling hints
+   */
+  // app.get("/api/umf/alerts", async (req: Request, res: Response) => {
+  //   try {
+  //     // const severityFilter = req.query.severity ? String(req.query.severity).split(',') : undefined;
+  //     // const activeOnly = req.query.active !== 'false';
+  //     // TODO: Fetch from alerts database
+  //     // TODO: Filter by severity and active status
+  //     // TODO: Return sorted by timestamp (newest first)
+  //     res.status(501).json({ error: "Not implemented yet" });
+  //   } catch (error) {
+  //     console.error("UMF alerts error:", error);
+  //     res.status(500).json({ error: "Failed to fetch market alerts" });
+  //   }
+  // });
+
   const httpServer = createServer(app);
 
   return httpServer;
