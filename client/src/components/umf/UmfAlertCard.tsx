@@ -8,6 +8,9 @@
  * 
  * Shows: title, body, timestamp, dismissible close button
  * 
+ * Theming: Black-gold premium aesthetic (#0f0f0f, #1a1a1a, #2a2a2a)
+ * Accessibility: Icon-enhanced badges, ARIA live regions, semantic colors
+ * 
  * @see client/src/hooks/useUmf.ts - useUmfAlerts() hook
  */
 
@@ -26,6 +29,7 @@ interface UmfAlertCardProps {
 /**
  * Alert severity configuration
  * Maps severity levels to colors, icons, and labels
+ * Icons ensure accessibility (not color-only)
  */
 const SEVERITY_CONFIG = {
   info: {
@@ -35,6 +39,7 @@ const SEVERITY_CONFIG = {
     borderColor: 'border-blue-500/30',
     textColor: 'text-blue-500',
     iconBgColor: 'bg-blue-500/20',
+    ariaLabel: 'Information alert',
   },
   warn: {
     icon: AlertTriangle,
@@ -43,6 +48,7 @@ const SEVERITY_CONFIG = {
     borderColor: 'border-yellow-500/30',
     textColor: 'text-yellow-500',
     iconBgColor: 'bg-yellow-500/20',
+    ariaLabel: 'Warning alert',
   },
   high: {
     icon: AlertCircle,
@@ -51,6 +57,7 @@ const SEVERITY_CONFIG = {
     borderColor: 'border-red-500/30',
     textColor: 'text-red-500',
     iconBgColor: 'bg-red-500/20',
+    ariaLabel: 'Critical alert',
   },
 } as const;
 
@@ -69,23 +76,24 @@ export function UmfAlertCard({ alert, onDismiss, className }: UmfAlertCardProps)
       className={`${config.bgColor} border ${config.borderColor} shadow-md ${className || ''}`}
       role="alert"
       aria-live="polite"
+      aria-label={config.ariaLabel}
       aria-labelledby={`alert-title-${alert.id}`}
       aria-describedby={`alert-body-${alert.id}`}
       data-testid={`umf-alert-${alert.id}`}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          {/* Severity Icon */}
+          {/* Severity Icon - provides visual indicator beyond color */}
           <div 
             className={`w-10 h-10 rounded-full ${config.iconBgColor} flex items-center justify-center flex-shrink-0`}
             aria-hidden="true"
           >
-            <Icon className={`w-5 h-5 ${config.textColor}`} />
+            <Icon className={`w-5 h-5 ${config.textColor}`} aria-label={`${config.label} icon`} />
           </div>
 
           {/* Alert Content */}
           <div className="flex-1 min-w-0">
-            {/* Header: Title + Severity Badge */}
+            {/* Header: Title + Severity Badge with icon */}
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3
@@ -97,44 +105,46 @@ export function UmfAlertCard({ alert, onDismiss, className }: UmfAlertCardProps)
                 </h3>
                 <Badge
                   variant="outline"
-                  className={`text-xs ${config.bgColor} ${config.borderColor} ${config.textColor}`}
+                  className={`text-xs ${config.bgColor} ${config.borderColor} ${config.textColor} flex items-center gap-1`}
                   data-testid={`alert-severity-${alert.id}`}
+                  aria-label={`${config.label} severity level`}
                 >
-                  {config.label}
+                  <Icon className="w-3 h-3" aria-hidden="true" />
+                  <span>{config.label}</span>
                 </Badge>
               </div>
 
-              {/* Dismiss Button */}
+              {/* Dismiss Button (if handler provided) */}
               {onDismiss && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 hover:bg-background/20"
                   onClick={() => onDismiss(alert.id)}
+                  className="h-6 w-6 flex-shrink-0 hover:bg-[#2a2a2a]"
                   aria-label={`Dismiss ${config.label.toLowerCase()} alert`}
                   data-testid={`alert-dismiss-${alert.id}`}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" aria-label="Close icon" />
                 </Button>
               )}
             </div>
 
-            {/* Body Text */}
+            {/* Alert Body */}
             <p
               id={`alert-body-${alert.id}`}
-              className="text-sm text-muted-foreground mb-2"
+              className="text-sm text-muted-foreground leading-relaxed mb-2"
               data-testid={`alert-body-${alert.id}`}
             >
               {alert.body}
             </p>
 
             {/* Timestamp */}
-            <div 
-              className="text-xs text-muted-foreground flex items-center gap-1"
-              data-testid={`alert-time-${alert.id}`}
-            >
-              <span className={`w-1 h-1 rounded-full ${config.bgColor}`} aria-hidden="true" />
-              <time dateTime={alert.createdAt_utc}>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="font-medium">Posted at</span>
+              <time 
+                dateTime={alert.createdAt_utc}
+                data-testid={`alert-time-${alert.id}`}
+              >
                 {alertTime}
               </time>
             </div>
@@ -146,8 +156,9 @@ export function UmfAlertCard({ alert, onDismiss, className }: UmfAlertCardProps)
 }
 
 /**
- * Alert List Component
- * Displays multiple alerts in a stacked layout
+ * UMF Alert List Component
+ * 
+ * Renders a list of market alerts with proper spacing and ARIA region
  */
 interface UmfAlertListProps {
   alerts: UmfAlert[];
@@ -162,9 +173,9 @@ export function UmfAlertList({ alerts, onDismiss, className }: UmfAlertListProps
 
   return (
     <div 
-      className={`space-y-3 ${className || ''}`}
+      className={`space-y-4 ${className || ''}`}
       role="region"
-      aria-label="Market alerts"
+      aria-label="Market alerts section"
       data-testid="umf-alert-list"
     >
       {alerts.map((alert) => (

@@ -8,6 +8,9 @@
  * - "Why it moved" narrative tone
  * - Copy to clipboard functionality
  * 
+ * Theming: Black-gold premium aesthetic (#0f0f0f, #1a1a1a, #C7AE6A)
+ * Accessibility: Full ARIA support, aria-live updates, keyboard navigation
+ * 
  * @see client/src/hooks/useUmf.ts - useUmfBrief() hook
  */
 
@@ -73,16 +76,19 @@ export function UmfMorningBrief({ brief, className }: UmfMorningBriefProps) {
 
   return (
     <Card 
-      className={`bg-[#111] border-[#C7AE6A]/20 shadow-lg ${className || ''}`}
+      className={`bg-[#0f0f0f] border-[#C7AE6A]/20 shadow-lg ${className || ''}`}
       data-testid="umf-morning-brief"
-      role="article"
-      aria-label="Morning market intelligence brief"
+      role="region"
+      aria-label="Morning market intelligence brief section"
     >
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#C7AE6A]/20 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-5 h-5 text-[#C7AE6A]" aria-hidden="true" />
+            <div 
+              className="w-10 h-10 rounded-full bg-[#C7AE6A]/20 flex items-center justify-center flex-shrink-0"
+              aria-hidden="true"
+            >
+              <TrendingUp className="w-5 h-5 text-[#C7AE6A]" aria-label="Trending up icon" />
             </div>
             <CardTitle className="text-xl text-[#C7AE6A]">
               Morning Intelligence
@@ -95,8 +101,8 @@ export function UmfMorningBrief({ brief, className }: UmfMorningBriefProps) {
               className="bg-[#C7AE6A]/10 border-[#C7AE6A]/30 text-[#C7AE6A] text-xs"
               data-testid="brief-date-badge"
             >
-              <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
-              {briefDate}
+              <Clock className="w-3 h-3 mr-1" aria-label="Calendar icon" />
+              <span>{briefDate}</span>
             </Badge>
             
             <Button
@@ -109,13 +115,13 @@ export function UmfMorningBrief({ brief, className }: UmfMorningBriefProps) {
             >
               {copied ? (
                 <>
-                  <Check className="w-3 h-3 mr-1" />
-                  Copied
+                  <Check className="w-3 h-3 mr-1" aria-label="Checkmark icon" />
+                  <span>Copied</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3 h-3 mr-1" />
-                  Copy Brief
+                  <Copy className="w-3 h-3 mr-1" aria-label="Copy icon" />
+                  <span>Copy Brief</span>
                 </>
               )}
             </Button>
@@ -124,10 +130,12 @@ export function UmfMorningBrief({ brief, className }: UmfMorningBriefProps) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Headline - "Why it moved" summary */}
+        {/* Headline - "Why it moved" summary with aria-live for dynamic updates */}
         <div>
           <h3 
             className="text-base font-semibold text-foreground leading-relaxed"
+            aria-live="polite"
+            aria-atomic="true"
             data-testid="brief-headline"
           >
             {brief.headline}

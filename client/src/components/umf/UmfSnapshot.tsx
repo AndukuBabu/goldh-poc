@@ -10,6 +10,9 @@
  * Each tile shows: symbol, price, 24h %, sparkline placeholder
  * Enhanced with hover elevation and detailed tooltips with timestamps
  * 
+ * Theming: Black-gold premium aesthetic (#0f0f0f, #1a1a1a, #2a2a2a, #C7AE6A)
+ * Accessibility: Keyboard navigation, ARIA labels, icon-enhanced badges
+ * 
  * @see client/src/hooks/useUmf.ts - useUmfSnapshot() hook
  */
 
@@ -17,7 +20,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TrendingUp, TrendingDown, Minus, BarChart3, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, BarChart3, Clock, ArrowUp, ArrowDown } from "lucide-react";
 import type { UmfAsset } from "@shared/schema";
 
 interface UmfSnapshotProps {
@@ -44,10 +47,10 @@ export function UmfSnapshot({ assets, className }: UmfSnapshotProps) {
 
   return (
     <Card 
-      className={`bg-[#111] border-[#2a2a2a] shadow-lg ${className || ''}`}
+      className={`bg-[#0f0f0f] border-[#2a2a2a] shadow-lg ${className || ''}`}
       data-testid="umf-snapshot"
       role="region"
-      aria-label="Market snapshot for key assets"
+      aria-label="Market snapshot section showing key asset prices"
     >
       <CardHeader>
         <CardTitle className="text-lg text-foreground">
@@ -59,7 +62,7 @@ export function UmfSnapshot({ assets, className }: UmfSnapshotProps) {
         <div 
           className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3"
           role="list"
-          aria-label="Key asset prices"
+          aria-label="Key asset prices and changes"
         >
           {sortedAssets.map((asset) => (
             <AssetTile key={asset.id} asset={asset} />
@@ -86,8 +89,9 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
   const isPositive = asset.changePct24h >= 0;
   const isFlat = Math.abs(asset.changePct24h) < 0.01;
   
-  // Get appropriate icon
+  // Get appropriate icons
   const TrendIcon = isFlat ? Minus : isPositive ? TrendingUp : TrendingDown;
+  const ArrowIcon = isPositive ? ArrowUp : ArrowDown;
   
   // Get asset class display name
   const assetClassLabel = {
@@ -140,13 +144,13 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
     <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
       <TooltipTrigger asChild>
         <div
-          className="p-3 rounded-lg bg-[#0a0a0a] border border-[#2a2a2a] hover-elevate active-elevate-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C7AE6A]/50"
+          className="p-3 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] hover-elevate active-elevate-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C7AE6A]/50"
           role="listitem"
           tabIndex={0}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          aria-label={`${asset.name}, price ${asset.price}, ${isPositive ? 'up' : 'down'} ${Math.abs(asset.changePct24h)}% in 24 hours. Press Enter to view details.`}
+          aria-label={`${asset.name}, ${assetClassLabel}, price ${asset.price} dollars, ${isPositive ? 'up' : 'down'} ${Math.abs(asset.changePct24h)} percent in 24 hours. Press Enter to view details.`}
           data-testid={`snapshot-tile-${asset.symbol}`}
         >
           {/* Header: Symbol + Asset Class Badge */}
@@ -179,7 +183,7 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
             </div>
           </div>
 
-          {/* 24h Change */}
+          {/* 24h Change - Icon-enhanced badge for accessibility */}
           <div className="flex items-center justify-between">
             <div 
               className={`flex items-center gap-1 text-sm font-medium ${
@@ -191,7 +195,8 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
               }`}
               data-testid={`snapshot-change-${asset.symbol}`}
             >
-              <TrendIcon className="w-3 h-3" aria-hidden="true" />
+              <TrendIcon className="w-3 h-3" aria-label={isPositive ? 'Trending up' : isFlat ? 'No change' : 'Trending down'} />
+              <ArrowIcon className="w-3 h-3" aria-label={isPositive ? 'Up arrow' : 'Down arrow'} />
               <span>
                 {isPositive && !isFlat ? '+' : ''}
                 {asset.changePct24h.toFixed(2)}%
@@ -204,7 +209,7 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
               aria-hidden="true"
               title="Sparkline chart (placeholder)"
             >
-              <BarChart3 className="w-4 h-4 text-muted-foreground" />
+              <BarChart3 className="w-4 h-4 text-muted-foreground" aria-label="Chart icon" />
             </div>
           </div>
         </div>
@@ -212,7 +217,8 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
       
       <TooltipContent 
         side="top" 
-        className="bg-[#0a0a0a] border-[#2a2a2a] max-w-xs"
+        className="bg-[#1a1a1a] border-[#2a2a2a] max-w-xs"
+        role="tooltip"
       >
         <div className="space-y-2">
           <div>
@@ -233,11 +239,11 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
           
           <div className="pt-2 border-t border-[#2a2a2a] space-y-1">
             <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-              <Clock className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <Clock className="w-3 h-3 mt-0.5 flex-shrink-0" aria-label="Clock icon" />
               <div className="space-y-0.5">
                 <div className="font-medium">Last Updated:</div>
-                <div>UTC: {lastUpdateUTC}</div>
-                <div>Local: {lastUpdateLocal}</div>
+                <div><span className="font-medium">UTC:</span> {lastUpdateUTC}</div>
+                <div><span className="font-medium">Local:</span> {lastUpdateLocal}</div>
               </div>
             </div>
           </div>

@@ -12,7 +12,13 @@ Preferred communication style: Simple, everyday language.
 - **Framework & Routing**: React with TypeScript, Wouter for routing, Vite for bundling.
 - **UI Component System**: shadcn/ui (New York style), Radix UI primitives, Tailwind CSS with custom design tokens.
 - **State Management**: TanStack Query for server state, React Context API for authentication, local component state with React hooks.
-- **Design System**: Black-gold color palette (`#C7AE6A`, `#d5c28f`, `#b99a45`, `#e3d6b4` on dark backgrounds like `#1a1a1a`, `#000000`), professional fintech aesthetic, responsive design, custom spacing, elevation classes, and enhanced visual polish with shadows and gradients. Logo integrated with blend modes and gold glow effects.
+- **Design System**: Black-gold color palette with premium fintech aesthetic:
+  - Backgrounds: `#0f0f0f` (darkest), `#1a1a1a` (cards/tiles), `#2a2a2a` (borders)
+  - Gold accents: `#C7AE6A` (primary), `#d5c28f`, `#b99a45`, `#e3d6b4`
+  - Icon-enhanced badges (not color-only for accessibility)
+  - Responsive design with custom spacing and elevation classes
+  - Enhanced visual polish with shadows, gradients, and gold glow effects
+  - Logo integrated with blend modes
 
 ### Backend Architecture
 - **Server Framework**: Express.js on Node.js with TypeScript and ESM modules.
@@ -118,6 +124,20 @@ Preferred communication style: Simple, everyday language.
   - Full keyboard navigation (Tab + Enter/Space) with visible focus rings
   - Hover elevation effects on all interactive elements
   - Mobile-responsive 2-column grid for snapshot tiles
+- **Theming & Visual Design**:
+  - Black-gold premium aesthetic (#0f0f0f, #1a1a1a, #2a2a2a backgrounds with #C7AE6A accents)
+  - Icon-enhanced badges for all status indicators (positive/negative changes show icons + colors)
+  - Consistent use of TrendingUp/TrendingDown/ArrowUp/ArrowDown icons alongside color coding
+  - No inline styles or display: table usage
+  - All data-testid attributes preserved for testing
+- **Accessibility (WCAG 2.1 AA)**: 
+  - Full keyboard support with Tab navigation and Enter/Space activation
+  - ARIA regions (role="region") with descriptive labels on all sections
+  - aria-live="polite" on dynamic content (morning brief headline, alerts)
+  - Comprehensive aria-labels on interactive elements and asset tiles
+  - Icon-enhanced badges ensure information not conveyed by color alone
+  - Focus indicators with gold rings (#C7AE6A) for keyboard visibility
+  - Screen reader friendly with proper semantic structure (main, header, section elements)
+  - Tooltips accessible via keyboard focus
 - **Performance**: First paint <2s target, optimized caching (30s for prices, 5min for briefs)
-- **Accessibility**: Full keyboard support, ARIA labels, focus indicators (gold rings), screen reader friendly, tooltips on focus
 - **Future Migration**: Designed for seamless API migration from Firestore to `/api/umf/*` endpoints without UI refactor

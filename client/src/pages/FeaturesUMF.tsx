@@ -51,7 +51,7 @@ export default function FeaturesUMF() {
     <div className="min-h-screen bg-background" data-testid="umf-page">
       <Header />
       
-      <div className="pt-24 pb-16 px-6">
+      <main className="pt-24 pb-16 px-6" role="main" aria-label="Universal Market Financials page">
         <div className="container mx-auto max-w-7xl">
           {/* Back Button */}
           <Button 
@@ -59,17 +59,21 @@ export default function FeaturesUMF() {
             onClick={() => setLocation("/features")}
             className="mb-6"
             data-testid="button-back-features"
+            aria-label="Navigate back to features page"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Features
+            <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+            <span>Back to Features</span>
           </Button>
 
           {/* Page Hero */}
-          <div className="mb-8 space-y-4">
+          <header className="mb-8 space-y-4" role="banner">
             <div className="flex items-center gap-4 flex-wrap">
               {/* Icon */}
-              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-[#C7AE6A]/20 to-[#C7AE6A]/5 border-2 border-[#C7AE6A]/30 flex items-center justify-center">
-                <TrendingUp className="w-8 h-8 text-[#C7AE6A]" />
+              <div 
+                className="w-16 h-16 rounded-lg bg-gradient-to-br from-[#C7AE6A]/20 to-[#C7AE6A]/5 border-2 border-[#C7AE6A]/30 flex items-center justify-center"
+                aria-hidden="true"
+              >
+                <TrendingUp className="w-8 h-8 text-[#C7AE6A]" aria-label="Trending up icon" />
               </div>
               
               {/* Title & Badge */}
@@ -82,9 +86,10 @@ export default function FeaturesUMF() {
                     variant="outline" 
                     className="text-xs bg-[#C7AE6A]/10 border-[#C7AE6A]/30 text-[#C7AE6A]"
                     data-testid="badge-mock-data"
+                    aria-label="Using UI mock data"
                   >
-                    <Database className="w-3 h-3 mr-1" />
-                    UI Mock Data
+                    <Database className="w-3 h-3 mr-1" aria-hidden="true" />
+                    <span>UI Mock Data</span>
                   </Badge>
                 </div>
                 <p className="text-muted-foreground text-lg mt-2">
@@ -99,14 +104,19 @@ export default function FeaturesUMF() {
               and commodities (Gold, Oil) in one unified dashboard. Get instant insights with 
               AI-generated market briefs and real-time alerts.
             </p>
-          </div>
+          </header>
 
           {/* Error State */}
           {hasError && !isLoading && (
-            <Card className="bg-red-500/10 border-red-500/30 mb-6">
+            <Card 
+              className="bg-red-500/10 border-red-500/30 mb-6"
+              role="alert"
+              aria-live="assertive"
+              aria-label="Error loading market data"
+            >
               <CardContent className="p-6">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" aria-label="Error icon" />
                   <div>
                     <h3 className="text-sm font-semibold text-red-500 mb-1">
                       Failed to Load Market Data
@@ -193,7 +203,7 @@ export default function FeaturesUMF() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

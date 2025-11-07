@@ -8,6 +8,9 @@
  * Each entry shows: symbol, name, 24h % badge, price
  * Enhanced with clickable rows that open detail drawer
  * 
+ * Theming: Black-gold premium aesthetic (#0f0f0f, #1a1a1a, #2a2a2a, #C7AE6A)
+ * Accessibility: Icon-enhanced badges, keyboard navigation, ARIA labels
+ * 
  * @see client/src/hooks/useUmf.ts - useUmfMovers() hook
  */
 
@@ -17,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { TrendingUp, TrendingDown, Clock, BarChart3, X } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, BarChart3, X, ArrowUp, ArrowDown, Circle } from "lucide-react";
 import type { UmfMover } from "@shared/schema";
 
 interface UmfTopMoversProps {
@@ -47,10 +50,10 @@ export function UmfTopMovers({ movers, className }: UmfTopMoversProps) {
   return (
     <>
       <Card 
-        className={`bg-[#111] border-[#2a2a2a] shadow-lg ${className || ''}`}
+        className={`bg-[#0f0f0f] border-[#2a2a2a] shadow-lg ${className || ''}`}
         data-testid="umf-top-movers"
         role="region"
-        aria-label="Top market movers - gainers and losers"
+        aria-label="Top market movers section showing gainers and losers"
       >
         <CardHeader>
           <CardTitle className="text-lg text-foreground">
@@ -61,11 +64,12 @@ export function UmfTopMovers({ movers, className }: UmfTopMoversProps) {
         <CardContent className="space-y-6">
           {/* Gainers Section */}
           <section 
+            role="region"
             aria-labelledby="gainers-heading"
             data-testid="movers-gainers-section"
           >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-green-500" aria-hidden="true" />
+              <Circle className="w-2 h-2 fill-green-500 text-green-500" aria-label="Green circle indicator" />
               <h3 
                 id="gainers-heading" 
                 className="text-sm font-semibold text-green-500"
@@ -96,11 +100,12 @@ export function UmfTopMovers({ movers, className }: UmfTopMoversProps) {
 
           {/* Losers Section */}
           <section 
+            role="region"
             aria-labelledby="losers-heading"
             data-testid="movers-losers-section"
           >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
+              <Circle className="w-2 h-2 fill-red-500 text-red-500" aria-label="Red circle indicator" />
               <h3 
                 id="losers-heading" 
                 className="text-sm font-semibold text-red-500"
@@ -167,12 +172,12 @@ function MoverItem({ mover, type, onClick }: MoverItemProps) {
 
   return (
     <div
-      className="flex items-center justify-between p-3 rounded-md bg-[#0a0a0a] border border-[#2a2a2a] hover-elevate active-elevate-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C7AE6A]/50"
+      className="flex items-center justify-between p-3 rounded-md bg-[#1a1a1a] border border-[#2a2a2a] hover-elevate active-elevate-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C7AE6A]/50"
       role="button"
       tabIndex={0}
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      aria-label={`${mover.name}, ${isGainer ? 'up' : 'down'} ${Math.abs(mover.changePct24h)}% at ${mover.price}. Press Enter to view details.`}
+      aria-label={`${mover.name}, ${isGainer ? 'up' : 'down'} ${Math.abs(mover.changePct24h)} percent at ${mover.price} dollars. Press Enter to view details.`}
       data-testid={`mover-${type}-${mover.symbol}`}
     >
       {/* Left: Symbol + Name */}
@@ -185,9 +190,9 @@ function MoverItem({ mover, type, onClick }: MoverItemProps) {
             {mover.symbol}
           </span>
           {isGainer ? (
-            <TrendingUp className="w-3 h-3 text-green-500" aria-hidden="true" />
+            <TrendingUp className="w-3 h-3 text-green-500" aria-label="Trending up icon" />
           ) : (
-            <TrendingDown className="w-3 h-3 text-red-500" aria-hidden="true" />
+            <TrendingDown className="w-3 h-3 text-red-500" aria-label="Trending down icon" />
           )}
         </div>
         <span className="text-xs text-muted-foreground truncate">
@@ -195,7 +200,7 @@ function MoverItem({ mover, type, onClick }: MoverItemProps) {
         </span>
       </div>
 
-      {/* Right: Price + Change Badge */}
+      {/* Right: Price + Change Badge with icons */}
       <div className="flex flex-col items-end gap-1 flex-shrink-0">
         <span 
           className="text-sm font-mono text-foreground"
@@ -208,11 +213,18 @@ function MoverItem({ mover, type, onClick }: MoverItemProps) {
         </span>
         <Badge 
           variant="outline"
-          className={`text-xs font-bold ${badgeBg} ${badgeBorder} ${changeColor}`}
+          className={`text-xs font-bold ${badgeBg} ${badgeBorder} ${changeColor} flex items-center gap-1`}
           data-testid={`mover-change-${mover.symbol}`}
         >
-          {isGainer ? '+' : ''}
-          {mover.changePct24h.toFixed(2)}%
+          {isGainer ? (
+            <ArrowUp className="w-3 h-3" aria-label="Up arrow icon" />
+          ) : (
+            <ArrowDown className="w-3 h-3" aria-label="Down arrow icon" />
+          )}
+          <span>
+            {isGainer ? '+' : ''}
+            {mover.changePct24h.toFixed(2)}%
+          </span>
         </Badge>
       </div>
     </div>
@@ -281,15 +293,17 @@ function MoverDetailSheet({ mover, open, onOpenChange }: MoverDetailSheetProps) 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
-        className="bg-[#111] border-[#2a2a2a] w-full sm:max-w-lg"
+        className="bg-[#0f0f0f] border-[#2a2a2a] w-full sm:max-w-lg"
+        role="dialog"
+        aria-label={`${mover.name} details`}
         data-testid={`mover-detail-sheet-${mover.symbol}`}
       >
         <SheetHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <SheetTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                {mover.symbol}
-                <TrendIcon className={`w-6 h-6 ${changeColor}`} />
+                <span>{mover.symbol}</span>
+                <TrendIcon className={`w-6 h-6 ${changeColor}`} aria-label={isGainer ? 'Trending up' : 'Trending down'} />
               </SheetTitle>
               <SheetDescription className="text-base text-muted-foreground mt-1">
                 {mover.name}
@@ -300,7 +314,7 @@ function MoverDetailSheet({ mover, open, onOpenChange }: MoverDetailSheetProps) 
 
         <div className="mt-6 space-y-6">
           {/* Price & Change Card */}
-          <Card className="bg-[#0a0a0a] border-[#2a2a2a]">
+          <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
             <CardContent className="p-4">
               <div className="space-y-3">
                 <div>
@@ -316,10 +330,17 @@ function MoverDetailSheet({ mover, open, onOpenChange }: MoverDetailSheetProps) 
                 <div className="flex items-center gap-2">
                   <Badge 
                     variant="outline"
-                    className={`text-base font-bold ${isGainer ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'} ${changeColor}`}
+                    className={`text-base font-bold ${isGainer ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'} ${changeColor} flex items-center gap-1.5`}
                   >
-                    {isGainer ? '+' : ''}
-                    {mover.changePct24h.toFixed(2)}%
+                    {isGainer ? (
+                      <ArrowUp className="w-4 h-4" aria-label="Up arrow" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4" aria-label="Down arrow" />
+                    )}
+                    <span>
+                      {isGainer ? '+' : ''}
+                      {mover.changePct24h.toFixed(2)}%
+                    </span>
                   </Badge>
                   <span className="text-sm text-muted-foreground">24h Change</span>
                 </div>
@@ -372,8 +393,8 @@ function MoverDetailSheet({ mover, open, onOpenChange }: MoverDetailSheetProps) 
             {/* Last Update */}
             <div>
               <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Last Updated
+                <Clock className="w-4 h-4" aria-label="Clock icon" />
+                <span>Last Updated</span>
               </h3>
               <div className="space-y-1 text-xs text-muted-foreground">
                 <div>
@@ -387,9 +408,9 @@ function MoverDetailSheet({ mover, open, onOpenChange }: MoverDetailSheetProps) 
 
             {/* Sparkline Placeholder */}
             <div className="pt-4">
-              <div className="h-32 rounded-lg bg-[#0a0a0a] border border-[#2a2a2a] flex items-center justify-center">
+              <div className="h-32 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center">
                 <div className="text-center text-muted-foreground">
-                  <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                  <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-40" aria-label="Chart icon" />
                   <p className="text-xs">Price chart coming soon</p>
                 </div>
               </div>
