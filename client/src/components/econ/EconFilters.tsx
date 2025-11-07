@@ -1,7 +1,7 @@
 /**
  * Economic Calendar Filters
- * Multi-select filters for Region, Category, Importance, and Date Range
- * Sticky on scroll, mobile collapsible
+ * Multi-select filters for Region, Category, Importance, and Status
+ * Sticky on scroll, mobile collapsible, fully accessible
  */
 
 import { useState } from "react";
@@ -81,7 +81,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-primary" aria-hidden="true" />
-            <CardTitle className="text-lg">Filter Events</CardTitle>
+            <CardTitle className="text-lg text-foreground">Filter Events</CardTitle>
             {activeFilterCount > 0 && (
               <Badge 
                 variant="default" 
@@ -99,7 +99,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
                 variant="ghost"
                 size="sm"
                 onClick={clearAllFilters}
-                className="text-sm h-8"
+                className="text-sm h-8 text-foreground"
                 data-testid="button-clear-filters"
                 aria-label="Clear all filters"
               >
@@ -141,20 +141,23 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
               role="group"
               aria-labelledby="filter-region-label"
             >
-              {ECON_COUNTRIES.map((country) => (
-                <Button
-                  key={country}
-                  variant={(filters.country || []).includes(country) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleCountry(country)}
-                  className="h-8"
-                  data-testid={`filter-country-${country.toLowerCase()}`}
-                  aria-label={`Filter by ${ECON_COUNTRY_LABELS[country]}`}
-                  aria-pressed={(filters.country || []).includes(country)}
-                >
-                  {ECON_COUNTRY_LABELS[country]}
-                </Button>
-              ))}
+              {ECON_COUNTRIES.map((country) => {
+                const isActive = (filters.country || []).includes(country);
+                return (
+                  <Button
+                    key={country}
+                    variant={isActive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleCountry(country)}
+                    className="h-8"
+                    data-testid={`filter-country-${country.toLowerCase()}`}
+                    aria-label={`Filter by ${ECON_COUNTRY_LABELS[country]}`}
+                    aria-pressed={isActive}
+                  >
+                    {ECON_COUNTRY_LABELS[country]}
+                  </Button>
+                );
+              })}
             </div>
           </div>
 
@@ -171,21 +174,24 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
               role="group"
               aria-labelledby="filter-category-label"
             >
-              {ECON_CATEGORIES.map((category) => (
-                <Button
-                  key={category}
-                  variant={(filters.category || []).includes(category) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleCategory(category)}
-                  className="h-8"
-                  data-testid={`filter-category-${category.toLowerCase()}`}
-                  aria-label={`Filter by ${ECON_CATEGORY_LABELS[category].label}`}
-                  aria-pressed={(filters.category || []).includes(category)}
-                  title={ECON_CATEGORY_LABELS[category].description}
-                >
-                  {ECON_CATEGORY_LABELS[category].label}
-                </Button>
-              ))}
+              {ECON_CATEGORIES.map((category) => {
+                const isActive = (filters.category || []).includes(category);
+                return (
+                  <Button
+                    key={category}
+                    variant={isActive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleCategory(category)}
+                    className="h-8"
+                    data-testid={`filter-category-${category.toLowerCase()}`}
+                    aria-label={`Filter by ${ECON_CATEGORY_LABELS[category].label}`}
+                    aria-pressed={isActive}
+                    title={ECON_CATEGORY_LABELS[category].description}
+                  >
+                    {ECON_CATEGORY_LABELS[category].label}
+                  </Button>
+                );
+              })}
             </div>
           </div>
 
@@ -208,7 +214,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
                 value="High" 
                 className="h-8"
                 data-testid="filter-importance-high"
-                aria-label="Filter by high importance"
+                aria-label="Filter by high importance events"
               >
                 High
               </ToggleGroupItem>
@@ -216,7 +222,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
                 value="Medium" 
                 className="h-8"
                 data-testid="filter-importance-medium"
-                aria-label="Filter by medium importance"
+                aria-label="Filter by medium importance events"
               >
                 Medium
               </ToggleGroupItem>
@@ -224,7 +230,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
                 value="Low" 
                 className="h-8"
                 data-testid="filter-importance-low"
-                aria-label="Filter by low importance"
+                aria-label="Filter by low importance events"
               >
                 Low
               </ToggleGroupItem>
@@ -266,7 +272,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
           {/* Active Filters Summary */}
           {activeFilterCount > 0 && (
             <div className="pt-2 border-t border-border">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-foreground/70">
                 {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''} active
               </p>
             </div>

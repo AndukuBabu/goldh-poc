@@ -1,6 +1,7 @@
 /**
  * Economic Calendar Summary KPIs
  * Displays key metrics: total events, high-impact count, next release time
+ * Fully accessible with high contrast and ARIA labels
  */
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,7 +30,7 @@ export function EconSummary({ events = [], isLoading = false }: EconSummaryProps
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="border-primary/20 bg-card/50 animate-pulse">
+          <Card key={i} className="border-primary/20 bg-card animate-pulse">
             <CardContent className="pt-6">
               <div className="h-16 bg-muted/20 rounded" />
             </CardContent>
@@ -47,7 +48,7 @@ export function EconSummary({ events = [], isLoading = false }: EconSummaryProps
       aria-label="Economic Calendar Summary Statistics"
     >
       {/* Total Events */}
-      <Card className="border-primary/20 bg-card/50 hover-elevate transition-all">
+      <Card className="border-primary/20 bg-card hover-elevate transition-all">
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
             <div 
@@ -60,18 +61,18 @@ export function EconSummary({ events = [], isLoading = false }: EconSummaryProps
               <p 
                 className="text-2xl font-bold text-foreground"
                 data-testid="stat-total-events"
-                aria-label={`${totalEvents} total events`}
+                aria-label={`${totalEvents} total events in calendar`}
               >
                 {totalEvents}
               </p>
-              <p className="text-sm text-muted-foreground">Total Events</p>
+              <p className="text-sm text-foreground/80">Total Events</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* High Impact Count */}
-      <Card className="border-primary/20 bg-card/50 hover-elevate transition-all">
+      <Card className="border-primary/20 bg-card hover-elevate transition-all">
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
             <div 
@@ -84,18 +85,18 @@ export function EconSummary({ events = [], isLoading = false }: EconSummaryProps
               <p 
                 className="text-2xl font-bold text-foreground"
                 data-testid="stat-high-impact"
-                aria-label={`${highImpactCount} high impact events`}
+                aria-label={`${highImpactCount} high impact events with score above 70`}
               >
                 {highImpactCount}
               </p>
-              <p className="text-sm text-muted-foreground">High Impact</p>
+              <p className="text-sm text-foreground/80">High Impact</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Next Release */}
-      <Card className="border-primary/20 bg-card/50 hover-elevate transition-all">
+      <Card className="border-primary/20 bg-card hover-elevate transition-all">
         <CardContent className="pt-6">
           <div className="flex items-center gap-3">
             <div 
@@ -110,21 +111,21 @@ export function EconSummary({ events = [], isLoading = false }: EconSummaryProps
                   <p 
                     className="text-base font-semibold text-foreground truncate"
                     data-testid="stat-next-release-time"
-                    aria-label={`Next release: ${nextRelease.title}`}
+                    aria-label={`Next event ${nextRelease.title} releasing ${getRelativeTime(nextRelease.datetime_utc)}`}
                     title={nextRelease.title}
                   >
                     {getRelativeTime(nextRelease.datetime_utc)}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate" title={nextRelease.title}>
+                  <p className="text-xs text-foreground/70 truncate" title={nextRelease.title}>
                     {nextRelease.title}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-base font-semibold text-muted-foreground">
+                  <p className="text-base font-semibold text-foreground">
                     No upcoming
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-foreground/70">
                     All events released
                   </p>
                 </>

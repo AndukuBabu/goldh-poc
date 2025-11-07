@@ -1,19 +1,20 @@
 /**
  * Economic Calendar Legend
- * Explains chips, badges, and visual indicators
+ * Explains chips, badges, and visual indicators with icon shapes
+ * Ensures accessibility by using shapes, not just colors
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Info, TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Info, TrendingUp, AlertCircle, CheckCircle, Clock, AlertTriangle, Circle } from "lucide-react";
 
 export function EconLegend() {
   return (
     <Card 
-      className="border-primary/20"
+      className="border-primary/20 bg-card"
       data-testid="econ-legend"
       role="region"
-      aria-label="Calendar legend and explanation"
+      aria-label="Calendar legend and explanation of visual indicators"
     >
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
@@ -22,88 +23,129 @@ export function EconLegend() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        {/* Importance Levels */}
+        {/* Importance Levels - Shape-based, not color-only */}
         <div>
-          <p className="font-semibold text-foreground mb-2">Importance Levels</p>
-          <div className="flex flex-wrap gap-2">
+          <p className="font-semibold text-foreground mb-2">
+            Importance Levels
+          </p>
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-red-400" aria-hidden="true" />
-              <Badge variant="destructive" className="h-6">High</Badge>
-              <span className="text-muted-foreground text-xs">Major market mover</span>
+              <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" aria-hidden="true" />
+              <Badge variant="destructive" className="h-6">
+                <AlertTriangle className="w-3 h-3 mr-1" aria-hidden="true" />
+                High
+              </Badge>
+              <span className="text-muted-foreground text-xs">
+                Filled triangle - Major market mover
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <Info className="w-4 h-4 text-primary" aria-hidden="true" />
-              <Badge variant="default" className="h-6">Medium</Badge>
-              <span className="text-muted-foreground text-xs">Moderate impact</span>
+              <Info className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+              <Badge variant="default" className="h-6">
+                <Info className="w-3 h-3 mr-1" aria-hidden="true" />
+                Medium
+              </Badge>
+              <span className="text-muted-foreground text-xs">
+                Info icon - Moderate impact
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <Info className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <Badge variant="secondary" className="h-6">Low</Badge>
-              <span className="text-muted-foreground text-xs">Minor influence</span>
+              <Circle className="w-4 h-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+              <Badge variant="secondary" className="h-6">
+                <Circle className="w-3 h-3 mr-1" aria-hidden="true" />
+                Low
+              </Badge>
+              <span className="text-muted-foreground text-xs">
+                Circle - Minor influence
+              </span>
             </div>
           </div>
         </div>
 
         {/* Impact Scores */}
         <div>
-          <p className="font-semibold text-foreground mb-2">AI Impact Score (0-100)</p>
+          <p className="font-semibold text-foreground mb-2">
+            AI Impact Score (0-100)
+          </p>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-red-400" aria-hidden="true" />
-              <Badge className="bg-red-900/50 text-red-300 border-red-800 h-6">80-100</Badge>
-              <span className="text-muted-foreground text-xs">Critical impact expected</span>
+              <TrendingUp className="w-4 h-4 text-red-400 flex-shrink-0" aria-hidden="true" />
+              <Badge className="bg-red-900/50 text-red-300 border-red-800 h-6">
+                80-100
+              </Badge>
+              <span className="text-muted-foreground text-xs">
+                Critical impact expected
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-orange-400" aria-hidden="true" />
-              <Badge className="bg-orange-900/50 text-orange-300 border-orange-800 h-6">60-79</Badge>
-              <span className="text-muted-foreground text-xs">High volatility likely</span>
+              <TrendingUp className="w-4 h-4 text-orange-400 flex-shrink-0" aria-hidden="true" />
+              <Badge className="bg-orange-900/50 text-orange-300 border-orange-800 h-6">
+                60-79
+              </Badge>
+              <span className="text-muted-foreground text-xs">
+                High volatility likely
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-yellow-400" aria-hidden="true" />
-              <Badge className="bg-yellow-900/50 text-yellow-300 border-yellow-800 h-6">40-59</Badge>
-              <span className="text-muted-foreground text-xs">Moderate movement</span>
+              <TrendingUp className="w-4 h-4 text-yellow-400 flex-shrink-0" aria-hidden="true" />
+              <Badge className="bg-yellow-900/50 text-yellow-300 border-yellow-800 h-6">
+                40-59
+              </Badge>
+              <span className="text-muted-foreground text-xs">
+                Moderate movement
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-blue-400" aria-hidden="true" />
-              <Badge className="bg-blue-900/50 text-blue-300 border-blue-800 h-6">20-39</Badge>
-              <span className="text-muted-foreground text-xs">Low impact</span>
+              <TrendingUp className="w-4 h-4 text-blue-400 flex-shrink-0" aria-hidden="true" />
+              <Badge className="bg-blue-900/50 text-blue-300 border-blue-800 h-6">
+                20-39
+              </Badge>
+              <span className="text-muted-foreground text-xs">
+                Low impact
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <TrendingDown className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <Badge variant="secondary" className="h-6">0-19</Badge>
-              <span className="text-muted-foreground text-xs">Minimal effect</span>
+              <Circle className="w-4 h-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+              <Badge variant="secondary" className="h-6">
+                0-19
+              </Badge>
+              <span className="text-muted-foreground text-xs">
+                Minimal effect
+              </span>
             </div>
           </div>
         </div>
 
         {/* Confidence Levels */}
         <div>
-          <p className="font-semibold text-foreground mb-2">AI Confidence</p>
+          <p className="font-semibold text-foreground mb-2">
+            AI Confidence
+          </p>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-primary" aria-hidden="true" />
-              <span className="text-xs">
+              <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+              <span className="text-xs text-foreground">
                 <span className="text-primary font-medium">85-100%</span>
                 <span className="text-muted-foreground"> - High certainty</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-primary/60" aria-hidden="true" />
-              <span className="text-xs">
+              <CheckCircle className="w-4 h-4 text-primary/60 flex-shrink-0" aria-hidden="true" />
+              <span className="text-xs text-foreground">
                 <span className="text-primary/80 font-medium">70-84%</span>
                 <span className="text-muted-foreground"> - Good confidence</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <span className="text-xs">
+              <AlertCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+              <span className="text-xs text-foreground">
                 <span className="text-muted-foreground font-medium">50-69%</span>
                 <span className="text-muted-foreground"> - Moderate uncertainty</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />
-              <span className="text-xs">
+              <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" aria-hidden="true" />
+              <span className="text-xs text-foreground">
                 <span className="text-destructive font-medium">&lt;50%</span>
                 <span className="text-muted-foreground"> - Low confidence</span>
               </span>
@@ -113,29 +155,38 @@ export function EconLegend() {
 
         {/* Event Status */}
         <div>
-          <p className="font-semibold text-foreground mb-2">Event Status</p>
-          <div className="flex flex-wrap gap-2">
+          <p className="font-semibold text-foreground mb-2">
+            Event Status
+          </p>
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-400" aria-hidden="true" />
+              <Clock className="w-4 h-4 text-blue-400 flex-shrink-0" aria-hidden="true" />
               <Badge variant="outline" className="bg-blue-900/20 text-blue-300 border-blue-800 h-6">
+                <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
                 Upcoming
               </Badge>
-              <span className="text-muted-foreground text-xs">Not yet released</span>
+              <span className="text-muted-foreground text-xs">
+                Not yet released
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-400" aria-hidden="true" />
+              <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" aria-hidden="true" />
               <Badge variant="outline" className="bg-green-900/20 text-green-300 border-green-800 h-6">
+                <CheckCircle className="w-3 h-3 mr-1" aria-hidden="true" />
                 Released
               </Badge>
-              <span className="text-muted-foreground text-xs">Data published</span>
+              <span className="text-muted-foreground text-xs">
+                Data published
+              </span>
             </div>
           </div>
         </div>
 
         {/* Note */}
         <div className="pt-2 border-t border-border">
-          <p className="text-xs text-muted-foreground italic">
-            💡 Hover over any event for detailed information and local time conversion
+          <p className="text-xs text-muted-foreground">
+            💡 Icons and shapes ensure accessibility for colorblind users. 
+            Hover over any event for detailed information and local time conversion.
           </p>
         </div>
       </CardContent>
