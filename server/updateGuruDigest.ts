@@ -1,5 +1,7 @@
 import fetch from 'node-fetch';
 import admin from 'firebase-admin';
+import { XMLParser } from 'fast-xml-parser';
+
 
 // Firebase init (make sure admin is already initialized in another file you import here)
 import { db } from './firebase'; // adjust this import if needed

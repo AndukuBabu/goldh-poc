@@ -377,6 +377,12 @@ export const umfMoverSchema = z.object({
     .positive("Price must be positive")
     .describe("Current spot price in USD"),
   
+  marketCap: z.number().nullable().optional()
+    .describe("Market capitalization in USD (optional, null if unavailable)"),
+  
+  volume24h: z.number().nullable().optional()
+    .describe("24-hour trading volume in USD (optional, null if unavailable)"),
+  
   updatedAt_utc: z.string()
     .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
     .describe("Last update timestamp in UTC (ISO 8601 format)"),
