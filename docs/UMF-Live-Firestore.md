@@ -26,28 +26,85 @@ This document outlines the plan to migrate UMF from Firestore mock data to live 
 
 ---
 
-### Authentication
+### Authentication & Secrets
 
 **API Key (Optional for Demo Tier):**
 - **Header:** `x-cg-demo-api-key`
 - **When to include:** If API key exists in environment
 - **Fallback:** Works without key (more restrictive rate limits)
 
-**Environment Variable:**
-```bash
-COINGECKO_API_KEY=<optional-demo-api-key>
-```
+---
 
-**Request Headers:**
+#### **Setting Up the Replit Secret**
+
+**Secret Name:** `COINGECKO_API_KEY`
+
+**How to Add:**
+1. Click the **"Secrets"** tab (🔒 lock icon) in the left sidebar
+2. Click **"+ New Secret"**
+3. Enter:
+   - **Key:** `COINGECKO_API_KEY`
+   - **Value:** Your CoinGecko demo API key
+4. Click **"Add Secret"**
+
+**Important:**
+- ⚠️ **NEVER commit the API key to Git** - Always use Replit Secrets
+- ✅ The secret is automatically injected as `process.env.COINGECKO_API_KEY`
+- 🔒 Only server-side code can access this secret (not client code)
+- 📌 Used exclusively by the scheduler (hourly tick), never from API routes
+
+---
+
+#### **Usage in Server Code**
+
+**Scheduler Implementation (`server/schedulers/umfScheduler.ts`):**
+
 ```typescript
-const headers: Record<string, string> = {
-  'Accept': 'application/json',
-};
+async function refreshUmfSnapshot() {
+  // Build request headers
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+  };
 
-if (process.env.COINGECKO_API_KEY) {
-  headers['x-cg-demo-api-key'] = process.env.COINGECKO_API_KEY;
+  // Add API key header ONLY if secret exists
+  if (process.env.COINGECKO_API_KEY) {
+    headers['x-cg-demo-api-key'] = process.env.COINGECKO_API_KEY;
+    console.log('[UMF Scheduler] Using CoinGecko API key');
+  } else {
+    console.warn('[UMF Scheduler] No API key found, using keyless fallback');
+  }
+
+  // Fetch from CoinGecko
+  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coinIds}&sparkline=false&price_change_percentage=24h`;
+  
+  const response = await fetch(url, { headers });
+  
+  if (!response.ok) {
+    throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
+  }
+  
+  const coins = await response.json();
+  // ... rest of logic
 }
 ```
+
+**Key Points:**
+- ✅ Check `process.env.COINGECKO_API_KEY` before using
+- ✅ Only add header if secret exists (graceful fallback)
+- ✅ Log whether key is being used (for debugging)
+- ⚠️ Never log the actual key value (security risk)
+
+---
+
+#### **Keyless Fallback Behavior**
+
+**If Secret Missing:**
+- Scheduler will still fetch data (no header sent)
+- CoinGecko uses more restrictive rate limits (10 calls/min vs 30)
+- Our 1-call-per-hour policy is still well within limits
+- No functionality lost (just lower rate ceiling)
+
+**Recommendation:** Always set the secret for better rate limits and future-proofing.
 
 ---
 
@@ -1291,10 +1348,156 @@ curl "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin
 
 ---
 
+### Secret Verification
+
+**After Setting Up `COINGECKO_API_KEY` Secret:**
+
+#### **Quick Verification Check**
+
+Run this one-off server verification (no actual CoinGecko API call):
+
+**Create:** `server/scripts/verifySecret.ts`
+
+```typescript
+// Verify that the COINGECKO_API_KEY secret is accessible
+// Run with: npx tsx server/scripts/verifySecret.ts
+
+console.log('🔍 Verifying CoinGecko API Key Secret...\n');
+
+const apiKey = process.env.COINGECKO_API_KEY;
+
+if (apiKey) {
+  console.log('✅ Secret found: COINGECKO_API_KEY');
+  console.log(`   Length: ${apiKey.length} characters`);
+  console.log(`   First 10 chars: ${apiKey.substring(0, 10)}...`);
+  console.log(`   Last 4 chars: ...${apiKey.slice(-4)}`);
+  console.log('\n✅ Secret will be included in scheduler requests as header:');
+  console.log('   x-cg-demo-api-key: <value>');
+} else {
+  console.warn('⚠️  Secret not found: COINGECKO_API_KEY');
+  console.warn('   Scheduler will use keyless fallback (more restrictive rate limits)');
+  console.warn('   To add secret:');
+  console.warn('   1. Click "Secrets" tab (🔒) in left sidebar');
+  console.warn('   2. Click "+ New Secret"');
+  console.warn('   3. Key: COINGECKO_API_KEY');
+  console.warn('   4. Value: Your CoinGecko demo API key');
+}
+
+console.log('\n✅ Verification complete');
+```
+
+**Run Verification:**
+```bash
+npx tsx server/scripts/verifySecret.ts
+```
+
+**Expected Output (if secret is set):**
+```
+🔍 Verifying CoinGecko API Key Secret...
+
+✅ Secret found: COINGECKO_API_KEY
+   Length: 29 characters
+   First 10 chars: CG-njqZw9m...
+   Last 4 chars: ...wK86W
+
+✅ Secret will be included in scheduler requests as header:
+   x-cg-demo-api-key: <value>
+
+✅ Verification complete
+```
+
+**Expected Output (if secret is missing):**
+```
+🔍 Verifying CoinGecko API Key Secret...
+
+⚠️  Secret not found: COINGECKO_API_KEY
+   Scheduler will use keyless fallback (more restrictive rate limits)
+   To add secret:
+   1. Click "Secrets" tab (🔒) in left sidebar
+   2. Click "+ New Secret"
+   3. Key: COINGECKO_API_KEY
+   4. Value: Your CoinGecko demo API key
+
+✅ Verification complete
+```
+
+---
+
+#### **Scheduler Behavior Verification**
+
+**On Next Hourly Tick:**
+
+The scheduler (`server/schedulers/umfScheduler.ts`) will:
+
+1. **Check for secret:**
+   ```typescript
+   if (process.env.COINGECKO_API_KEY) {
+     headers['x-cg-demo-api-key'] = process.env.COINGECKO_API_KEY;
+     console.log('[UMF Scheduler] Using CoinGecko API key');
+   }
+   ```
+
+2. **Log to console:**
+   - With key: `[UMF Scheduler] Using CoinGecko API key`
+   - Without key: `[UMF Scheduler] No API key found, using keyless fallback`
+
+3. **Include header in request:**
+   ```typescript
+   const response = await fetch(url, { 
+     headers: {
+       'Accept': 'application/json',
+       'x-cg-demo-api-key': process.env.COINGECKO_API_KEY // Only if exists
+     }
+   });
+   ```
+
+**Check Scheduler Logs:**
+```bash
+# After scheduler runs (hourly tick or manual trigger)
+grep "UMF Scheduler" logs/*.log
+
+# Or check real-time:
+tail -f logs/*.log | grep "UMF Scheduler"
+```
+
+**Expected Log Output:**
+```
+[2025-11-07 10:00:00] [UMF Scheduler] Starting refresh...
+[2025-11-07 10:00:00] [UMF Scheduler] Using CoinGecko API key
+[2025-11-07 10:00:02] [UMF Scheduler] Success: 2025-11-07T10:00:00.000Z
+```
+
+---
+
+#### **Security Checklist**
+
+After setting up the secret, verify:
+
+- [ ] Secret exists in Replit Secrets tab
+- [ ] Secret name is exactly `COINGECKO_API_KEY` (case-sensitive)
+- [ ] Secret value is not committed to Git (check: `git grep COINGECKO_API_KEY`)
+- [ ] Secret value is not in any `.env` file
+- [ ] Secret value is not logged in console (only "Using API key" message)
+- [ ] Secret is only used in server code (never in `client/` directory)
+- [ ] Secret is only used by scheduler (never in API routes)
+- [ ] Verification script confirms secret is accessible
+
+**Command to Check for Leaked Secrets:**
+```bash
+# Search all files for API key pattern (should return no results)
+git grep -i "cg-njqzw9m" || echo "✅ No secrets found in Git"
+git grep -i "x-cg-demo-api-key.*:" || echo "✅ No hardcoded headers"
+grep -r "COINGECKO_API_KEY.*=" client/ || echo "✅ No secrets in client code"
+```
+
+All commands should return "✅ No secrets found" or similar.
+
+---
+
 **Document Owner:** Development Team  
 **Created:** November 7, 2025  
 **Last Updated:** November 7, 2025  
-**Version:** 1.0.0
+**Version:** 1.1.0 (Added Secret Verification)
 
 **Related Documents:**
 - `docs/UMF-UI-MVP.md` - UI specification
