@@ -484,3 +484,264 @@ export const umfAlertSchema = z.object({
  * TypeScript type for UmfAlert
  */
 export type UmfAlert = z.infer<typeof umfAlertSchema>;
+
+/**
+ * ============================================================================
+ * UMF LIVE SCHEMAS (CoinGecko Integration)
+ * ============================================================================
+ * 
+ * These schemas define the canonical live data structures for the UMF feature
+ * when fetching from CoinGecko API. They differ from the mock schemas above
+ * in several ways:
+ * 
+ * 1. Nullable fields: changePct24h, volume24h, marketCap can be null if
+ *    CoinGecko doesn't provide them (e.g., for certain asset types)
+ * 
+ * 2. Degraded flag: Indicates when data is stale or from fallback sources
+ *    (e.g., scheduler failed, serving from Firestore cache)
+ * 
+ * 3. Movers structure: Returns separate gainers/losers arrays instead of
+ *    a mixed array with direction field
+ * 
+ * Data Flow:
+ * - Scheduler fetches from CoinGecko hourly
+ * - Transforms to these live schemas
+ * - Stores in Firestore (umf_snapshot_live, umf_snapshot_history)
+ * - API routes serve from cache/Firestore (never call CoinGecko directly)
+ * 
+ * @see docs/UMF-Live-Firestore.md for complete integration plan
+ */
+
+/**
+ * UMF Asset Class Enum (Live)
+ * 
+ * Supported asset classifications for the live CoinGecko integration.
+ * 
+ * Note: CoinGecko primarily covers cryptocurrencies. For traditional assets
+ * (indices, forex, commodities), we may need additional data providers or
+ * limit the MVP to crypto-only assets.
+ * 
+ * @see docs/UMF-Live-Firestore.md Section "Traditional Assets"
+ */
+export const umfAssetClassEnum = z.enum([
+  "crypto",      // Cryptocurrencies (BTC, ETH, SOL, etc.)
+  "index",       // Stock indices (SPX, NDX, etc.) - requires additional provider
+  "forex",       // Currency pairs (DXY, EUR/USD, etc.) - requires additional provider
+  "commodity",   // Physical commodities (GOLD, WTI, etc.) - requires additional provider
+  "etf",         // Exchange-traded funds (SPY, QQQ, etc.) - requires additional provider
+]);
+
+/**
+ * TypeScript type for UmfAssetClass
+ */
+export type UmfAssetClass = z.infer<typeof umfAssetClassEnum>;
+
+/**
+ * UMF Asset Schema (Live)
+ * 
+ * Represents a single tradeable asset from CoinGecko API with nullable fields
+ * for data that may not be available for all asset types.
+ * 
+ * Differences from mock schema:
+ * - changePct24h is nullable (CoinGecko may not provide for all assets)
+ * - volume24h is nullable (not applicable for indices/forex)
+ * - marketCap is nullable (not applicable for forex/commodities)
+ * 
+ * Field Descriptions:
+ * - id: CoinGecko asset ID (e.g., "bitcoin", "ethereum")
+ * - symbol: Ticker symbol, uppercase (e.g., "BTC", "ETH")
+ * - name: Full asset name (e.g., "Bitcoin", "Ethereum")
+ * - class: Asset classification (crypto, index, forex, commodity, etf)
+ * - price: Current spot price in USD (always present)
+ * - changePct24h: 24-hour percentage change (null if unavailable)
+ * - volume24h: 24-hour trading volume in USD (null if unavailable)
+ * - marketCap: Total market capitalization in USD (null if unavailable)
+ * - updatedAt_utc: Last price update timestamp (ISO 8601, UTC)
+ * 
+ * @example CoinGecko Bitcoin
+ * {
+ *   id: "bitcoin",
+ *   symbol: "BTC",
+ *   name: "Bitcoin",
+ *   class: "crypto",
+ *   price: 43250.50,
+ *   changePct24h: 1.61,
+ *   volume24h: 25678901234,
+ *   marketCap: 846234567890,
+ *   updatedAt_utc: "2025-11-07T10:00:00.000Z"
+ * }
+ * 
+ * @example Asset with missing data
+ * {
+ *   id: "some-token",
+ *   symbol: "TOKEN",
+ *   name: "Some Token",
+ *   class: "crypto",
+ *   price: 1.23,
+ *   changePct24h: null,
+ *   volume24h: null,
+ *   marketCap: null,
+ *   updatedAt_utc: "2025-11-07T10:00:00.000Z"
+ * }
+ */
+export const umfAssetLiveSchema = z.object({
+  id: z.string().min(1, "Asset ID is required"),
+  
+  symbol: z.string().min(1, "Symbol is required")
+    .describe("Ticker symbol, uppercase (e.g., BTC, ETH)"),
+  
+  name: z.string().min(1, "Asset name is required")
+    .describe("Full asset name (e.g., Bitcoin, Ethereum)"),
+  
+  class: umfAssetClassEnum
+    .describe("Asset classification"),
+  
+  price: z.number()
+    .positive("Price must be positive")
+    .describe("Current spot price in USD"),
+  
+  changePct24h: z.number()
+    .nullable()
+    .describe("24-hour percentage change (null if unavailable)"),
+  
+  volume24h: z.number()
+    .positive("Volume must be positive")
+    .nullable()
+    .describe("24-hour trading volume in USD (null if unavailable)"),
+  
+  marketCap: z.number()
+    .positive("Market cap must be positive")
+    .nullable()
+    .describe("Total market capitalization in USD (null if unavailable)"),
+  
+  updatedAt_utc: z.string()
+    .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
+    .describe("Last price update timestamp (ISO 8601, UTC)"),
+});
+
+/**
+ * TypeScript type for UmfAsset (Live)
+ */
+export type UmfAssetLive = z.infer<typeof umfAssetLiveSchema>;
+
+/**
+ * UMF Snapshot Schema (Live)
+ * 
+ * Represents a complete market snapshot from the scheduler's hourly CoinGecko
+ * API call. Includes all tracked assets and an optional degraded flag.
+ * 
+ * Differences from mock schema:
+ * - degraded (optional): Indicates data is stale or from fallback source
+ * 
+ * Field Descriptions:
+ * - timestamp_utc: Snapshot creation time (ISO 8601, UTC)
+ * - assets: Array of all tracked assets from CoinGecko
+ * - degraded: (Optional) true if data is stale/from fallback, false/omitted if fresh
+ * 
+ * Degraded Mode Scenarios:
+ * 1. Scheduler failed to fetch from CoinGecko (API error, network timeout)
+ * 2. Serving stale data from Firestore (cache expired, no recent update)
+ * 3. Using mock data as last resort (Firestore empty, first-time setup)
+ * 
+ * Frontend should detect degraded=true and show warning banner.
+ * 
+ * @example Fresh snapshot
+ * {
+ *   timestamp_utc: "2025-11-07T10:00:00.000Z",
+ *   assets: [
+ *     { id: "bitcoin", symbol: "BTC", ... },
+ *     { id: "ethereum", symbol: "ETH", ... }
+ *   ],
+ *   degraded: false // or omitted
+ * }
+ * 
+ * @example Degraded snapshot
+ * {
+ *   timestamp_utc: "2025-11-07T08:00:00.000Z", // 2 hours old
+ *   assets: [...],
+ *   degraded: true // Scheduler failed at 09:00 and 10:00
+ * }
+ */
+export const umfSnapshotLiveSchema = z.object({
+  timestamp_utc: z.string()
+    .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
+    .describe("Snapshot creation timestamp (ISO 8601, UTC)"),
+  
+  assets: z.array(umfAssetLiveSchema)
+    .min(1, "Snapshot must contain at least one asset")
+    .describe("Array of all tracked assets from CoinGecko"),
+  
+  degraded: z.boolean()
+    .optional()
+    .describe("True if data is stale/from fallback, false/omitted if fresh"),
+});
+
+/**
+ * TypeScript type for UmfSnapshot (Live)
+ */
+export type UmfSnapshotLive = z.infer<typeof umfSnapshotLiveSchema>;
+
+/**
+ * UMF Movers Schema (Live)
+ * 
+ * Represents the top gainers and losers calculated from the latest snapshot.
+ * Unlike the mock schema (which uses a direction field), this schema returns
+ * separate arrays for clarity and easier frontend consumption.
+ * 
+ * Differences from mock schema:
+ * - Separate gainers/losers arrays (instead of mixed array with direction)
+ * - timestamp_utc at top level (instead of per-mover)
+ * - degraded (optional): Indicates data is stale or from fallback source
+ * 
+ * Field Descriptions:
+ * - timestamp_utc: When movers were calculated (ISO 8601, UTC)
+ * - gainers: Top 5 assets with largest positive 24h % change
+ * - losers: Top 5 assets with largest negative 24h % change
+ * - degraded: (Optional) true if data is stale/from fallback
+ * 
+ * Calculation Logic:
+ * 1. Fetch latest snapshot
+ * 2. Sort assets by changePct24h (descending)
+ * 3. Take top 5 as gainers
+ * 4. Take bottom 5 (reversed) as losers
+ * 
+ * Note: Movers are calculated on-demand from snapshot, not stored separately.
+ * 
+ * @example Fresh movers
+ * {
+ *   timestamp_utc: "2025-11-07T10:00:00.000Z",
+ *   gainers: [
+ *     { id: "bitcoin", symbol: "BTC", changePct24h: 8.45, ... },
+ *     { id: "ethereum", symbol: "ETH", changePct24h: 5.20, ... },
+ *     ...
+ *   ],
+ *   losers: [
+ *     { id: "cardano", symbol: "ADA", changePct24h: -3.10, ... },
+ *     { id: "ripple", symbol: "XRP", changePct24h: -2.85, ... },
+ *     ...
+ *   ],
+ *   degraded: false // or omitted
+ * }
+ */
+export const umfMoversLiveSchema = z.object({
+  timestamp_utc: z.string()
+    .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
+    .describe("When movers were calculated (ISO 8601, UTC)"),
+  
+  gainers: z.array(umfAssetLiveSchema)
+    .max(5, "Should return at most 5 gainers")
+    .describe("Top 5 assets with largest positive 24h % change"),
+  
+  losers: z.array(umfAssetLiveSchema)
+    .max(5, "Should return at most 5 losers")
+    .describe("Top 5 assets with largest negative 24h % change"),
+  
+  degraded: z.boolean()
+    .optional()
+    .describe("True if data is stale/from fallback, false/omitted if fresh"),
+});
+
+/**
+ * TypeScript type for UmfMovers (Live)
+ */
+export type UmfMoversLive = z.infer<typeof umfMoversLiveSchema>;
