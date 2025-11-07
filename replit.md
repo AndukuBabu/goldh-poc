@@ -117,6 +117,9 @@ Preferred communication style: Simple, everyday language.
 ### Deployment Documentation
 - `docs/UMF-GoLive-UI-Only.md` - Production deployment checklist (150+ items) covering Firestore seeding, widget functionality, QA/a11y validation, API migration stubs, code quality, browser compatibility, and rollback procedures. Ensures UI-only MVP is production-ready.
 
+### Live API Integration Documentation
+- `docs/UMF-Live-Firestore.md` - Comprehensive plan for migrating from mock to live CoinGecko API with 1-call-per-hour rate limiting. Covers scheduler architecture, in-memory caching (TTL=3600s), Firestore storage (latest + history), API route implementation, failure policies (degraded mode), CoinGecko attribution requirements, and complete acceptance checklist.
+
 ### API Migration Placeholders (Future Implementation)
 - `client/src/lib/umf.client.ts` - API client functions (currently TODOs) for future REST API migration
 - `server/routes.ts` - Commented API endpoint stubs for GET /api/umf/snapshot, /movers, /brief, /alerts (lines 316-425)
