@@ -8,14 +8,16 @@
  * - GOLD, OIL (commodities)
  * 
  * Each tile shows: symbol, price, 24h %, sparkline placeholder
+ * Enhanced with hover elevation and detailed tooltips with timestamps
  * 
  * @see client/src/hooks/useUmf.ts - useUmfSnapshot() hook
  */
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TrendingUp, TrendingDown, Minus, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, BarChart3, Clock } from "lucide-react";
 import type { UmfAsset } from "@shared/schema";
 
 interface UmfSnapshotProps {
@@ -55,7 +57,7 @@ export function UmfSnapshot({ assets, className }: UmfSnapshotProps) {
 
       <CardContent>
         <div 
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3"
+          className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3"
           role="list"
           aria-label="Key asset prices"
         >
@@ -77,8 +79,10 @@ export function UmfSnapshot({ assets, className }: UmfSnapshotProps) {
 /**
  * Individual Asset Tile Component
  * Displays symbol, price, 24h change, and sparkline placeholder
+ * Enhanced with keyboard navigation and detailed tooltip
  */
 function AssetTile({ asset }: { asset: UmfAsset }) {
+  const [tooltipOpen, setTooltipOpen] = useState(false);
   const isPositive = asset.changePct24h >= 0;
   const isFlat = Math.abs(asset.changePct24h) < 0.01;
   
@@ -94,13 +98,55 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
     etf: 'ETF',
   }[asset.class];
 
+  // Format last update time (UTC + Local)
+  const lastUpdateUTC = new Date(asset.updatedAt_utc).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZone: 'UTC',
+    timeZoneName: 'short',
+  });
+
+  const lastUpdateLocal = new Date(asset.updatedAt_utc).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'short',
+  });
+
+  // Handle keyboard activation (Enter or Space)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setTooltipOpen(prev => !prev);
+    }
+  };
+
+  // Show tooltip on focus
+  const handleFocus = () => {
+    setTooltipOpen(true);
+  };
+
+  // Hide tooltip on blur
+  const handleBlur = () => {
+    setTooltipOpen(false);
+  };
+
   return (
-    <Tooltip>
+    <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
       <TooltipTrigger asChild>
         <div
-          className="p-3 rounded-lg bg-[#0a0a0a] border border-[#2a2a2a] hover-elevate transition-all cursor-pointer"
+          className="p-3 rounded-lg bg-[#0a0a0a] border border-[#2a2a2a] hover-elevate active-elevate-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C7AE6A]/50"
           role="listitem"
-          aria-label={`${asset.name}, price ${asset.price}, ${isPositive ? 'up' : 'down'} ${Math.abs(asset.changePct24h)}% in 24 hours`}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          aria-label={`${asset.name}, price ${asset.price}, ${isPositive ? 'up' : 'down'} ${Math.abs(asset.changePct24h)}% in 24 hours. Press Enter to view details.`}
           data-testid={`snapshot-tile-${asset.symbol}`}
         >
           {/* Header: Symbol + Asset Class Badge */}
@@ -166,11 +212,14 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
       
       <TooltipContent 
         side="top" 
-        className="bg-[#0a0a0a] border-[#2a2a2a]"
+        className="bg-[#0a0a0a] border-[#2a2a2a] max-w-xs"
       >
-        <div className="space-y-1">
-          <div className="font-semibold text-foreground">{asset.name}</div>
-          <div className="text-xs text-muted-foreground">{assetClassLabel}</div>
+        <div className="space-y-2">
+          <div>
+            <div className="font-semibold text-foreground">{asset.name}</div>
+            <div className="text-xs text-muted-foreground">{assetClassLabel}</div>
+          </div>
+          
           {asset.marketCap && (
             <div className="text-xs text-muted-foreground">
               Market Cap: ${(asset.marketCap / 1e9).toFixed(1)}B
@@ -181,6 +230,17 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
               24h Volume: ${(asset.volume24h / 1e9).toFixed(1)}B
             </div>
           )}
+          
+          <div className="pt-2 border-t border-[#2a2a2a] space-y-1">
+            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              <Clock className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <div className="space-y-0.5">
+                <div className="font-medium">Last Updated:</div>
+                <div>UTC: {lastUpdateUTC}</div>
+                <div>Local: {lastUpdateLocal}</div>
+              </div>
+            </div>
+          </div>
         </div>
       </TooltipContent>
     </Tooltip>

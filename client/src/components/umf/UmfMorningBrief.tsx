@@ -6,14 +6,18 @@
  * - 3-5 bullet points explaining key movements
  * - Timestamp of brief generation
  * - "Why it moved" narrative tone
+ * - Copy to clipboard functionality
  * 
  * @see client/src/hooks/useUmf.ts - useUmfBrief() hook
  */
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { TrendingUp, Clock } from "lucide-react";
+import { TrendingUp, Clock, Copy, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import type { UmfBrief } from "@shared/schema";
 
 interface UmfMorningBriefProps {
@@ -22,6 +26,9 @@ interface UmfMorningBriefProps {
 }
 
 export function UmfMorningBrief({ brief, className }: UmfMorningBriefProps) {
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+  
   // Format date for display
   const briefDate = new Date(brief.date_utc).toLocaleDateString('en-US', {
     weekday: 'long',
@@ -29,6 +36,40 @@ export function UmfMorningBrief({ brief, className }: UmfMorningBriefProps) {
     day: 'numeric',
     year: 'numeric',
   });
+
+  // Format brief as copyable text
+  const formatBriefForCopy = () => {
+    const header = `Morning Intelligence - ${briefDate}\n`;
+    const separator = '='.repeat(50) + '\n\n';
+    const headline = `${brief.headline}\n\n`;
+    const keyDrivers = 'KEY MARKET DRIVERS:\n';
+    const bullets = brief.bullets.map((bullet, idx) => `${idx + 1}. ${bullet}`).join('\n');
+    
+    return header + separator + headline + keyDrivers + bullets;
+  };
+
+  // Copy brief to clipboard
+  const handleCopyBrief = async () => {
+    try {
+      const textToCopy = formatBriefForCopy();
+      await navigator.clipboard.writeText(textToCopy);
+      
+      setCopied(true);
+      toast({
+        title: "Brief copied!",
+        description: "Morning intelligence copied to clipboard",
+      });
+      
+      // Reset copied state after 2 seconds
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Could not copy to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Card 
@@ -48,14 +89,37 @@ export function UmfMorningBrief({ brief, className }: UmfMorningBriefProps) {
             </CardTitle>
           </div>
           
-          <Badge 
-            variant="outline" 
-            className="bg-[#C7AE6A]/10 border-[#C7AE6A]/30 text-[#C7AE6A] text-xs"
-            data-testid="brief-date-badge"
-          >
-            <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
-            {briefDate}
-          </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge 
+              variant="outline" 
+              className="bg-[#C7AE6A]/10 border-[#C7AE6A]/30 text-[#C7AE6A] text-xs"
+              data-testid="brief-date-badge"
+            >
+              <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
+              {briefDate}
+            </Badge>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyBrief}
+              className="border-[#C7AE6A]/30 text-[#C7AE6A] hover:bg-[#C7AE6A]/10"
+              aria-label="Copy morning brief to clipboard"
+              data-testid="button-copy-brief"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3 h-3 mr-1" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3 mr-1" />
+                  Copy Brief
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </CardHeader>
 

@@ -106,11 +106,18 @@ Preferred communication style: Simple, everyday language.
 - **Data Layer**: 5 TypeScript/Zod schemas in `shared/schema.ts` (UmfAsset with 5 asset classes, UmfSnapshot, UmfMover, UmfBrief, UmfAlert)
 - **React Hooks**: 4 TanStack Query hooks in `client/src/hooks/useUmf.ts` (useUmfSnapshot with 30s staleTime, useUmfMovers, useUmfBrief, useUmfAlerts) + 6 derived selectors
 - **UI Components**: 
-  - `UmfMorningBrief.tsx` - Displays headline, 3-5 bullets, timestamp with "why it moved" tone
-  - `UmfSnapshot.tsx` - Asset grid showing BTC, ETH, SOL, SPX, NDX, DXY, GOLD, WTI with prices, 24h %, sparkline placeholders
-  - `UmfTopMovers.tsx` - Side-by-side lists of gainers/losers with badges
-  - `UmfAlertCard.tsx` - Severity-styled alert banners (info/warn/high)
+  - `UmfMorningBrief.tsx` - Displays headline, 3-5 bullets, timestamp, copy-to-clipboard button with toast feedback
+  - `UmfSnapshot.tsx` - Asset grid with hover elevation, keyboard-accessible tooltips showing UTC/local timestamps, 2-wide mobile grid
+  - `UmfTopMovers.tsx` - Clickable gainers/losers that open detail sheets/drawers with asset info, market context, and timestamps
+  - `UmfAlertCard.tsx` - Severity-styled alert banners (info/warn/high) with optional dismiss functionality
 - **Page**: `/features/umf` - Full-screen responsive layout (mobile stacked, desktop 2-column) with loading/empty states
+- **Interactive Features**:
+  - Copy morning brief to clipboard with formatted text
+  - Enhanced tooltips with UTC/local timestamps on asset tiles
+  - Clickable mover rows that open detail drawers (Sheet component)
+  - Full keyboard navigation (Tab + Enter/Space) with visible focus rings
+  - Hover elevation effects on all interactive elements
+  - Mobile-responsive 2-column grid for snapshot tiles
 - **Performance**: First paint <2s target, optimized caching (30s for prices, 5min for briefs)
-- **Accessibility**: All components have data-testid attributes, ARIA labels, keyboard navigation support
+- **Accessibility**: Full keyboard support, ARIA labels, focus indicators (gold rings), screen reader friendly, tooltips on focus
 - **Future Migration**: Designed for seamless API migration from Firestore to `/api/umf/*` endpoints without UI refactor
