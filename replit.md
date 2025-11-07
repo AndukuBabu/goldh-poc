@@ -108,6 +108,9 @@ Preferred communication style: Simple, everyday language.
 - `scripts/uploadGuruDigest.ts` - Populates Firestore with mock Guru Digest entries
 - `scripts/uploadUmfMock.ts` - Seeds UMF Firestore collections with realistic mock market data
 
+### Quality Assurance
+- `qa/UMF-UI-Manual.md` - Comprehensive manual QA checklist for UMF feature with 9 test cases covering performance, functionality, accessibility, and responsive design
+
 ### UMF Feature Implementation
 - **Data Layer**: 5 TypeScript/Zod schemas in `shared/schema.ts` (UmfAsset with 5 asset classes, UmfSnapshot, UmfMover, UmfBrief, UmfAlert)
 - **React Hooks**: 4 TanStack Query hooks in `client/src/hooks/useUmf.ts` (useUmfSnapshot with 30s staleTime, useUmfMovers, useUmfBrief, useUmfAlerts) + 6 derived selectors
