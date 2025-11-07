@@ -31,15 +31,29 @@ import {
   UmfTopMovers,
   UmfAlertList,
 } from "@/components/umf";
+import {
+  mapSnapshotExtendedToAssets,
+  mapMoversExtendedToMovers,
+  getSnapshotMetadata,
+  getMoversMetadata,
+} from "@/lib/umf_adapters";
 
 export default function FeaturesUMF() {
   const [, setLocation] = useLocation();
   
   // Fetch UMF data with loading states
-  const { data: snapshot, isLoading: snapshotLoading, error: snapshotError } = useUmfSnapshot();
-  const { data: movers = [], isLoading: moversLoading, error: moversError } = useUmfMovers();
+  const { data: snapshotExtended, isLoading: snapshotLoading, error: snapshotError } = useUmfSnapshot();
+  const { data: moversExtended, isLoading: moversLoading, error: moversError } = useUmfMovers();
   const { data: brief, isLoading: briefLoading, error: briefError } = useUmfBrief();
   const { data: alerts = [], isLoading: alertsLoading, error: alertsError } = useUmfAlerts();
+  
+  // Transform extended data to UI-friendly format using adapters
+  const assets = mapSnapshotExtendedToAssets(snapshotExtended);
+  const movers = mapMoversExtendedToMovers(moversExtended);
+  
+  // Extract metadata for debugging/transparency
+  const snapshotMeta = getSnapshotMetadata(snapshotExtended);
+  const moversMeta = getMoversMetadata(moversExtended);
   
   // Combined loading state
   const isLoading = snapshotLoading || moversLoading || briefLoading || alertsLoading;
@@ -164,8 +178,8 @@ export default function FeaturesUMF() {
               {/* Sections 2 & 3: Two-Column Layout (Market Snapshot + Top Movers) */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Section 2: Market Snapshot */}
-                {snapshot && snapshot.assets.length > 0 ? (
-                  <UmfSnapshot assets={snapshot.assets} />
+                {assets && assets.length > 0 ? (
+                  <UmfSnapshot assets={assets} />
                 ) : (
                   <Card className="bg-[#111] border-[#2a2a2a] shadow-lg">
                     <CardContent className="p-12">

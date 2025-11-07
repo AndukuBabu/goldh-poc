@@ -120,6 +120,29 @@ Preferred communication style: Simple, everyday language.
 ### Live API Integration Documentation
 - `docs/UMF-Live-Firestore.md` - Comprehensive plan for migrating from mock to live CoinGecko API with 1-call-per-hour rate limiting. Covers scheduler architecture, in-memory caching (TTL=3600s), Firestore storage (latest + history), API route implementation, failure policies (degraded mode), CoinGecko attribution requirements, and complete acceptance checklist.
 
+### UMF Live Integration (Complete)
+- **Architecture**: Scheduler-only CoinGecko calls (1/hour) → In-memory Cache (1hr TTL) → Firestore (live + 48hr history) → API routes → Frontend
+- **CoinGecko Provider**: `server/umf/providers/coingecko.ts` with exponential backoff retry (3 attempts, 1s/2s/4s delays)
+- **Configuration**: `server/umf/lib/config.ts` (20+ exports: COINGECKO_BASE_URL, rate limits, jitter ranges, TTLs, asset mappings)
+- **In-Memory Cache**: `server/umf/lib/cache.ts` (TTL-based with LRU eviction, thread-safe, 1hr default TTL)
+- **Firestore I/O**: `server/umf/lib/firestoreUmf.ts` (server-side admin SDK, writes to `umf_snapshot_live/latest` and `umf_snapshot_history/{id}`)
+- **Scheduler**: `server/umf/scheduler.ts` (THE ONLY COINGECKO CALLER)
+  - Runs every 55 minutes (safety margin for 60-min rate limit)
+  - ±15s jitter to prevent thundering herd
+  - Guarded by `UMF_SCHEDULER=1` environment variable
+  - Writes to cache (1hr TTL) and Firestore (live + history)
+  - Cleanup: deletes snapshots older than 48 hours
+- **API Routes**: `server/routes.ts` - GET `/api/umf/snapshot` and `/api/umf/movers`
+  - Serve from cache → Firestore → empty fallback (NEVER call CoinGecko)
+  - Return `x-umf-source` header: 'cache' | 'firestore' | 'empty'
+  - Structured responses with degraded flag
+- **Client Firestore Helpers**: `client/src/lib/umf_firestore.ts` (read-only, client SDK)
+  - `getUmfSnapshotLive()` - Read `umf_snapshot_live/latest`
+  - `getUmfSnapshotHistory(limit)` - Read history (newest first)
+  - `getUmfSnapshotHistoryCount()` - Count history entries
+- **Multi-Tier Fallback**: Frontend hooks cascade through API → Client Firestore → Mock with source tracking
+- **Rate Limiting**: 55-minute minimum between CoinGecko calls (24 calls/day vs 43,200 limit), rate limit guard enforced in scheduler
+
 ### API Migration Placeholders (Future Implementation)
 - `client/src/lib/umf.client.ts` - API client functions (currently TODOs) for future REST API migration
 - `server/routes.ts` - Commented API endpoint stubs for GET /api/umf/snapshot, /movers, /brief, /alerts (lines 316-425)
@@ -127,8 +150,21 @@ Preferred communication style: Simple, everyday language.
 - `docs/UMF-UI-MVP.md` - Updated with detailed API migration guide (Section 17)
 
 ### UMF Feature Implementation
-- **Data Layer**: 5 TypeScript/Zod schemas in `shared/schema.ts` (UmfAsset with 5 asset classes, UmfSnapshot, UmfMover, UmfBrief, UmfAlert)
-- **React Hooks**: 4 TanStack Query hooks in `client/src/hooks/useUmf.ts` (useUmfSnapshot with 30s staleTime, useUmfMovers, useUmfBrief, useUmfAlerts) + 6 derived selectors
+- **Data Layer**: 
+  - Live schemas: `UmfSnapshotLive` and `UmfAssetLive` with nullable fields (changePct24h, volume24h, marketCap)
+  - Mock schemas: `UmfSnapshot`, `UmfMover`, `UmfBrief`, `UmfAlert`
+  - 5 asset classes: crypto, index, forex, commodity, etf
+- **React Hooks**: 4 TanStack Query hooks in `client/src/hooks/useUmf.ts` with multi-tier fallback architecture:
+  - `useUmfSnapshot()` - Returns `UmfSnapshotExtended` with `{ data, degraded, sourceUi, ageMinutes }`
+    - Fallback: API route → Client Firestore → Mock data
+    - Reads `x-umf-source` header to determine data source
+    - Computes data age in minutes for UI transparency
+  - `useUmfMovers()` - Returns `UmfMoversExtended` with `{ gainers, losers, degraded, sourceUi }`
+    - Fallback: API route → Computed from snapshot → Mock data
+    - Top 5 gainers and losers with source transparency
+  - `useUmfBrief()` - Daily morning intelligence brief
+  - `useUmfAlerts()` - Active market alerts
+  - 6 derived selectors (useCryptoByMarketCap, useIndices, useDXY, useBtcEth, useAssetBySymbol, useAssetsByClass)
 - **UI Components**: 
   - `UmfMorningBrief.tsx` - Displays headline, 3-5 bullets, timestamp, copy-to-clipboard button with toast feedback
   - `UmfSnapshot.tsx` - Asset grid with hover elevation, keyboard-accessible tooltips showing UTC/local timestamps, 2-wide mobile grid

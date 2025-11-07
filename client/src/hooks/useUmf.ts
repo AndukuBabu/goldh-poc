@@ -23,7 +23,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { 
   getUmfSnapshotLatest,
-  getUmfMovers,
+  getUmfMovers as getUmfMoversMock,
   getUmfBriefToday,
   getUmfAlerts,
   type UmfSnapshot,
@@ -31,33 +31,54 @@ import {
   type UmfBrief,
   type UmfAlert,
 } from "@/lib/umf";
-import type { UmfAsset } from "@shared/schema";
+import { getUmfSnapshotLive } from "@/lib/umf_firestore";
+import type { UmfAsset, UmfSnapshotLive, UmfAssetLive } from "@shared/schema";
+
+/**
+ * Extended Snapshot Response
+ * 
+ * Includes metadata about data source and age for UI transparency.
+ */
+export interface UmfSnapshotExtended {
+  data: UmfSnapshotLive;
+  degraded: boolean;
+  sourceUi: 'Live' | 'Firestore' | 'Mock';
+  ageMinutes: number;
+}
 
 /**
  * Hook: Fetch Latest Market Snapshot
  * 
- * Fetches all tracked assets (Top-20 crypto, indices, forex, commodities)
- * with automatic caching and background refetching.
+ * Fetches all tracked assets with multi-tier fallback:
+ * 1. API route (/api/umf/snapshot) - tries cache → Firestore → empty
+ * 2. Direct Firestore (client SDK) - if API returns empty
+ * 3. Mock data (Firestore) - if all else fails
+ * 
+ * Returns extended data with source transparency and age calculation.
  * 
  * Cache Strategy:
  * - staleTime: 30 seconds (data considered fresh for 30s)
  * - refetchInterval: 60 seconds (background refresh every minute)
- * - cacheTime: 5 minutes (cached data persists for 5 min after unmount)
+ * - gcTime: 5 minutes (cached data persists for 5 min after unmount)
  * 
- * @returns TanStack Query result with UmfSnapshot data
+ * @returns TanStack Query result with UmfSnapshotExtended
  * 
  * @example
  * ```tsx
  * function MarketOverview() {
- *   const { data: snapshot, isLoading, error } = useUmfSnapshot();
+ *   const { data, isLoading, error } = useUmfSnapshot();
  *   
  *   if (isLoading) return <Skeleton />;
  *   if (error) return <Error message={error.message} />;
  *   
+ *   const { data: snapshot, degraded, sourceUi, ageMinutes } = data;
+ *   
  *   return (
  *     <div>
  *       <h2>Market Snapshot</h2>
- *       <p>{snapshot.assets.length} assets tracked</p>
+ *       <Badge>{sourceUi}</Badge>
+ *       {degraded && <Badge variant="warn">Degraded</Badge>}
+ *       <p>Data age: {ageMinutes.toFixed(1)} minutes</p>
  *       {snapshot.assets.map(asset => (
  *         <AssetRow key={asset.id} asset={asset} />
  *       ))}
@@ -67,39 +88,132 @@ import type { UmfAsset } from "@shared/schema";
  * ```
  */
 export function useUmfSnapshot() {
-  return useQuery<UmfSnapshot, Error>({
-    queryKey: ['/features/umf/snapshot'],
-    queryFn: getUmfSnapshotLatest,
+  return useQuery<UmfSnapshotExtended, Error>({
+    queryKey: ['/api/umf/snapshot'],
+    queryFn: async () => {
+      let snapshot: UmfSnapshotLive | null = null;
+      let source: 'cache' | 'firestore' | 'empty' | 'mock' = 'empty';
+      let degraded = true;
+      
+      // Step 1: Try API route first
+      try {
+        const response = await fetch('/api/umf/snapshot');
+        
+        if (response.ok) {
+          // Read x-umf-source header
+          const headerSource = response.headers.get('x-umf-source') as 'cache' | 'firestore' | 'empty' | null;
+          source = headerSource || 'empty';
+          
+          const data = await response.json();
+          
+          // Check if we got actual data (not empty fallback)
+          if (data.assets && data.assets.length > 0) {
+            snapshot = data;
+            degraded = data.degraded || false;
+          }
+        }
+      } catch (error) {
+        console.warn('[useUmfSnapshot] API route failed:', error);
+      }
+      
+      // Step 2: If API returned empty, try direct Firestore
+      if (!snapshot || snapshot.assets.length === 0) {
+        try {
+          const firestoreSnapshot = await getUmfSnapshotLive();
+          
+          if (firestoreSnapshot && firestoreSnapshot.assets.length > 0) {
+            snapshot = firestoreSnapshot;
+            source = 'firestore';
+            degraded = true; // Direct Firestore = degraded
+          }
+        } catch (error) {
+          console.warn('[useUmfSnapshot] Direct Firestore failed:', error);
+        }
+      }
+      
+      // Step 3: If still empty, fallback to mock
+      if (!snapshot || snapshot.assets.length === 0) {
+        try {
+          const mockSnapshot = await getUmfSnapshotLatest();
+          
+          snapshot = {
+            timestamp_utc: mockSnapshot.timestamp_utc,
+            assets: mockSnapshot.assets as UmfAssetLive[], // Cast to live schema
+            degraded: true,
+          };
+          source = 'mock';
+          degraded = true;
+        } catch (error) {
+          console.error('[useUmfSnapshot] All data sources failed:', error);
+          throw new Error('Failed to fetch market snapshot from all sources');
+        }
+      }
+      
+      // Compute age in minutes
+      const ageMinutes = (Date.now() - new Date(snapshot.timestamp_utc).getTime()) / 60000;
+      
+      // Map source to UI-friendly label
+      const sourceUi: 'Live' | 'Firestore' | 'Mock' = 
+        source === 'cache' ? 'Live' :
+        source === 'firestore' ? 'Firestore' :
+        'Mock';
+      
+      return {
+        data: snapshot,
+        degraded,
+        sourceUi,
+        ageMinutes,
+      };
+    },
     staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
+    gcTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 60 * 1000, // Refetch every minute
-    retry: 2, // Retry failed requests twice
+    retry: 2,
   });
+}
+
+/**
+ * Extended Movers Response
+ * 
+ * Includes metadata about data source for UI transparency.
+ */
+export interface UmfMoversExtended {
+  gainers: UmfAssetLive[];
+  losers: UmfAssetLive[];
+  degraded: boolean;
+  sourceUi: 'Live' | 'Firestore' | 'Mock';
 }
 
 /**
  * Hook: Fetch Top Movers (Gainers & Losers)
  * 
- * Fetches the top performing and worst performing assets in the last 24 hours.
- * Typically returns 5 gainers + 5 losers = 10 total movers.
+ * Fetches top performing and worst performing assets with multi-tier fallback:
+ * 1. API route (/api/umf/movers) - server-computed movers
+ * 2. Compute from snapshot - if API returns empty
+ * 3. Mock data - if all else fails
+ * 
+ * Returns top 5 gainers and top 5 losers with source transparency.
  * 
  * Cache Strategy:
  * - staleTime: 30 seconds
  * - refetchInterval: 60 seconds
- * - cacheTime: 5 minutes
+ * - gcTime: 5 minutes
  * 
- * @returns TanStack Query result with UmfMover[] data
+ * @returns TanStack Query result with UmfMoversExtended
  * 
  * @example
  * ```tsx
  * function TopMovers() {
- *   const { data: movers, isLoading } = useUmfMovers();
+ *   const { data, isLoading } = useUmfMovers();
  *   
- *   const gainers = movers?.filter(m => m.direction === 'gainer') || [];
- *   const losers = movers?.filter(m => m.direction === 'loser') || [];
+ *   if (isLoading) return <Skeleton />;
+ *   
+ *   const { gainers, losers, degraded, sourceUi } = data;
  *   
  *   return (
  *     <div>
+ *       <Badge>{sourceUi}</Badge>
+ *       {degraded && <Badge variant="warn">Degraded</Badge>}
  *       <GainersCard data={gainers} />
  *       <LosersCard data={losers} />
  *     </div>
@@ -108,9 +222,130 @@ export function useUmfSnapshot() {
  * ```
  */
 export function useUmfMovers() {
-  return useQuery<UmfMover[], Error>({
-    queryKey: ['/features/umf/movers'],
-    queryFn: () => getUmfMovers(10),
+  return useQuery<UmfMoversExtended, Error>({
+    queryKey: ['/api/umf/movers'],
+    queryFn: async () => {
+      let gainers: UmfAssetLive[] = [];
+      let losers: UmfAssetLive[] = [];
+      let source: 'cache' | 'firestore' | 'empty' | 'mock' = 'empty';
+      let degraded = true;
+      
+      // Step 1: Try API route first
+      try {
+        const response = await fetch('/api/umf/movers');
+        
+        if (response.ok) {
+          // Read x-umf-source header
+          const headerSource = response.headers.get('x-umf-source') as 'cache' | 'firestore' | 'empty' | null;
+          source = headerSource || 'empty';
+          
+          const data = await response.json();
+          
+          // Check if we got actual data (not empty fallback)
+          if (data.gainers && data.gainers.length > 0) {
+            gainers = data.gainers;
+            losers = data.losers || [];
+            degraded = data.degraded || false;
+          }
+        }
+      } catch (error) {
+        console.warn('[useUmfMovers] API route failed:', error);
+      }
+      
+      // Step 2: If API returned empty, compute from snapshot
+      if (gainers.length === 0) {
+        try {
+          // Try getting snapshot from API first
+          const snapshotResponse = await fetch('/api/umf/snapshot');
+          let snapshot: UmfSnapshotLive | null = null;
+          
+          if (snapshotResponse.ok) {
+            const snapshotData = await snapshotResponse.json();
+            if (snapshotData.assets && snapshotData.assets.length > 0) {
+              snapshot = snapshotData;
+            }
+          }
+          
+          // If snapshot API failed, try direct Firestore
+          if (!snapshot) {
+            snapshot = await getUmfSnapshotLive();
+          }
+          
+          if (snapshot && snapshot.assets.length > 0) {
+            // Compute movers from snapshot
+            const assetsWithChange = snapshot.assets.filter(
+              (asset) => asset.changePct24h !== null
+            );
+            
+            const sorted = [...assetsWithChange].sort(
+              (a, b) => (b.changePct24h || 0) - (a.changePct24h || 0)
+            );
+            
+            gainers = sorted.slice(0, 5);
+            losers = sorted.slice(-5).reverse();
+            source = 'firestore';
+            degraded = true;
+          }
+        } catch (error) {
+          console.warn('[useUmfMovers] Snapshot fallback failed:', error);
+        }
+      }
+      
+      // Step 3: If still empty, fallback to mock
+      if (gainers.length === 0) {
+        try {
+          const mockMovers = await getUmfMoversMock(10);
+          
+          // Convert UmfMover[] to gainers/losers format
+          gainers = mockMovers
+            .filter(m => m.direction === 'gainer')
+            .map(m => ({
+              id: m.symbol.toLowerCase(),
+              symbol: m.symbol,
+              name: m.name,
+              class: m.class,
+              price: m.price,
+              changePct24h: m.changePct24h,
+              volume24h: null,
+              marketCap: null,
+              updatedAt_utc: m.updatedAt_utc,
+            }));
+          
+          losers = mockMovers
+            .filter(m => m.direction === 'loser')
+            .map(m => ({
+              id: m.symbol.toLowerCase(),
+              symbol: m.symbol,
+              name: m.name,
+              class: m.class,
+              price: m.price,
+              changePct24h: m.changePct24h,
+              volume24h: null,
+              marketCap: null,
+              updatedAt_utc: m.updatedAt_utc,
+            }));
+          
+          source = 'mock';
+          degraded = true;
+        } catch (error) {
+          console.error('[useUmfMovers] All data sources failed:', error);
+          throw new Error('Failed to fetch market movers from all sources');
+        }
+      }
+      
+      // Map source to UI-friendly label
+      const sourceUi: 'Live' | 'Firestore' | 'Mock' = 
+        source === 'cache' ? 'Live' :
+        source === 'firestore' ? 'Firestore' :
+        'Mock';
+      
+      return {
+        gainers,
+        losers,
+        degraded,
+        sourceUi,
+      };
+    },
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 60 * 1000, // Refetch every minute
@@ -238,10 +473,10 @@ export function useUmfAlerts() {
  * ```
  */
 export function useCryptoByMarketCap(limit: number = 20) {
-  const { data: snapshot, ...queryState } = useUmfSnapshot();
+  const { data: extended, ...queryState } = useUmfSnapshot();
   
-  const topCrypto = snapshot?.assets
-    .filter((asset): asset is UmfAsset & { marketCap: number } => 
+  const topCrypto = extended?.data.assets
+    .filter((asset): asset is UmfAssetLive & { marketCap: number } => 
       asset.class === 'crypto' && asset.marketCap !== null
     )
     .sort((a, b) => b.marketCap - a.marketCap)
@@ -278,9 +513,9 @@ export function useCryptoByMarketCap(limit: number = 20) {
  * ```
  */
 export function useIndices() {
-  const { data: snapshot, ...queryState } = useUmfSnapshot();
+  const { data: extended, ...queryState } = useUmfSnapshot();
   
-  const indices = snapshot?.assets.filter(asset => asset.class === 'index');
+  const indices = extended?.data.assets.filter(asset => asset.class === 'index');
   
   return {
     data: indices,
@@ -316,9 +551,9 @@ export function useIndices() {
  * ```
  */
 export function useDXY() {
-  const { data: snapshot, ...queryState } = useUmfSnapshot();
+  const { data: extended, ...queryState } = useUmfSnapshot();
   
-  const dxy = snapshot?.assets.find(
+  const dxy = extended?.data.assets.find(
     asset => asset.symbol === 'DXY' || asset.id === 'dxy'
   );
   
@@ -371,14 +606,14 @@ export function useDXY() {
  * ```
  */
 export function useBtcEth() {
-  const { data: snapshot, ...queryState } = useUmfSnapshot();
+  const { data: extended, ...queryState } = useUmfSnapshot();
   
-  const btc = snapshot?.assets.find(
-    asset => asset.symbol === 'BTC' || asset.id === 'btc-usd'
+  const btc = extended?.data.assets.find(
+    asset => asset.symbol === 'BTC' || asset.id === 'bitcoin'
   );
   
-  const eth = snapshot?.assets.find(
-    asset => asset.symbol === 'ETH' || asset.id === 'eth-usd'
+  const eth = extended?.data.assets.find(
+    asset => asset.symbol === 'ETH' || asset.id === 'ethereum'
   );
   
   return {
@@ -414,9 +649,9 @@ export function useBtcEth() {
  * ```
  */
 export function useAssetBySymbol(symbol: string) {
-  const { data: snapshot, ...queryState } = useUmfSnapshot();
+  const { data: extended, ...queryState } = useUmfSnapshot();
   
-  const asset = snapshot?.assets.find(
+  const asset = extended?.data.assets.find(
     asset => asset.symbol.toLowerCase() === symbol.toLowerCase()
   );
   
@@ -453,9 +688,9 @@ export function useAssetBySymbol(symbol: string) {
  * ```
  */
 export function useAssetsByClass(assetClass: 'crypto' | 'index' | 'forex' | 'commodity' | 'etf') {
-  const { data: snapshot, ...queryState } = useUmfSnapshot();
+  const { data: extended, ...queryState } = useUmfSnapshot();
   
-  const assets = snapshot?.assets.filter(asset => asset.class === assetClass);
+  const assets = extended?.data.assets.filter(asset => asset.class === assetClass);
   
   return {
     data: assets,
