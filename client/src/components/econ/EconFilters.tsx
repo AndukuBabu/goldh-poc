@@ -72,7 +72,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
 
   return (
     <Card 
-      className="border-primary/20 sticky top-20 z-10 bg-card/95 backdrop-blur-sm"
+      className="border-primary/20 sticky top-16 z-20 bg-black/90 backdrop-blur transition-shadow hover:shadow-[0_0_10px_rgba(199,174,106,0.13)]"
       data-testid="econ-filters"
       role="search"
       aria-label="Economic event filters"
@@ -127,7 +127,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 max-h-[60vh] md:max-h-none overflow-y-auto md:overflow-y-visible border-b border-[#2a2a2a] pb-4">
           {/* Region Filter */}
           <div className="space-y-2">
             <label 
@@ -137,9 +137,13 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
               Region / Country
             </label>
             <div 
-              className="flex flex-wrap gap-2"
+              className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide"
               role="group"
               aria-labelledby="filter-region-label"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
             >
               {ECON_COUNTRIES.map((country) => {
                 const isActive = (filters.country || []).includes(country);
@@ -149,10 +153,11 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
                     variant={isActive ? "default" : "outline"}
                     size="sm"
                     onClick={() => toggleCountry(country)}
-                    className="h-8"
+                    className="h-8 snap-start flex-shrink-0"
                     data-testid={`filter-country-${country.toLowerCase()}`}
                     aria-label={`Filter by ${ECON_COUNTRY_LABELS[country]}`}
                     aria-pressed={isActive}
+                    tabIndex={0}
                   >
                     {ECON_COUNTRY_LABELS[country]}
                   </Button>
@@ -170,9 +175,13 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
               Category
             </label>
             <div 
-              className="flex flex-wrap gap-2"
+              className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide"
               role="group"
               aria-labelledby="filter-category-label"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
             >
               {ECON_CATEGORIES.map((category) => {
                 const isActive = (filters.category || []).includes(category);
@@ -182,11 +191,12 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
                     variant={isActive ? "default" : "outline"}
                     size="sm"
                     onClick={() => toggleCategory(category)}
-                    className="h-8"
+                    className="h-8 snap-start flex-shrink-0"
                     data-testid={`filter-category-${category.toLowerCase()}`}
                     aria-label={`Filter by ${ECON_CATEGORY_LABELS[category].label}`}
                     aria-pressed={isActive}
                     title={ECON_CATEGORY_LABELS[category].description}
+                    tabIndex={0}
                   >
                     {ECON_CATEGORY_LABELS[category].label}
                   </Button>
@@ -207,7 +217,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
               type="multiple"
               value={filters.importance || []}
               onValueChange={handleImportanceChange}
-              className="justify-start"
+              className="justify-start flex-wrap gap-2"
               aria-labelledby="filter-importance-label"
             >
               <ToggleGroupItem 
@@ -215,6 +225,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
                 className="h-8"
                 data-testid="filter-importance-high"
                 aria-label="Filter by high importance events"
+                tabIndex={0}
               >
                 High
               </ToggleGroupItem>
@@ -223,6 +234,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
                 className="h-8"
                 data-testid="filter-importance-medium"
                 aria-label="Filter by medium importance events"
+                tabIndex={0}
               >
                 Medium
               </ToggleGroupItem>
@@ -231,6 +243,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
                 className="h-8"
                 data-testid="filter-importance-low"
                 aria-label="Filter by low importance events"
+                tabIndex={0}
               >
                 Low
               </ToggleGroupItem>
