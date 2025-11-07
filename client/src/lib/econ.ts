@@ -26,6 +26,9 @@ import { db } from "./firebase";
 import { collection, query, where, orderBy, getDocs, Timestamp } from "firebase/firestore";
 import { econEventSchema, type EconEvent } from "@shared/schema";
 
+// Re-export EconEvent type for external consumers
+export type { EconEvent };
+
 /**
  * Filter options for economic events query
  */
