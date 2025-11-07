@@ -17,7 +17,8 @@ import { Header } from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, ArrowLeft, Database, AlertCircle } from "lucide-react";
+import { TrendingUp, ArrowLeft, Database, AlertCircle, Clock, ExternalLink } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation } from "wouter";
 import {
   useUmfSnapshot,
@@ -90,21 +91,74 @@ export default function FeaturesUMF() {
                 <TrendingUp className="w-8 h-8 text-[#C7AE6A]" aria-label="Trending up icon" />
               </div>
               
-              {/* Title & Badge */}
+              {/* Title & Badges */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="text-4xl font-bold text-foreground">
                     Universal Market Financials
                   </h1>
-                  <Badge 
-                    variant="outline" 
-                    className="text-xs bg-[#C7AE6A]/10 border-[#C7AE6A]/30 text-[#C7AE6A]"
-                    data-testid="badge-mock-data"
-                    aria-label="Using UI mock data"
-                  >
-                    <Database className="w-3 h-3 mr-1" aria-hidden="true" />
-                    <span>UI Mock Data</span>
-                  </Badge>
+                  
+                  {/* Data Source Badge */}
+                  {snapshotMeta && (
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${
+                        snapshotMeta.sourceUi === 'Live' 
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                          : snapshotMeta.sourceUi === 'Firestore'
+                          ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                          : 'bg-[#C7AE6A]/10 border-[#C7AE6A]/30 text-[#C7AE6A]'
+                      }`}
+                      data-testid="badge-data-source"
+                      aria-label={`Data source: ${snapshotMeta.sourceUi}`}
+                    >
+                      <Database className="w-3 h-3 mr-1" aria-hidden="true" />
+                      <span>Data: {snapshotMeta.sourceUi}</span>
+                    </Badge>
+                  )}
+                  
+                  {/* Degraded Status Indicator */}
+                  {snapshotMeta?.degraded && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs bg-amber-500/10 border-amber-500/30 text-amber-400"
+                          data-testid="badge-degraded"
+                          aria-label="Serving degraded data"
+                        >
+                          <span 
+                            className="w-2 h-2 rounded-full bg-amber-500 mr-1.5 animate-pulse" 
+                            aria-hidden="true"
+                          />
+                          <span>Degraded</span>
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent 
+                        className="bg-[#1a1a1a] border-[#C7AE6A]/30 text-foreground"
+                        data-testid="tooltip-degraded"
+                      >
+                        <p>Serving last good snapshot</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  
+                  {/* Last Updated */}
+                  {snapshotMeta && (
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs bg-muted/50 border-muted-foreground/20 text-muted-foreground"
+                      data-testid="badge-last-updated"
+                      aria-label={`Last updated ${snapshotMeta.ageMinutes.toFixed(1)} minutes ago`}
+                    >
+                      <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
+                      <span>
+                        Updated {snapshotMeta.ageMinutes < 1 
+                          ? 'just now' 
+                          : `${Math.floor(snapshotMeta.ageMinutes)} min ago`}
+                      </span>
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-muted-foreground text-lg mt-2">
                   Your daily control center for crypto, equities, and market intelligence
@@ -214,6 +268,47 @@ export default function FeaturesUMF() {
                   <UmfAlertList alerts={alerts} />
                 </section>
               )}
+              
+              {/* CoinGecko Attribution */}
+              <footer 
+                className="mt-12 pt-6 border-t border-[#2a2a2a]"
+                role="contentinfo"
+                aria-label="Data attribution"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <a 
+                    href="https://www.coingecko.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex"
+                    data-testid="link-coingecko-badge"
+                    aria-label="Powered by CoinGecko - opens in new window"
+                  >
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs bg-muted/30 border-muted-foreground/20 text-muted-foreground hover:bg-muted/40 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                      data-testid="badge-coingecko-attribution"
+                    >
+                      <Database className="w-3 h-3" aria-hidden="true" />
+                      <span>Powered by CoinGecko</span>
+                      <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                    </Badge>
+                  </a>
+                </div>
+                <p className="text-xs text-muted-foreground text-center mt-3">
+                  Real-time cryptocurrency market data provided by{' '}
+                  <a 
+                    href="https://www.coingecko.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[#C7AE6A] hover:text-[#d5c28f] underline underline-offset-2 transition-colors"
+                    data-testid="link-coingecko"
+                    aria-label="Visit CoinGecko website - opens in new window"
+                  >
+                    CoinGecko API
+                  </a>
+                </p>
+              </footer>
             </div>
           )}
         </div>
