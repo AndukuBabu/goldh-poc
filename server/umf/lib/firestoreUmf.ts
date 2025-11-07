@@ -33,7 +33,7 @@ import {
   Timestamp,
   type Firestore,
 } from 'firebase/firestore';
-import { umfSnapshotSchema, type UmfSnapshot } from '@shared/schema';
+import { umfSnapshotLiveSchema, type UmfSnapshotLive } from '@shared/schema';
 
 /**
  * Firebase Configuration
@@ -107,9 +107,9 @@ function initializeFirestore(): Firestore {
  * console.log('Live snapshot updated');
  * ```
  */
-export async function writeLiveSnapshot(snapshot: UmfSnapshot): Promise<void> {
+export async function writeLiveSnapshot(snapshot: UmfSnapshotLive): Promise<void> {
   // Validate with Zod before writing
-  const validated = umfSnapshotSchema.parse(snapshot);
+  const validated = umfSnapshotLiveSchema.parse(snapshot);
   
   // Initialize Firestore
   const firestore = initializeFirestore();
@@ -148,9 +148,9 @@ export async function writeLiveSnapshot(snapshot: UmfSnapshot): Promise<void> {
  * console.log('History snapshot appended');
  * ```
  */
-export async function appendHistorySnapshot(snapshot: UmfSnapshot): Promise<void> {
+export async function appendHistorySnapshot(snapshot: UmfSnapshotLive): Promise<void> {
   // Validate with Zod before writing
-  const validated = umfSnapshotSchema.parse(snapshot);
+  const validated = umfSnapshotLiveSchema.parse(snapshot);
   
   // Initialize Firestore
   const firestore = initializeFirestore();
@@ -192,7 +192,7 @@ export async function appendHistorySnapshot(snapshot: UmfSnapshot): Promise<void
  * }
  * ```
  */
-export async function readLiveSnapshot(): Promise<UmfSnapshot | null> {
+export async function readLiveSnapshot(): Promise<UmfSnapshotLive | null> {
   // Initialize Firestore
   const firestore = initializeFirestore();
   
@@ -209,7 +209,7 @@ export async function readLiveSnapshot(): Promise<UmfSnapshot | null> {
   const data = docSnap.data();
   
   // Validate with Zod
-  const validated = umfSnapshotSchema.parse(data);
+  const validated = umfSnapshotLiveSchema.parse(data);
   
   return validated;
 }
