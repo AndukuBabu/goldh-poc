@@ -123,7 +123,7 @@ export default function FeaturesCalendar() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-foreground">
-                  Economic Calendar with AI Impact
+                  Economic Calendar
                 </h1>
                 <p className="text-muted-foreground text-lg mt-2">
                   Never miss a market-moving event.
@@ -131,63 +131,22 @@ export default function FeaturesCalendar() {
               </div>
             </div>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-4xl">
-              Global crypto-relevant macroeconomic events delivered in real time — with intelligent summaries, 
-              live countdowns, and impact signals powered by AI. From Fed decisions to inflation releases, 
-              never get blindsided again.
+              Track global macroeconomic events that impact crypto markets. From Fed rate decisions to employment reports, 
+              stay informed with upcoming releases, forecasts, and live data updates. Filter by region, category, and importance 
+              to focus on what matters most to your portfolio.
             </p>
           </div>
 
-          {/* Beta Preview Banner */}
-          <Card className="mb-8 border-2 border-amber-800/50 bg-gradient-to-r from-amber-950/20 to-amber-900/10">
-            <CardHeader className="pb-4">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-amber-900/50 border border-amber-800/60 flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-5 h-5 text-amber-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CardTitle className="text-xl text-amber-200">
-                      Beta Preview - Mock Data
-                    </CardTitle>
-                    <Badge variant="outline" className="bg-amber-900/30 text-amber-300 border-amber-700">
-                      MVP Phase
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-base text-amber-100/70">
-                    You're viewing a functional preview with mock economic events from Firestore. 
-                    Real-time API integration, ML impact models, and live notifications coming in Phase 2.
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex flex-wrap gap-3 text-amber-200/80">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <span>Firestore Mock Data</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    <span>Filtering & Pagination</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span>Real-time APIs (Phase 2)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span>ML Models (Phase 2)</span>
-                  </div>
-                </div>
-                {/* Last Updated Timestamp */}
-                <div className="ml-auto flex items-center gap-2 text-amber-200/60 text-xs">
-                  <Database className="w-3 h-3" />
-                  <span>Updated: {lastUpdated}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Coming Soon Note */}
+          <div className="mb-6 p-3 border border-primary/20 rounded-lg bg-card/50 backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-sm">
+              <AlertCircle className="w-4 h-4 text-primary flex-shrink-0" />
+              <p className="text-foreground/80">
+                <span className="font-semibold text-primary">Coming Soon:</span> Real-time API integration, ML impact predictions, and live notifications. 
+                Currently showing mock data for preview.
+              </p>
+            </div>
+          </div>
 
           {/* Main Economic Calendar Section */}
           <section 
