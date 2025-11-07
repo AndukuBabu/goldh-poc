@@ -72,7 +72,7 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
 
   return (
     <Card 
-      className="border-primary/20 sticky top-16 z-20 bg-black/90 backdrop-blur transition-shadow hover:shadow-[0_0_10px_rgba(199,174,106,0.13)]"
+      className="border-primary/20 bg-card/95 backdrop-blur-sm"
       data-testid="econ-filters"
       role="search"
       aria-label="Economic event filters"
