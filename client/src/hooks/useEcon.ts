@@ -15,6 +15,8 @@ import { useMemo } from "react";
 import { getEconEventsMock, type EconEventFilters } from "@/lib/econ";
 import type { EconEvent } from "@shared/schema";
 
+const isDev = import.meta.env.DEV;
+
 /**
  * Parameters for useEconEvents hook
  * Extends EconEventFilters with query-specific options
@@ -64,6 +66,7 @@ function getDefaultDateRange(): { from: Date; to: Date } {
  * - Default 14-day window from today
  * - Memoized selectors for derived data
  * - Type-safe query key for cache invalidation
+ * - Performance tracking in development mode
  * 
  * @param params - Optional filters and date range
  * @returns TanStack Query result with events and loading states
@@ -129,7 +132,39 @@ export function useEconEvents(params: UseEconEventsParams = {}) {
     
     // Query function: fetch from Firestore (MVP) or API (Phase 2)
     queryFn: async () => {
+      // Performance: Start timing data fetch
+      const fetchStartTime = performance.now();
+      
+      if (isDev) {
+        console.log(
+          `%c[useEconEvents] Fetch Start`,
+          'color: #74c0fc; font-weight: bold;',
+          normalizedParams
+        );
+      }
+      
       const events = await getEconEventsMock(normalizedParams);
+      
+      // Performance: Calculate fetch duration
+      const fetchDuration = performance.now() - fetchStartTime;
+      
+      if (isDev) {
+        console.log(
+          `%c[useEconEvents] Fetch Complete`,
+          'color: #51cf66; font-weight: bold;',
+          `${fetchDuration.toFixed(2)}ms | ${events.length} events`
+        );
+        
+        // Warn if fetch is slow
+        if (fetchDuration > 300) {
+          console.warn(
+            `%c[useEconEvents] Slow Fetch`,
+            'color: #ff6b6b; font-weight: bold;',
+            `${fetchDuration.toFixed(2)}ms (target: <300ms)`
+          );
+        }
+      }
+      
       return events;
     },
     

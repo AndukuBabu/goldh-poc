@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,17 @@ import {
 } from "@/components/econ";
 import type { EconEventFilters } from "@/lib/econ";
 
+const isDev = import.meta.env.DEV;
+
 export default function FeaturesCalendar() {
   const [, setLocation] = useLocation();
+  
+  // Performance: Mark component mount start
+  useEffect(() => {
+    if (isDev) {
+      performance.mark('econ-calendar-mount-start');
+    }
+  }, []);
   
   // Filter state with defaults: next 14 days, all regions/categories, all importance
   const [filters, setFilters] = useState<EconEventFilters>({
@@ -25,6 +34,47 @@ export default function FeaturesCalendar() {
 
   // Fetch events with current filters
   const { data: events = [], isLoading, error, dataUpdatedAt } = useEconEvents(filters);
+
+  // Performance: Track when data is loaded and component is ready
+  useEffect(() => {
+    if (isDev && !isLoading && events.length > 0) {
+      // Mark first paint (when data is available and ready to render)
+      performance.mark('econ-calendar-first-paint');
+      
+      // Measure time from mount to first paint
+      try {
+        const measure = performance.measure(
+          'econ-calendar-render-time',
+          'econ-calendar-mount-start',
+          'econ-calendar-first-paint'
+        );
+        
+        console.log(
+          `%c[EconCalendar] First Paint`,
+          'color: #C7AE6A; font-weight: bold;',
+          `${measure.duration.toFixed(2)}ms (${events.length} events)`
+        );
+        
+        // Check if we're under target
+        if (measure.duration > 500) {
+          console.warn(
+            `%c[EconCalendar] Performance Warning`,
+            'color: #ff6b6b; font-weight: bold;',
+            `First paint took ${measure.duration.toFixed(2)}ms (target: <500ms)`
+          );
+        } else {
+          console.log(
+            `%c[EconCalendar] Performance`,
+            'color: #51cf66; font-weight: bold;',
+            `✓ Under 500ms target`
+          );
+        }
+      } catch (err) {
+        // Marks may not exist if component remounted
+        console.debug('[EconCalendar] Performance marks not available');
+      }
+    }
+  }, [isLoading, events.length]);
 
   // Count active filters (excluding default date range)
   const activeFilterCount = useMemo(() => {
