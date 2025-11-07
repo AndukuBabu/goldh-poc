@@ -92,7 +92,7 @@ export async function fetchMarkets(
   }
 
   // Build URL with query parameters
-  const url = new URL(COINGECKO_ENDPOINT, COINGECKO_BASE_URL);
+  const url = new URL(COINGECKO_BASE_URL + COINGECKO_ENDPOINT);
   url.searchParams.set('vs_currency', 'usd');
   url.searchParams.set('ids', ids.join(',')); // Comma-separated, no spaces
   url.searchParams.set('sparkline', 'false');
