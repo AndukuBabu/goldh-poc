@@ -5,6 +5,9 @@ import { hashPassword, verifyPassword, sessionManager } from "./auth";
 import { requireAuth } from "./middleware";
 import { insertUserSchema, serverSignUpSchema } from "@shared/schema";
 import { z } from "zod";
+import { getFresh } from "./umf/lib/cache";
+import { readLiveSnapshot } from "./umf/lib/firestoreUmf";
+import type { UmfSnapshotLive, UmfAssetLive } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -320,52 +323,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
   /**
    * GET /api/umf/snapshot
    * 
-   * Returns current market snapshot with all tracked assets
-   * Response: { timestamp_utc: string, assets: UmfAsset[] }
+   * Returns current market snapshot with all tracked assets.
+   * NEVER calls CoinGecko - serves from cache/Firestore only.
    * 
-   * Implementation notes:
-   * - Fetch latest prices from market data provider (e.g., CoinGecko, Alpha Vantage)
-   * - Calculate 24h changes
-   * - Include crypto (BTC, ETH, SOL, etc.), indices (SPX, NDX), forex (DXY), commodities (GOLD, WTI)
-   * - Cache results for 30 seconds to reduce API calls
+   * Data Sources (in priority order):
+   * 1. In-memory cache (fastest, < 5ms)
+   * 2. Firestore live collection (~100ms)
+   * 3. Empty fallback (degraded mode)
+   * 
+   * Response Headers:
+   * - x-umf-source: 'cache' | 'firestore' | 'empty'
+   * 
+   * Response: UmfSnapshotLive
+   * - degraded: false if from cache, true if from Firestore/empty
    */
-  // app.get("/api/umf/snapshot", async (req: Request, res: Response) => {
-  //   try {
-  //     // TODO: Fetch from market data provider
-  //     // TODO: Transform to UmfSnapshot schema
-  //     // TODO: Return with proper caching headers
-  //     res.status(501).json({ error: "Not implemented yet" });
-  //   } catch (error) {
-  //     console.error("UMF snapshot error:", error);
-  //     res.status(500).json({ error: "Failed to fetch market snapshot" });
-  //   }
-  // });
+  app.get("/api/umf/snapshot", async (req: Request, res: Response) => {
+    try {
+      // Step 1: Try in-memory cache first (fastest)
+      const cached = getFresh<UmfSnapshotLive>('umf:snapshot');
+      
+      if (cached) {
+        // Cache hit - return fresh data
+        res.setHeader('x-umf-source', 'cache');
+        return res.json(cached);
+      }
+      
+      // Step 2: Cache miss - try Firestore
+      const firestore = await readLiveSnapshot();
+      
+      if (firestore) {
+        // Firestore hit - mark as degraded
+        res.setHeader('x-umf-source', 'firestore');
+        return res.json({
+          ...firestore,
+          degraded: true, // From Firestore = degraded (not fresh from scheduler)
+        });
+      }
+      
+      // Step 3: No data available - return empty fallback
+      res.setHeader('x-umf-source', 'empty');
+      return res.json({
+        timestamp_utc: new Date().toISOString(),
+        assets: [],
+        degraded: true,
+      });
+    } catch (error) {
+      console.error("UMF snapshot error:", error);
+      res.status(500).json({ error: "Failed to fetch market snapshot" });
+    }
+  });
 
   /**
    * GET /api/umf/movers
    * 
-   * Returns top market movers (gainers and losers)
-   * Query params: ?limit=10 (default: 10, max: 50)
-   * Response: UmfMover[]
+   * Returns top market movers (gainers and losers).
+   * NEVER calls CoinGecko - serves from cache/Firestore only.
    * 
-   * Implementation notes:
-   * - Calculate 24h percentage changes for all tracked assets
-   * - Sort by absolute percentage change
-   * - Return top N gainers and top N losers
-   * - Cache results for 1 minute
+   * Data Sources (in priority order):
+   * 1. In-memory cache (fastest)
+   * 2. Firestore live collection
+   * 3. Empty fallback (degraded mode)
+   * 
+   * Logic:
+   * - Derive top 5 gainers (highest positive changePct24h)
+   * - Derive top 5 losers (lowest negative changePct24h)
+   * - Ignore assets with null changePct24h
+   * 
+   * Response Headers:
+   * - x-umf-source: 'cache' | 'firestore' | 'empty'
+   * 
+   * Response: { gainers: UmfAssetLive[], losers: UmfAssetLive[], degraded: boolean }
    */
-  // app.get("/api/umf/movers", async (req: Request, res: Response) => {
-  //   try {
-  //     // const limit = Math.min(Number(req.query.limit) || 10, 50);
-  //     // TODO: Fetch from market data provider
-  //     // TODO: Calculate and sort by 24h change
-  //     // TODO: Return top gainers and losers
-  //     res.status(501).json({ error: "Not implemented yet" });
-  //   } catch (error) {
-  //     console.error("UMF movers error:", error);
-  //     res.status(500).json({ error: "Failed to fetch market movers" });
-  //   }
-  // });
+  app.get("/api/umf/movers", async (req: Request, res: Response) => {
+    try {
+      let snapshot: UmfSnapshotLive | null = null;
+      let source: 'cache' | 'firestore' | 'empty' = 'empty';
+      let degraded = true;
+      
+      // Step 1: Try in-memory cache first
+      const cached = getFresh<UmfSnapshotLive>('umf:snapshot');
+      
+      if (cached) {
+        snapshot = cached;
+        source = 'cache';
+        degraded = false; // Cache = fresh data
+      } else {
+        // Step 2: Cache miss - try Firestore
+        const firestore = await readLiveSnapshot();
+        
+        if (firestore) {
+          snapshot = firestore;
+          source = 'firestore';
+          degraded = true; // Firestore = degraded (not fresh from scheduler)
+        }
+      }
+      
+      // Step 3: Derive movers from snapshot
+      let gainers: UmfAssetLive[] = [];
+      let losers: UmfAssetLive[] = [];
+      
+      if (snapshot && snapshot.assets.length > 0) {
+        // Filter out assets with null changePct24h
+        const assetsWithChange = snapshot.assets.filter(
+          (asset) => asset.changePct24h !== null
+        );
+        
+        // Sort by changePct24h descending (highest first)
+        const sorted = [...assetsWithChange].sort(
+          (a, b) => (b.changePct24h || 0) - (a.changePct24h || 0)
+        );
+        
+        // Top 5 gainers (highest positive changes)
+        gainers = sorted.slice(0, 5);
+        
+        // Top 5 losers (lowest negative changes)
+        losers = sorted.slice(-5).reverse();
+      }
+      
+      // Set response header
+      res.setHeader('x-umf-source', source);
+      
+      // Return movers
+      return res.json({
+        gainers,
+        losers,
+        degraded,
+      });
+    } catch (error) {
+      console.error("UMF movers error:", error);
+      res.status(500).json({ error: "Failed to fetch market movers" });
+    }
+  });
 
   /**
    * GET /api/umf/brief
