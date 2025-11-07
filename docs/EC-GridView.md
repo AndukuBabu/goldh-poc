@@ -1050,6 +1050,318 @@ interface EconGridDayDrawerProps {
 
 ---
 
+## 15. Swap to API (Production Migration)
+
+### 15.1 Overview
+
+The Grid View currently uses **mock Firestore data** via `getEconEventsMock()` for development. When the production API endpoint `/api/econ/events` is live, the data fetching logic can be swapped with minimal code changes.
+
+**Migration Impact:**
+- ✅ **One file change:** `client/src/components/econ/EconCalendarGrid.tsx`
+- ✅ **No UI refactor needed:** All components remain unchanged
+- ✅ **Same data flow:** Event bucketing and UTC logic stay identical
+- ✅ **No new dependencies:** Use existing `fetchEconEvents()` function
+
+---
+
+### 15.2 Current Implementation (Mock Data)
+
+**File:** `client/src/components/econ/EconCalendarGrid.tsx`
+
+```typescript
+import { getEconEventsMock, type EconEvent } from "@/lib/econ";
+
+// Current: Fetch from Firestore mock
+const {
+  data: events = [],
+  isLoading,
+  error,
+} = useQuery({
+  queryKey: ["/api/econ/events", bounds.startUtcISO, bounds.endUtcISO, filters],
+  queryFn: async () => {
+    return getEconEventsMock({
+      from: bounds.startUtcISO,
+      to: bounds.endUtcISO,
+      ...filters,
+    });
+  },
+});
+```
+
+**Data Source:** Firestore `guruDigest` collection (mock data)
+
+---
+
+### 15.3 Production Implementation (Real API)
+
+**File:** `client/src/components/econ/EconCalendarGrid.tsx`
+
+```typescript
+import { fetchEconEvents, type EconEvent } from "@/lib/econ";
+
+// Production: Fetch from backend API
+const {
+  data: events = [],
+  isLoading,
+  error,
+} = useQuery({
+  queryKey: ["/api/econ/events", bounds.startUtcISO, bounds.endUtcISO, filters],
+  queryFn: async () => {
+    return fetchEconEvents({
+      from: bounds.startUtcISO,
+      to: bounds.endUtcISO,
+      ...filters,
+    });
+  },
+});
+```
+
+**Data Source:** Express backend `/api/econ/events` endpoint
+
+---
+
+### 15.4 Migration Steps
+
+**Step 1: Verify API Endpoint Ready**
+```bash
+# Test API endpoint responds correctly
+curl http://localhost:5000/api/econ/events?from=2025-01-01T00:00:00.000Z&to=2025-01-31T23:59:59.999Z
+
+# Expected response:
+# [
+#   {
+#     "id": "...",
+#     "title": "US CPI (YoY)",
+#     "datetime_utc": "2025-01-15T13:30:00.000Z",
+#     "country": "US",
+#     "category": "Inflation",
+#     "importance": "High",
+#     "impactScore": 85,
+#     "confidence": 90,
+#     ...
+#   }
+# ]
+```
+
+**Step 2: Update EconCalendarGrid.tsx**
+
+Replace this:
+```typescript
+import { getEconEventsMock, type EconEvent } from "@/lib/econ";
+
+const { data: events = [] } = useQuery({
+  queryFn: async () => {
+    return getEconEventsMock({ from: bounds.startUtcISO, to: bounds.endUtcISO, ...filters });
+  },
+});
+```
+
+With this:
+```typescript
+import { fetchEconEvents, type EconEvent } from "@/lib/econ";
+
+const { data: events = [] } = useQuery({
+  queryFn: async () => {
+    return fetchEconEvents({ from: bounds.startUtcISO, to: bounds.endUtcISO, ...filters });
+  },
+});
+```
+
+**Step 3: Test Grid View**
+```
+1. Navigate to /features/calendar?view=grid
+2. Verify events load from API (check Network tab)
+3. Test month navigation (Prev/Next)
+4. Verify event bucketing works (events on correct days)
+5. Test drawer/popover (events show correct data)
+```
+
+**Step 4: Verify UTC Logic Unchanged**
+
+```typescript
+// Event bucketing logic (unchanged)
+const eventsByDay = useMemo(() => {
+  const map = new Map<string, EconEvent[]>();
+  
+  events.forEach((event) => {
+    // Extract date portion from datetime_utc (YYYY-MM-DD)
+    const dateKey = event.datetime_utc.split('T')[0];
+    
+    if (!map.has(dateKey)) {
+      map.set(dateKey, []);
+    }
+    map.get(dateKey)!.push(event);
+  });
+
+  // Sort events within each day by time, then importance
+  map.forEach((dayEvents) => {
+    dayEvents.sort((a, b) => {
+      const timeA = new Date(a.datetime_utc).getTime();
+      const timeB = new Date(b.datetime_utc).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      
+      const importanceOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
+      return importanceOrder[a.importance] - importanceOrder[b.importance];
+    });
+  });
+
+  return map;
+}, [events]);
+```
+
+✅ **This logic remains identical** - works with both mock and real API data.
+
+---
+
+### 15.5 API Requirements
+
+**Endpoint:** `GET /api/econ/events`
+
+**Query Parameters:**
+- `from` (required): ISO 8601 UTC datetime string (e.g., `2025-01-01T00:00:00.000Z`)
+- `to` (required): ISO 8601 UTC datetime string (e.g., `2025-01-31T23:59:59.999Z`)
+- `country` (optional): Filter by country code (e.g., `US`, `EU`, `GB`)
+- `category` (optional): Filter by category (e.g., `Inflation`, `Employment`, `GDP`)
+- `importance` (optional): Filter by importance (e.g., `High`, `Medium`, `Low`)
+
+**Response Format:**
+```typescript
+type EconEvent[] = {
+  id: string;
+  title: string;
+  country: string;
+  category: 'Inflation' | 'Employment' | 'GDP' | 'Rates' | 'Earnings' | 'Other';
+  datetime_utc: string; // ISO 8601 with Z suffix
+  importance: 'High' | 'Medium' | 'Low';
+  impactScore: number; // 0-100
+  confidence: number; // 0-100
+  status: 'upcoming' | 'released';
+  previous: number | null;
+  forecast: number | null;
+  actual: number | null;
+}[]
+```
+
+**Critical:** All `datetime_utc` values MUST end with `Z` (UTC timezone indicator).
+
+---
+
+### 15.6 No Changes Needed
+
+The following components **remain unchanged** during API swap:
+
+**Grid Components:**
+- ✅ `CalendarGrid.tsx` - Matrix rendering logic
+- ✅ `DayCell.tsx` - Event dot display
+- ✅ `DayDrawer.tsx` - Mobile bottom sheet
+- ✅ `EventPopover.tsx` - Desktop hover preview
+- ✅ `EventDot.tsx` - Event indicator
+- ✅ `MonthHeader.tsx` - Navigation controls
+
+**Shared Utilities:**
+- ✅ `econDate.ts` - UTC date utilities (matrix generation, formatting)
+- ✅ All date bucketing logic
+- ✅ All event sorting logic
+- ✅ All keyboard navigation
+- ✅ All accessibility features
+
+**Why no changes needed?**
+- Components receive events as props from parent
+- UTC date parsing happens in parent (`EconCalendarGrid`)
+- Event bucketing logic works on any `EconEvent[]` array
+- UI rendering doesn't care about data source
+
+---
+
+### 15.7 Rollback Plan
+
+If API issues arise, revert to mock data immediately:
+
+**Step 1: Revert import**
+```typescript
+// Change this back
+import { fetchEconEvents } from "@/lib/econ";
+
+// To this
+import { getEconEventsMock } from "@/lib/econ";
+```
+
+**Step 2: Revert queryFn**
+```typescript
+// Change this back
+queryFn: async () => fetchEconEvents({ ... })
+
+// To this
+queryFn: async () => getEconEventsMock({ ... })
+```
+
+**Step 3: Deploy**
+```bash
+git checkout client/src/components/econ/EconCalendarGrid.tsx
+git commit -m "Rollback to Firestore mock data"
+```
+
+**Estimated rollback time:** < 2 minutes
+
+---
+
+### 15.8 Testing Checklist
+
+After swapping to API, verify:
+
+**Data Loading:**
+- [ ] Events load on grid mount
+- [ ] Month navigation triggers new API calls
+- [ ] Loading spinner shows during fetch
+- [ ] Error state shows if API fails
+- [ ] Filters trigger API refetch with correct params
+
+**Event Display:**
+- [ ] Events appear on correct UTC day
+- [ ] Event count matches API response
+- [ ] Up to 3 events shown per day
+- [ ] "+N more" appears for 4+ events
+- [ ] Event shapes match importance (Triangle/Info/Circle)
+
+**UTC Logic:**
+- [ ] Events bucket by UTC date (not local date)
+- [ ] Month matrix uses UTC dates
+- [ ] Drawer/popover show correct local time tooltips
+- [ ] Deep links to List View use UTC date filters
+
+**Performance:**
+- [ ] First render < 500ms
+- [ ] API response < 300ms
+- [ ] No layout shifts
+- [ ] Month navigation smooth
+
+**Edge Cases:**
+- [ ] Empty months (no events) show empty grid
+- [ ] API errors show user-friendly message
+- [ ] Network timeout handled gracefully
+- [ ] Large event counts (80+) render smoothly
+
+---
+
+### 15.9 Summary
+
+**Migration Complexity:** ⭐ Low (1-file change)
+
+**What changes:**
+- Data source: Firestore mock → Backend API
+- Function call: `getEconEventsMock()` → `fetchEconEvents()`
+
+**What stays the same:**
+- All UI components (0 changes)
+- All date utilities (0 changes)
+- All event bucketing logic (0 changes)
+- All keyboard navigation (0 changes)
+- All accessibility features (0 changes)
+
+**Estimated migration time:** 15 minutes
+
+---
+
 **End of Specification**
 
 ---
