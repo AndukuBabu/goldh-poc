@@ -1,0 +1,499 @@
+openapi: 3.0.3
+info:
+  title: GOLDH Economic Calendar API
+  description: |
+    API specification for Economic Calendar feature (Phase 2).
+    
+    **Current Status:** NOT IMPLEMENTED (MVP uses Firestore)
+    
+    **Migration Path:**
+    1. Implement these endpoints in server/routes.ts
+    2. Set up PostgreSQL table for economic events
+    3. Create data sync service (Trading Economics, Alpha Vantage, etc.)
+    4. Update frontend to use fetchEconEvents() from lib/econ.client.ts
+    5. Remove Firestore dependency
+    
+    **Data Sources (Choose one or multiple):**
+    - Trading Economics API: https://tradingeconomics.com/api
+    - Alpha Vantage: https://www.alphavantage.co/
+    - Benzinga Calendar: https://www.benzinga.com/apis/calendar
+    - FMP Economic Calendar: https://financialmodelingprep.com/
+  version: 2.0.0-draft
+  contact:
+    name: GOLDH Development Team
+    email: dev@goldh.io
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://api.goldh.io
+    description: Production server (future)
+
+tags:
+  - name: Economic Calendar
+    description: Economic events with AI-powered impact predictions
+
+paths:
+  /api/econ/events:
+    get:
+      tags:
+        - Economic Calendar
+      summary: Get economic events with filters
+      description: |
+        Fetch economic calendar events with optional filtering by date range, 
+        country, category, importance level, and release status.
+        
+        **Default Behavior:**
+        - Returns events for next 14 days (UTC) if no date range specified
+        - Returns all countries, categories, and importance levels if not filtered
+        - Sorted by datetime_utc ascending (earliest first)
+        - Maximum 500 events per request (use pagination for more)
+        
+        **Performance:**
+        - Target response time: < 100ms
+        - Cached for 5 minutes (client-side TanStack Query)
+        - Server-side filtering recommended for large datasets
+      operationId: getEconEvents
+      parameters:
+        - name: from
+          in: query
+          description: Start date (ISO 8601 format). Defaults to today 00:00 UTC.
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-01-01T00:00:00.000Z"
+        
+        - name: to
+          in: query
+          description: End date (ISO 8601 format). Defaults to from + 14 days.
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-01-31T23:59:59.999Z"
+        
+        - name: country
+          in: query
+          description: |
+            Comma-separated country/region codes. 
+            Valid values: US, EU, UK, CN, JP, SG, Global
+          required: false
+          schema:
+            type: string
+            example: "US,EU,UK"
+        
+        - name: category
+          in: query
+          description: |
+            Comma-separated event categories.
+            Valid values: Inflation, Employment, GDP, Rates, Earnings, Other
+          required: false
+          schema:
+            type: string
+            example: "Inflation,Employment"
+        
+        - name: importance
+          in: query
+          description: |
+            Comma-separated importance levels.
+            Valid values: High, Medium, Low
+          required: false
+          schema:
+            type: string
+            example: "High,Medium"
+        
+        - name: status
+          in: query
+          description: |
+            Filter by release status.
+            - upcoming: Events not yet released
+            - released: Events with published data
+          required: false
+          schema:
+            type: string
+            enum: [upcoming, released]
+            example: "upcoming"
+        
+        - name: limit
+          in: query
+          description: Maximum number of events to return (default 500, max 1000)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 500
+            example: 100
+        
+        - name: offset
+          in: query
+          description: Number of events to skip (for pagination)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
+
+      responses:
+        '200':
+          description: Successful response with economic events
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - events
+                  - count
+                  - filters
+                  - timestamp
+                properties:
+                  events:
+                    type: array
+                    description: Array of economic events matching filters
+                    items:
+                      $ref: '#/components/schemas/EconEvent'
+                  count:
+                    type: integer
+                    description: Total number of events returned
+                    example: 58
+                  total:
+                    type: integer
+                    description: Total events available (before pagination)
+                    example: 245
+                  filters:
+                    type: object
+                    description: Applied filters (for debugging)
+                    properties:
+                      from:
+                        type: string
+                        format: date-time
+                      to:
+                        type: string
+                        format: date-time
+                      country:
+                        type: array
+                        items:
+                          type: string
+                      category:
+                        type: array
+                        items:
+                          type: string
+                      importance:
+                        type: array
+                        items:
+                          type: string
+                      status:
+                        type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Server timestamp of response
+                    example: "2025-01-07T14:32:18.123Z"
+              
+              examples:
+                successful:
+                  summary: Successful response with 2 events
+                  value:
+                    events:
+                      - id: "econ_abc123"
+                        title: "US CPI YoY"
+                        datetime_utc: "2025-01-15T13:30:00.000Z"
+                        country: "US"
+                        category: "Inflation"
+                        importance: "High"
+                        impactScore: 85
+                        confidence: 92
+                        previous: 3.2
+                        forecast: 3.4
+                        actual: null
+                        status: "upcoming"
+                        source: "Trading Economics"
+                        url: "https://tradingeconomics.com/..."
+                      - id: "econ_def456"
+                        title: "ECB Interest Rate Decision"
+                        datetime_utc: "2025-01-18T12:45:00.000Z"
+                        country: "EU"
+                        category: "Rates"
+                        importance: "High"
+                        impactScore: 92
+                        confidence: 88
+                        previous: 4.5
+                        forecast: 4.25
+                        actual: 4.25
+                        status: "released"
+                        source: "Alpha Vantage"
+                        url: "https://www.alphavantage.co/..."
+                    count: 2
+                    total: 58
+                    filters:
+                      from: "2025-01-01T00:00:00.000Z"
+                      to: "2025-01-31T23:59:59.999Z"
+                      country: ["US", "EU"]
+                      importance: ["High"]
+                    timestamp: "2025-01-07T14:32:18.123Z"
+        
+        '400':
+          description: Bad request - Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid query parameters"
+                details:
+                  - field: "importance"
+                    message: "Must be one of: High, Medium, Low"
+        
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Failed to fetch economic events"
+                message: "Database connection timeout"
+
+  /api/econ/health:
+    get:
+      tags:
+        - Economic Calendar
+      summary: API health check
+      description: |
+        Check Economic Calendar API health status, data source info, 
+        and last sync timestamp.
+        
+        **Use Cases:**
+        - Monitoring dashboard
+        - Status page display
+        - Alerting (if status is 'down')
+        - Data freshness verification
+        
+        **Response Status:**
+        - `healthy`: API fully operational, data up-to-date
+        - `degraded`: API operational but data may be stale
+        - `down`: API unavailable or database error
+      operationId: getEconHealth
+      responses:
+        '200':
+          description: Health check successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "healthy"
+                timestamp: "2025-01-07T14:32:18.123Z"
+                dataSource:
+                  provider: "Trading Economics"
+                  lastSync: "2025-01-07T14:00:00.000Z"
+                  eventCount: 1247
+                uptime: 432018
+                version: "2.0.0"
+        
+        '500':
+          description: Health check failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    EconEvent:
+      type: object
+      description: Economic calendar event with AI-powered impact prediction
+      required:
+        - id
+        - title
+        - datetime_utc
+        - country
+        - category
+        - importance
+        - impactScore
+        - confidence
+        - status
+      properties:
+        id:
+          type: string
+          description: Unique event identifier
+          example: "econ_abc123xyz"
+        
+        title:
+          type: string
+          description: Event name/title
+          minLength: 1
+          maxLength: 200
+          example: "US Consumer Price Index (CPI) YoY"
+        
+        datetime_utc:
+          type: string
+          format: date-time
+          description: Event release date/time in UTC
+          example: "2025-01-15T13:30:00.000Z"
+        
+        country:
+          type: string
+          description: Country or region code
+          enum: [US, EU, UK, CN, JP, SG, Global]
+          example: "US"
+        
+        category:
+          type: string
+          description: Event category/type
+          enum: [Inflation, Employment, GDP, Rates, Earnings, Other]
+          example: "Inflation"
+        
+        importance:
+          type: string
+          description: Market importance level
+          enum: [High, Medium, Low]
+          example: "High"
+        
+        impactScore:
+          type: integer
+          description: AI-predicted market impact score (0-100)
+          minimum: 0
+          maximum: 100
+          example: 85
+        
+        confidence:
+          type: integer
+          description: AI model confidence percentage (0-100)
+          minimum: 0
+          maximum: 100
+          example: 92
+        
+        previous:
+          type: number
+          nullable: true
+          description: Previous release value
+          example: 3.2
+        
+        forecast:
+          type: number
+          nullable: true
+          description: Analyst consensus forecast
+          example: 3.4
+        
+        actual:
+          type: number
+          nullable: true
+          description: Actual released value (null if upcoming)
+          example: 3.6
+        
+        status:
+          type: string
+          description: Event release status
+          enum: [upcoming, released]
+          example: "upcoming"
+        
+        source:
+          type: string
+          description: Data source provider
+          example: "Trading Economics"
+        
+        url:
+          type: string
+          format: uri
+          nullable: true
+          description: Link to event details on source website
+          example: "https://tradingeconomics.com/united-states/inflation-cpi"
+    
+    HealthResponse:
+      type: object
+      description: API health status response
+      required:
+        - status
+        - timestamp
+        - dataSource
+        - uptime
+        - version
+      properties:
+        status:
+          type: string
+          description: Overall API health status
+          enum: [healthy, degraded, down]
+          example: "healthy"
+        
+        timestamp:
+          type: string
+          format: date-time
+          description: Server timestamp of health check
+          example: "2025-01-07T14:32:18.123Z"
+        
+        dataSource:
+          type: object
+          description: External data source information
+          required:
+            - provider
+            - lastSync
+            - eventCount
+          properties:
+            provider:
+              type: string
+              description: Data provider name
+              example: "Trading Economics"
+            
+            lastSync:
+              type: string
+              format: date-time
+              description: Last successful data sync timestamp
+              example: "2025-01-07T14:00:00.000Z"
+            
+            eventCount:
+              type: integer
+              description: Total events in database
+              minimum: 0
+              example: 1247
+        
+        uptime:
+          type: number
+          description: API uptime in seconds
+          example: 432018
+        
+        version:
+          type: string
+          description: API version
+          pattern: '^\d+\.\d+\.\d+$'
+          example: "2.0.0"
+    
+    Error:
+      type: object
+      description: Error response
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Failed to fetch economic events"
+        
+        message:
+          type: string
+          description: Detailed error description
+          example: "Database connection timeout after 5000ms"
+        
+        details:
+          type: array
+          description: Validation error details (if applicable)
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+# Security schemes (if authentication is required in future)
+# securitySchemes:
+#   BearerAuth:
+#     type: http
+#     scheme: bearer
+#     bearerFormat: JWT
+
+# Apply security globally (if needed)
+# security:
+#   - BearerAuth: []

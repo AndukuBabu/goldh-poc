@@ -600,4 +600,502 @@ Sample events cover:
 
 ---
 
+## 16. Phase 2 Migration Guide: Firestore → API
+
+### Overview
+
+The Economic Calendar MVP uses Firestore for mock data to validate UX patterns quickly. When ready to migrate to a production backend API, follow these steps to swap data sources with minimal code changes.
+
+**Migration Files Created:**
+- `client/src/lib/econ.client.ts` - API client functions (empty placeholders)
+- `server/routes.ts` - Commented route stubs for `/api/econ/events` and `/api/econ/health`
+- `server/openapi/econ.draft.yaml` - Complete API specification
+
+---
+
+### Step 1: Implement Backend API Endpoints
+
+#### 1.1 Database Setup
+
+Create `econEvents` table in PostgreSQL (schema already defined in `shared/schema.ts`):
+
+```sql
+CREATE TABLE econ_events (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(200) NOT NULL,
+  datetime_utc TIMESTAMP NOT NULL,
+  country VARCHAR(10) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  importance VARCHAR(10) NOT NULL,
+  impact_score INTEGER NOT NULL,
+  confidence INTEGER NOT NULL,
+  previous DECIMAL,
+  forecast DECIMAL,
+  actual DECIMAL,
+  status VARCHAR(10) NOT NULL,
+  source VARCHAR(100) NOT NULL,
+  url VARCHAR(500)
+);
+
+CREATE INDEX idx_econ_events_datetime ON econ_events(datetime_utc);
+CREATE INDEX idx_econ_events_country ON econ_events(country);
+CREATE INDEX idx_econ_events_status ON econ_events(status);
+```
+
+**Note:** Use Drizzle ORM instead of raw SQL. Add table definition to `server/storage.ts`.
+
+#### 1.2 Uncomment Route Stubs
+
+In `server/routes.ts` (lines 229-314), uncomment the route implementations:
+
+```typescript
+// Before (commented):
+/*
+app.get("/api/econ/events", async (req: Request, res: Response) => {
+  // ...
+});
+*/
+
+// After (uncommented and implemented):
+app.get("/api/econ/events", async (req: Request, res: Response) => {
+  try {
+    const { from, to, country, category, importance, status } = req.query;
+    
+    // Validate inputs with Zod schema
+    const filters = econEventFiltersSchema.parse({
+      from: from || new Date().toISOString(),
+      to: to || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      country: country ? (country as string).split(',') : undefined,
+      category: category ? (category as string).split(',') : undefined,
+      importance: importance ? (importance as string).split(',') : undefined,
+      status: status as 'upcoming' | 'released' | undefined,
+    });
+    
+    // Fetch from database with filters
+    const events = await storage.getEconEvents(filters);
+    
+    // Return events with metadata
+    res.json({
+      events,
+      count: events.length,
+      filters: filters,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Get econ events error:", error);
+    res.status(500).json({ error: "Failed to get economic events" });
+  }
+});
+```
+
+**Reference:** See `server/openapi/econ.draft.yaml` for complete API specification.
+
+#### 1.3 Implement Storage Methods
+
+Add to `server/storage.ts`:
+
+```typescript
+interface IStorage {
+  // ... existing methods
+  
+  // Economic Calendar methods
+  getEconEvents(filters: EconEventFilters): Promise<EconEvent[]>;
+  getLastEconSync(): Promise<string | null>;
+  countEconEvents(): Promise<number>;
+}
+```
+
+**Implementation:**
+```typescript
+async getEconEvents(filters: EconEventFilters): Promise<EconEvent[]> {
+  let query = db
+    .select()
+    .from(econEvents)
+    .where(
+      and(
+        gte(econEvents.datetime_utc, filters.from),
+        lte(econEvents.datetime_utc, filters.to)
+      )
+    );
+  
+  if (filters.country) {
+    query = query.where(inArray(econEvents.country, filters.country));
+  }
+  
+  if (filters.category) {
+    query = query.where(inArray(econEvents.category, filters.category));
+  }
+  
+  if (filters.importance) {
+    query = query.where(inArray(econEvents.importance, filters.importance));
+  }
+  
+  if (filters.status) {
+    query = query.where(eq(econEvents.status, filters.status));
+  }
+  
+  const results = await query
+    .orderBy(asc(econEvents.datetime_utc))
+    .limit(500);
+  
+  return results;
+}
+```
+
+---
+
+### Step 2: Implement Frontend API Client
+
+#### 2.1 Complete fetchEconEvents()
+
+In `client/src/lib/econ.client.ts`, replace placeholder with implementation:
+
+```typescript
+// Before (placeholder):
+export async function fetchEconEvents(filters: EconEventFilters): Promise<EconEvent[]> {
+  throw new Error('fetchEconEvents() not implemented yet.');
+}
+
+// After (implemented):
+export async function fetchEconEvents(filters: EconEventFilters): Promise<EconEvent[]> {
+  const params = new URLSearchParams();
+  
+  if (filters.from) params.append('from', filters.from);
+  if (filters.to) params.append('to', filters.to);
+  if (filters.country) params.append('country', filters.country.join(','));
+  if (filters.category) params.append('category', filters.category.join(','));
+  if (filters.importance) params.append('importance', filters.importance.join(','));
+  if (filters.status) params.append('status', filters.status);
+  
+  const response = await fetch(`/api/econ/events?${params.toString()}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch events: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.events;
+}
+```
+
+#### 2.2 Complete fetchEconHealth()
+
+```typescript
+export async function fetchEconHealth(): Promise<EconHealthResponse> {
+  const response = await fetch('/api/econ/health');
+  
+  if (!response.ok) {
+    throw new Error(`Health check failed: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+```
+
+---
+
+### Step 3: Update useEconEvents Hook
+
+#### 3.1 Swap Data Source
+
+In `client/src/hooks/useEcon.ts` (lines 131-134), replace Firestore call:
+
+```typescript
+// BEFORE (MVP - Firestore):
+import { getEconEventsMock, type EconEventFilters } from "@/lib/econ";
+
+queryFn: async () => {
+  const fetchStartTime = performance.now();
+  
+  if (isDev) {
+    console.log('[useEconEvents] Fetch Start', normalizedParams);
+  }
+  
+  const events = await getEconEventsMock(normalizedParams);
+  
+  const fetchDuration = performance.now() - fetchStartTime;
+  
+  if (isDev) {
+    console.log('[useEconEvents] Fetch Complete', `${fetchDuration.toFixed(2)}ms`);
+  }
+  
+  return events;
+}
+```
+
+```typescript
+// AFTER (Phase 2 - API):
+import { fetchEconEvents } from "@/lib/econ.client";
+import type { EconEventFilters } from "@/lib/econ";
+
+queryFn: async () => {
+  const fetchStartTime = performance.now();
+  
+  if (isDev) {
+    console.log('[useEconEvents] Fetch Start (API)', normalizedParams);
+  }
+  
+  const events = await fetchEconEvents(normalizedParams);
+  
+  const fetchDuration = performance.now() - fetchStartTime;
+  
+  if (isDev) {
+    console.log('[useEconEvents] Fetch Complete (API)', `${fetchDuration.toFixed(2)}ms`);
+  }
+  
+  return events;
+}
+```
+
+**That's it!** All UI components automatically use the new API without any changes.
+
+---
+
+### Step 4: Data Sync Service (Optional)
+
+#### 4.1 External API Options
+
+Choose one or more data providers:
+
+1. **Trading Economics** (Recommended)
+   - Coverage: 196 countries, 300K+ indicators
+   - API: https://tradingeconomics.com/api
+   - Cost: $500-2000/month
+   - Quality: ★★★★★
+
+2. **Alpha Vantage**
+   - Coverage: US economic indicators
+   - API: https://www.alphavantage.co/
+   - Cost: Free tier available, $49+/month
+   - Quality: ★★★★☆
+
+3. **Benzinga Calendar API**
+   - Coverage: US earnings + macro events
+   - API: https://www.benzinga.com/apis/calendar
+   - Cost: Custom pricing
+   - Quality: ★★★★☆
+
+4. **FMP Economic Calendar**
+   - Coverage: Global macro events
+   - API: https://financialmodelingprep.com/
+   - Cost: $14-79/month
+   - Quality: ★★★☆☆
+
+5. **Federal Reserve Economic Data (FRED)**
+   - Coverage: US only, free
+   - API: https://fred.stlouisfed.org/
+   - Cost: Free
+   - Quality: ★★★★★ (US only)
+
+#### 4.2 Sync Script Example
+
+Create `server/services/econSync.ts`:
+
+```typescript
+import { db } from '@db';
+import { econEvents } from '@db/schema';
+
+export async function syncEconEvents() {
+  // Fetch from external API
+  const response = await fetch(
+    `https://api.tradingeconomics.com/calendar?c=${process.env.TE_API_KEY}`
+  );
+  
+  const externalEvents = await response.json();
+  
+  // Transform to our schema
+  const transformed = externalEvents.map(e => ({
+    id: `te_${e.CalendarId}`,
+    title: e.Event,
+    datetime_utc: new Date(e.Date).toISOString(),
+    country: e.Country,
+    category: mapCategory(e.Category),
+    importance: mapImportance(e.Importance),
+    impactScore: calculateImpact(e),
+    confidence: calculateConfidence(e),
+    previous: e.Previous,
+    forecast: e.Forecast,
+    actual: e.Actual,
+    status: e.Actual ? 'released' : 'upcoming',
+    source: 'Trading Economics',
+    url: e.URL,
+  }));
+  
+  // Upsert to database
+  await db.insert(econEvents)
+    .values(transformed)
+    .onConflictDoUpdate({
+      target: econEvents.id,
+      set: {
+        actual: sql`EXCLUDED.actual`,
+        status: sql`EXCLUDED.status`,
+      },
+    });
+  
+  console.log(`Synced ${transformed.length} events`);
+}
+
+// Run every 15 minutes
+setInterval(syncEconEvents, 15 * 60 * 1000);
+```
+
+---
+
+### Step 5: Testing & Validation
+
+#### 5.1 Manual Testing Checklist
+
+- [ ] `/api/econ/events` returns data (no 501 error)
+- [ ] Filters work (country, category, importance, status)
+- [ ] Default 14-day window applied correctly
+- [ ] Events sorted by datetime_utc ascending
+- [ ] Performance: API response < 100ms
+- [ ] Frontend displays events (no Firestore errors in console)
+- [ ] Pagination still works (20 events/page)
+- [ ] Filter interactions responsive (< 100ms)
+
+#### 5.2 Performance Comparison
+
+**Target Metrics:**
+- API response time: < 100ms (vs. Firestore 120-180ms)
+- First paint: < 400ms (vs. MVP 250-350ms)
+- Total page load: < 1.5s (vs. MVP 1.2-1.5s)
+
+**Run performance tests:**
+```bash
+# In browser console (after navigating to /features/calendar)
+# Look for console logs from useEconEvents hook:
+[useEconEvents] Fetch Start (API) {...}
+[useEconEvents] Fetch Complete (API) 87.32ms | 58 events
+[EconCalendar] First Paint 398.21ms (58 events)
+```
+
+#### 5.3 QA Manual
+
+Run complete QA test suite: `qa/EC-UI-Manual.md`
+
+Focus areas:
+- Test 2: Filter functionality (all combinations)
+- Test 3: Released vs Upcoming display
+- Test 7: Performance with 60+ events
+
+---
+
+### Step 6: Cleanup (After Validation)
+
+#### 6.1 Remove Firestore Dependencies
+
+```bash
+# Uninstall Firebase SDK
+npm uninstall firebase
+```
+
+**Delete files:**
+- `client/src/lib/firebase.ts` (if only used for EC)
+- `scripts/uploadEconEventsMock.ts`
+- `client/src/lib/econ.ts` (getEconEventsMock function)
+
+#### 6.2 Update Documentation
+
+- [ ] Update `replit.md` - Change "Firestore" to "PostgreSQL API"
+- [ ] Update `docs/EC-Perf-Notes.md` - Add API benchmark results
+- [ ] Archive `docs/EC-UI-MVP.md` → `docs/EC-UI-MVP-Phase1.md`
+- [ ] Create `docs/EC-API-Phase2.md` with API details
+
+#### 6.3 Environment Variables
+
+Add to `.env`:
+```bash
+# Economic Calendar API (Phase 2)
+ECON_API_PROVIDER=Trading Economics
+TE_API_KEY=your_trading_economics_key_here
+ECON_SYNC_INTERVAL=900000  # 15 minutes in ms
+```
+
+---
+
+### Migration Checklist Summary
+
+**Backend (Server):**
+- [ ] 1. Create `econEvents` table in PostgreSQL
+- [ ] 2. Uncomment route stubs in `server/routes.ts`
+- [ ] 3. Implement storage methods in `server/storage.ts`
+- [ ] 4. Set up data sync service (optional)
+- [ ] 5. Test `/api/econ/events` endpoint (Postman/curl)
+- [ ] 6. Test `/api/econ/health` endpoint
+
+**Frontend (Client):**
+- [ ] 7. Implement `fetchEconEvents()` in `lib/econ.client.ts`
+- [ ] 8. Implement `fetchEconHealth()` in `lib/econ.client.ts`
+- [ ] 9. Update `useEconEvents` hook to use `fetchEconEvents()`
+- [ ] 10. Test page load (no Firestore errors)
+- [ ] 11. Validate all filters work
+- [ ] 12. Run performance benchmarks
+
+**Cleanup:**
+- [ ] 13. Remove Firebase SDK (`npm uninstall firebase`)
+- [ ] 14. Delete `lib/firebase.ts` and `scripts/uploadEconEventsMock.ts`
+- [ ] 15. Remove `getEconEventsMock()` from `lib/econ.ts`
+- [ ] 16. Update documentation (replit.md, EC-Perf-Notes.md)
+- [ ] 17. Run full QA test suite (`qa/EC-UI-Manual.md`)
+- [ ] 18. Deploy to production
+
+**Estimated Time:** 4-6 hours for experienced developer
+
+---
+
+### Troubleshooting Common Issues
+
+**Issue: 501 Not Implemented**
+```
+GET /api/econ/events → 501 Not implemented yet
+```
+**Solution:** Routes are still commented. Uncomment in `server/routes.ts` (lines 229-314).
+
+---
+
+**Issue: Filters not working (returns all events)**
+```
+GET /api/econ/events?country=US → returns EU events too
+```
+**Solution:** Check storage method implementation. Ensure `inArray()` and `eq()` filters are applied.
+
+---
+
+**Issue: Performance regression (API slower than Firestore)**
+```
+API response: 450ms (vs. Firestore 145ms)
+```
+**Solution:** 
+- Add database indexes on `datetime_utc`, `country`, `status`
+- Check N+1 query issues
+- Enable query result caching (Redis)
+
+---
+
+**Issue: Frontend still using Firestore**
+```
+Console: "Firebase error: Permission denied"
+```
+**Solution:** Check `useEconEvents` hook - ensure it imports `fetchEconEvents` from `lib/econ.client.ts`, not `getEconEventsMock` from `lib/econ.ts`.
+
+---
+
+### API Specification Reference
+
+**Complete OpenAPI spec:** `server/openapi/econ.draft.yaml`
+
+**Quick Reference:**
+
+**GET /api/econ/events**
+- Query params: `from`, `to`, `country`, `category`, `importance`, `status`, `limit`, `offset`
+- Response: `{ events: EconEvent[], count: number, total: number, filters: object, timestamp: string }`
+- Example: `GET /api/econ/events?from=2025-01-01&country=US,EU&importance=High`
+
+**GET /api/econ/health**
+- Response: `{ status: 'healthy' | 'degraded' | 'down', timestamp: string, dataSource: {...}, uptime: number, version: string }`
+- Example: `GET /api/econ/health`
+
+---
+
 **Document End**
