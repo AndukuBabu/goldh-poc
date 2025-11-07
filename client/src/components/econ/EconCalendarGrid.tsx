@@ -5,7 +5,7 @@
  * Enhanced with keyboard navigation and accessibility
  */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getEconEventsMock, type EconEvent } from "@/lib/econ";
 import {
@@ -39,6 +39,9 @@ export function EconCalendarGrid({ filters = {} }: EconCalendarGridProps) {
   // State: Mobile drawer
   const [drawerDateISO, setDrawerDateISO] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  
+  // Ref: Store reference to the cell that opened the drawer (for focus restoration)
+  const drawerOriginCellRef = useRef<HTMLDivElement | null>(null);
 
   // Compute 6×7 matrix of ISO date strings for current month
   const matrix = useMemo(() => getMonthMatrixUTC(anchorDate), [anchorDate]);
@@ -168,11 +171,25 @@ export function EconCalendarGrid({ filters = {} }: EconCalendarGridProps) {
     }
   };
 
-  // Handle drawer close
+  // Handle drawer close with focus restoration
   const handleDrawerClose = () => {
     setDrawerOpen(false);
+    
+    // Restore focus to the originating cell
+    if (drawerOriginCellRef.current) {
+      drawerOriginCellRef.current.focus();
+    }
+    
     // Delay clearing dateISO to allow exit animation
-    setTimeout(() => setDrawerDateISO(null), 300);
+    setTimeout(() => {
+      setDrawerDateISO(null);
+      drawerOriginCellRef.current = null;
+    }, 300);
+  };
+  
+  // Handle setting the origin cell ref when drawer opens
+  const handleSetOriginRef = (ref: HTMLDivElement | null) => {
+    drawerOriginCellRef.current = ref;
   };
 
   // Get events for drawer
@@ -233,6 +250,7 @@ export function EconCalendarGrid({ filters = {} }: EconCalendarGridProps) {
         onDayFocus={handleDayFocus}
         onDayClick={handleDayClick}
         onMonthChange={handleMonthChange}
+        onSetOriginRef={handleSetOriginRef}
       />
 
       {/* Keyboard Shortcuts Help */}

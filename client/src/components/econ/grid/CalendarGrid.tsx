@@ -17,6 +17,7 @@ interface CalendarGridProps {
   onDayFocus: (dateISO: string) => void;
   onDayClick: (dateISO: string) => void;
   onMonthChange: (direction: 'prev' | 'next') => void;
+  onSetOriginRef: (ref: HTMLDivElement | null) => void;
 }
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -29,6 +30,7 @@ export function CalendarGrid({
   onDayFocus,
   onDayClick,
   onMonthChange,
+  onSetOriginRef,
 }: CalendarGridProps) {
   // Flatten matrix to 1D array for easier navigation
   const flatDates = matrix.flat();
@@ -156,6 +158,7 @@ export function CalendarGrid({
                 onFocus={() => onDayFocus(dateISO)}
                 onClick={() => onDayClick(dateISO)}
                 onKeyDown={(e) => handleKeyDown(e, flatIndex)}
+                onSetOriginRef={onSetOriginRef}
               />
             );
           })}

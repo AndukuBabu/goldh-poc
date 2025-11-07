@@ -4,6 +4,7 @@
  * Enhanced with keyboard navigation and accessibility
  */
 
+import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { EventDot } from "./EventDot";
 import type { EconEvent } from "@/lib/econ";
@@ -19,6 +20,7 @@ interface DayCellProps {
   onFocus: () => void;
   onClick: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
+  onSetOriginRef: (ref: HTMLDivElement | null) => void;
 }
 
 export function DayCell({
@@ -31,7 +33,10 @@ export function DayCell({
   onFocus,
   onClick,
   onKeyDown,
+  onSetOriginRef,
 }: DayCellProps) {
+  // Ref to this cell for focus restoration
+  const cellRef = useRef<HTMLDivElement>(null);
   // Extract day number from ISO date (YYYY-MM-DD)
   const dayNumber = parseInt(dateISO.split('-')[2], 10);
 
@@ -57,16 +62,23 @@ export function DayCell({
 
   return (
     <div
+      ref={cellRef}
       role="gridcell"
       tabIndex={tabIndex}
       aria-selected={isFocused}
       aria-label={ariaLabel}
-      onClick={onClick}
+      onClick={() => {
+        // Store ref for focus restoration
+        onSetOriginRef(cellRef.current);
+        onClick();
+      }}
       onFocus={onFocus}
       onKeyDown={(e) => {
         // Handle Enter/Space to open drawer
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
+          // Store ref for focus restoration
+          onSetOriginRef(cellRef.current);
           onClick();
           return;
         }

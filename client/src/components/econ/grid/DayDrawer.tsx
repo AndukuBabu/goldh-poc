@@ -1,6 +1,7 @@
 /**
  * Economic Calendar Grid - Day Drawer (Mobile)
  * Bottom sheet drawer showing all events for a selected day
+ * Enhanced with compact EconRow anatomy and deep linking to List view
  */
 
 import {
@@ -12,11 +13,18 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { AlertTriangle, Info, Circle, ExternalLink } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Clock, TrendingUp, CheckCircle, AlertTriangle, Info, Circle, ExternalLink } from "lucide-react";
 import { formatTimeUTC, formatDateUTC } from "@/lib/econDate";
+import { 
+  getCountryFlag, 
+  getImpactScoreColor, 
+  getConfidenceColor,
+  ECON_CATEGORY_LABELS,
+} from "@/lib/econ";
 import type { EconEvent } from "@/lib/econ";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface DayDrawerProps {
   dateISO: string | null;
@@ -38,6 +46,12 @@ export function DayDrawer({ dateISO, events, open, onClose }: DayDrawerProps) {
     return importanceOrder[a.importance] - importanceOrder[b.importance];
   });
 
+  // Handle "View in List" navigation with date filters
+  const handleViewInList = () => {
+    // Navigate to List view with single-day filter (from=to=dateISO)
+    window.location.href = `/features/calendar?view=list&from=${dateISO}&to=${dateISO}`;
+  };
+
   return (
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent 
@@ -58,7 +72,7 @@ export function DayDrawer({ dateISO, events, open, onClose }: DayDrawerProps) {
         <div className="overflow-y-auto h-[calc(70vh-180px)] space-y-3 pb-4">
           {sortedEvents.length > 0 ? (
             sortedEvents.map((event) => (
-              <EventDrawerCard key={event.id} event={event} />
+              <CompactEventCard key={event.id} event={event} />
             ))
           ) : (
             <div className="text-center py-8 text-muted-foreground">
@@ -72,13 +86,11 @@ export function DayDrawer({ dateISO, events, open, onClose }: DayDrawerProps) {
           <Button
             variant="default"
             className="w-full"
-            data-testid={`link-view-day-list-${dateISO}`}
-            onClick={() => {
-              window.location.href = `/features/calendar?view=list&date=${dateISO}`;
-            }}
+            data-testid={`button-view-day-list-${dateISO}`}
+            onClick={handleViewInList}
           >
             <ExternalLink className="w-4 h-4 mr-2" />
-            View day in List
+            View this day in List
           </Button>
         </div>
       </SheetContent>
@@ -86,89 +98,160 @@ export function DayDrawer({ dateISO, events, open, onClose }: DayDrawerProps) {
   );
 }
 
-function EventDrawerCard({ event }: { event: EconEvent }) {
-  const importanceConfig: Record<string, {
-    icon: React.ComponentType<any>;
-    color: string;
-    bgColor: string;
-  }> = {
-    High: { icon: AlertTriangle, color: 'text-red-500', bgColor: 'bg-red-500/10' },
-    Medium: { icon: Info, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
-    Low: { icon: Circle, color: 'text-yellow-500', bgColor: 'bg-yellow-500/10' },
-  };
-
-  const config = importanceConfig[event.importance];
-  const Icon = config.icon;
+/**
+ * Compact Event Card - Matches EconRow anatomy
+ * Shows: Title, Time (UTC + local tooltip), Importance, Impact, Confidence, Status
+ */
+function CompactEventCard({ event }: { event: EconEvent }) {
+  // Get local time for tooltip
+  const localTime = format(new Date(event.datetime_utc), "PPpp");
+  const timeUTC = formatTimeUTC(event.datetime_utc);
+  
+  // Get importance icon (shape-based, not just color)
+  const ImportanceIcon = event.importance === 'High' 
+    ? AlertTriangle  // Filled triangle for High
+    : event.importance === 'Medium'
+    ? Info           // Outlined info for Medium
+    : Circle;        // Small circle for Low
 
   return (
-    <Card className="p-4 border-primary/20 hover-elevate">
-      {/* Header: Time + Importance Icon */}
-      <div className="flex items-start gap-3 mb-3">
-        <div className={cn(
-          "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
-          config.bgColor
-        )}>
-          <Icon className={cn("w-5 h-5", config.color)} />
-        </div>
+    <div 
+      className="p-3 border border-border rounded-lg bg-card hover-elevate transition-all"
+      data-testid={`drawer-event-${event.id}`}
+      role="article"
+      aria-label={`${event.title}, ${event.importance} importance event from ${event.country}`}
+    >
+      {/* Header: Country Flag + Title */}
+      <div className="flex items-start gap-2 mb-2">
+        <span 
+          className="text-lg flex-shrink-0"
+          role="img"
+          aria-label={`Country: ${event.country}`}
+          title={event.country}
+        >
+          {getCountryFlag(event.country)}
+        </span>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono text-muted-foreground">
-              {formatTimeUTC(event.datetime_utc)} UTC
-            </span>
-            <Badge variant="outline" className="text-xs">
-              {event.importance}
-            </Badge>
-          </div>
-          <h4 className="text-sm font-semibold text-foreground">
+          <h4 className="font-semibold text-sm text-foreground leading-tight mb-1">
             {event.title}
           </h4>
-        </div>
-      </div>
-
-      {/* Metrics */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">Impact:</span>
-          <Badge variant="secondary" className="text-xs">
-            {event.impactScore}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">Confidence:</span>
-          <Badge variant="secondary" className="text-xs">
-            {event.confidence}%
-          </Badge>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">Status:</span>
+          {/* Category Badge */}
           <Badge 
-            variant={event.status === 'released' ? 'default' : 'outline'}
-            className="text-xs"
+            variant="outline" 
+            className="text-xs h-5 bg-primary/5 border-primary/20 text-foreground"
           >
-            {event.status === 'released' ? 'Released' : 'Upcoming'}
+            {ECON_CATEGORY_LABELS[event.category].label}
           </Badge>
         </div>
       </div>
 
-      {/* Data Grid */}
+      {/* Time with UTC/Local Tooltip */}
+      <div className="mb-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div 
+                className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help"
+                tabIndex={0}
+              >
+                <Clock className="w-3 h-3 text-primary" aria-hidden="true" />
+                <span className="font-mono">{timeUTC} UTC</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <div className="text-xs space-y-1">
+                <p className="font-semibold">UTC: {timeUTC}</p>
+                <p>Local: {localTime}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      {/* Badges: Importance, Impact, Confidence, Status */}
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        {/* Importance */}
+        <Badge 
+          variant={
+            event.importance === 'High' 
+              ? 'destructive' 
+              : event.importance === 'Medium'
+              ? 'default'
+              : 'secondary'
+          }
+          className="h-6 text-xs"
+          aria-label={`Importance level: ${event.importance}`}
+        >
+          <ImportanceIcon className="w-3 h-3 mr-1" aria-hidden="true" />
+          {event.importance}
+        </Badge>
+
+        {/* Impact Score */}
+        <Badge 
+          className={`${getImpactScoreColor(event.impactScore)} h-6 text-xs`}
+          aria-label={`AI predicted impact score: ${event.impactScore} out of 100`}
+        >
+          <TrendingUp className="w-3 h-3 mr-1" aria-hidden="true" />
+          {event.impactScore}
+        </Badge>
+
+        {/* Confidence */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge 
+                className={`${getConfidenceColor(event.confidence)} h-6 text-xs cursor-help`}
+                aria-label={`AI model confidence level: ${event.confidence} percent`}
+                tabIndex={0}
+              >
+                <CheckCircle className="w-3 h-3 mr-1" aria-hidden="true" />
+                {event.confidence}%
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">AI Model Confidence</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Status */}
+        <Badge 
+          variant="outline"
+          className={
+            event.status === 'upcoming' 
+              ? "bg-blue-900/20 text-blue-300 border-blue-800 h-6 text-xs"
+              : "bg-green-900/20 text-green-300 border-green-800 h-6 text-xs"
+          }
+          aria-label={`Event status: ${event.status === 'upcoming' ? 'Upcoming' : 'Released'}`}
+        >
+          {event.status === 'upcoming' ? (
+            <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
+          ) : (
+            <CheckCircle className="w-3 h-3 mr-1" aria-hidden="true" />
+          )}
+          {event.status === 'upcoming' ? 'Upcoming' : 'Released'}
+        </Badge>
+      </div>
+
+      {/* Data Points: Previous / Forecast / Actual */}
       {(event.previous !== null || event.forecast !== null || event.actual !== null) && (
-        <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border">
+        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border text-xs">
           <div>
-            <div className="text-xs text-muted-foreground mb-1">Previous</div>
-            <div className="text-sm font-mono font-semibold text-foreground">
+            <div className="text-muted-foreground mb-1">Prev</div>
+            <div className="font-mono font-semibold text-foreground">
               {event.previous ?? '-'}
             </div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground mb-1">Forecast</div>
-            <div className="text-sm font-mono font-semibold text-foreground">
+            <div className="text-muted-foreground mb-1">Fcst</div>
+            <div className="font-mono font-semibold text-foreground">
               {event.forecast ?? '-'}
             </div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground mb-1">Actual</div>
+            <div className="text-muted-foreground mb-1">Actual</div>
             <div className={cn(
-              "text-sm font-mono font-semibold",
+              "font-mono font-semibold",
               event.actual !== null && event.forecast !== null
                 ? event.actual > event.forecast
                   ? "text-green-500"
@@ -184,6 +267,6 @@ function EventDrawerCard({ event }: { event: EconEvent }) {
           </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
