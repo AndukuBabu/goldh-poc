@@ -30,12 +30,12 @@ export function MonthHeader({ anchorDate, onNavigate }: MonthHeaderProps) {
 
   return (
     <div 
-      className="flex items-center justify-between p-4 border-b border-border bg-card/50"
+      className="flex items-center justify-between p-4 border-b border-[#2a2a2a] bg-black/30"
       data-testid="grid-month-header"
     >
       {/* Month/Year Display */}
       <div className="flex items-center gap-2">
-        <Calendar className="w-5 h-5 text-primary" aria-hidden="true" />
+        <Calendar className="w-5 h-5 text-[#C7AE6A]" aria-hidden="true" />
         <h2 
           className="text-xl font-semibold text-foreground"
           data-testid="grid-month-title"

@@ -112,13 +112,13 @@ export function CalendarGrid({
       role="grid"
       aria-label={`Economic events calendar for ${anchorDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })}`}
       aria-readonly="true"
-      className="border border-border rounded-lg overflow-hidden bg-card"
+      className="border border-[#2a2a2a] rounded-lg overflow-hidden bg-[#111] shadow-lg"
       data-testid="grid-calendar"
     >
       {/* Weekday Headers */}
       <div 
         role="row" 
-        className="grid grid-cols-7 border-b border-border bg-muted/30"
+        className="grid grid-cols-7 border-b border-[#2a2a2a] bg-black/30"
       >
         {WEEKDAY_LABELS.map((day) => (
           <div
@@ -137,7 +137,7 @@ export function CalendarGrid({
         <div 
           key={weekIndex} 
           role="row" 
-          className="grid grid-cols-7 border-b border-border last:border-b-0"
+          className="grid grid-cols-7 border-b border-[#2a2a2a] last:border-b-0"
         >
           {week.map((dateISO, dayIndex) => {
             const dayEvents = eventsByDay.get(dateISO) || [];

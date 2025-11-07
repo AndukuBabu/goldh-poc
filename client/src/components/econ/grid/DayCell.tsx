@@ -132,12 +132,12 @@ export function DayCell({
         onKeyDown(e);
       }}
       className={cn(
-        "min-h-[80px] sm:min-h-[100px] lg:min-h-[120px] p-2 border-r border-b border-border last:border-r-0",
+        "min-h-[80px] sm:min-h-[100px] lg:min-h-[120px] p-2 border-r border-b border-[#2a2a2a] last:border-r-0",
         "cursor-pointer transition-all",
         "hover-elevate focus:outline-none",
-        isCurrentMonth ? "bg-card" : "bg-muted/30",
-        isToday && "border-2 border-primary",
-        isFocused && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        isCurrentMonth ? "bg-[#0a0a0a]" : "bg-black/20",
+        isToday && "border-2 border-[#C7AE6A]",
+        isFocused && "ring-2 ring-[#C7AE6A] ring-offset-2 ring-offset-[#111]",
         events.length > 0 && "hover:shadow-sm"
       )}
       data-testid={`grid-day-cell-${dateISO}`}

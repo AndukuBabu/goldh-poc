@@ -50,11 +50,11 @@ export function EventPopover({
         {children}
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 p-0 border-primary/20"
+        className="w-80 p-0 border-[#C7AE6A]/20 bg-[#0a0a0a]"
         data-testid={`grid-day-popover-${dateISO}`}
       >
         {/* Header */}
-        <div className="px-4 py-3 border-b border-border bg-muted/30">
+        <div className="px-4 py-3 border-b border-[#2a2a2a] bg-black/30">
           <h3 className="font-semibold text-foreground">
             {formatDateUTC(dateISO)}
           </h3>
@@ -71,11 +71,11 @@ export function EventPopover({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-border bg-muted/30">
+        <div className="px-4 py-3 border-t border-[#2a2a2a] bg-black/30">
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-primary hover:text-primary"
+            className="w-full justify-start text-[#C7AE6A] hover:text-[#d5c28f]"
             data-testid={`link-view-day-list-${dateISO}`}
             onClick={() => {
               // Navigate to list view filtered to this date (from=to for single day)
@@ -105,7 +105,7 @@ function EventPopoverItem({ event }: { event: EconEvent }) {
   const Icon = config.icon;
 
   return (
-    <div className="px-4 py-3 border-b border-border last:border-b-0 hover-elevate">
+    <div className="px-4 py-3 border-b border-[#2a2a2a] last:border-b-0 hover-elevate">
       {/* Time & Title */}
       <div className="flex items-start gap-2 mb-2">
         <span className="text-xs font-mono text-muted-foreground mt-0.5">

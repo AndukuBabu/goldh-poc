@@ -56,10 +56,10 @@ export function DayDrawer({ dateISO, events, open, onClose }: DayDrawerProps) {
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent 
         side="bottom" 
-        className="h-[70vh] border-t-2 border-primary/20"
+        className="h-[70vh] border-t-2 border-[#C7AE6A]/20 bg-[#0a0a0a]"
         data-testid="grid-day-drawer"
       >
-        <SheetHeader className="border-b border-border pb-4 mb-4">
+        <SheetHeader className="border-b border-[#2a2a2a] pb-4 mb-4">
           <SheetTitle className="text-foreground">
             {formatDateUTC(dateISO)}
           </SheetTitle>
@@ -82,7 +82,7 @@ export function DayDrawer({ dateISO, events, open, onClose }: DayDrawerProps) {
         </div>
 
         {/* Footer - View in List */}
-        <div className="border-t border-border pt-4">
+        <div className="border-t border-[#2a2a2a] pt-4">
           <Button
             variant="default"
             className="w-full"
@@ -116,7 +116,7 @@ function CompactEventCard({ event }: { event: EconEvent }) {
 
   return (
     <div 
-      className="p-3 border border-border rounded-lg bg-card hover-elevate transition-all"
+      className="p-3 border border-[#2a2a2a] rounded-lg bg-[#111] hover-elevate transition-all"
       data-testid={`drawer-event-${event.id}`}
       role="article"
       aria-label={`${event.title}, ${event.importance} importance event from ${event.country}`}

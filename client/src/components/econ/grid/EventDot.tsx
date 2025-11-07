@@ -70,7 +70,11 @@ export function EventDot({
         aria-label={ariaLabel}
       >
         <div 
-          className={cn("w-2 h-2 rounded-full", config.dotClass)}
+          className={cn(
+            "w-2 h-2 rounded-full transition-shadow",
+            "hover:shadow-[0_0_8px_#C7AE6A33]",
+            config.dotClass
+          )}
           aria-hidden="true"
         />
       </div>
@@ -85,8 +89,9 @@ export function EventDot({
       aria-label={ariaLabel}
       className={cn(
         "flex items-center gap-1 px-2 py-0.5 rounded text-xs border",
-        "truncate max-w-full",
-        "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1",
+        "truncate max-w-full transition-shadow",
+        "hover:shadow-[0_0_8px_#C7AE6A33]",
+        "focus:outline-none focus:ring-2 focus:ring-[#C7AE6A] focus:ring-offset-1",
         config.colorClass
       )}
       title={`${event.title} at ${timeUTC} UTC`}
