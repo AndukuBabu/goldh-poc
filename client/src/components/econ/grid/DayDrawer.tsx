@@ -68,8 +68,8 @@ export function DayDrawer({ dateISO, events, open, onClose }: DayDrawerProps) {
           </SheetDescription>
         </SheetHeader>
 
-        {/* Event List - Scrollable */}
-        <div className="overflow-y-auto h-[calc(70vh-180px)] space-y-3 pb-4">
+        {/* Event List - Performance: Smooth scroll with height constraint */}
+        <div className="overflow-y-auto h-[calc(70vh-180px)] space-y-3 pb-4 scroll-smooth">
           {sortedEvents.length > 0 ? (
             sortedEvents.map((event) => (
               <CompactEventCard key={event.id} event={event} />

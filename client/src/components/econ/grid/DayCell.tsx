@@ -2,11 +2,13 @@
  * Economic Calendar Grid - Day Cell
  * Individual cell in the calendar grid showing date and event indicators
  * Enhanced with keyboard navigation and accessibility
+ * Performance optimized with lazy-mounted popover
  */
 
-import { useRef } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { EventDot } from "./EventDot";
+import { EventPopover } from "./EventPopover";
 import type { EconEvent } from "@/lib/econ";
 import { toLocalTooltip } from "@/lib/econDate";
 
@@ -37,20 +39,42 @@ export function DayCell({
 }: DayCellProps) {
   // Ref to this cell for focus restoration
   const cellRef = useRef<HTMLDivElement>(null);
+  
+  // Performance: Lazy-mount popover only on hover/focus (desktop only)
+  const [isHovered, setIsHovered] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  
+  // Detect desktop/mobile responsively
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== 'undefined' && window.innerWidth >= 768
+  );
+  
+  // Update isDesktop on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   // Extract day number from ISO date (YYYY-MM-DD)
   const dayNumber = parseInt(dateISO.split('-')[2], 10);
 
-  // Sort events by importance (High -> Medium -> Low) then by time
-  const sortedEvents = [...events].sort((a, b) => {
-    const importanceOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
-    const importanceDiff = importanceOrder[a.importance] - importanceOrder[b.importance];
-    if (importanceDiff !== 0) return importanceDiff;
-    
-    return new Date(a.datetime_utc).getTime() - new Date(b.datetime_utc).getTime();
-  });
+  // Performance: Memoize sorted events with stable deps
+  const sortedEvents = useMemo(() => {
+    return [...events].sort((a, b) => {
+      const importanceOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
+      const importanceDiff = importanceOrder[a.importance] - importanceOrder[b.importance];
+      if (importanceDiff !== 0) return importanceDiff;
+      
+      return new Date(a.datetime_utc).getTime() - new Date(b.datetime_utc).getTime();
+    });
+  }, [events]);
 
-  // Show up to 3 events
-  const visibleEvents = sortedEvents.slice(0, 3);
+  // Limit to 3 visible event dots
+  const visibleEvents = useMemo(() => sortedEvents.slice(0, 3), [sortedEvents]);
   const remainingCount = Math.max(0, events.length - 3);
 
   // Build accessible label
@@ -60,7 +84,17 @@ export function DayCell({
   
   const ariaLabel = `${toLocalTooltip(dateISO)}, ${events.length} event${events.length !== 1 ? 's' : ''}. ${eventSummary}. ${remainingCount > 0 ? `${remainingCount} more event${remainingCount !== 1 ? 's' : ''}.` : ''} Press Enter to view details.`;
 
-  return (
+  // Performance: Lazy-mount popover only when needed
+  const shouldRenderPopover = isDesktop && events.length > 0 && (isHovered || isFocused);
+  
+  // Auto-open popover when hovering (lazy-mount + open)
+  useEffect(() => {
+    if (isDesktop && events.length > 0 && isHovered) {
+      setPopoverOpen(true);
+    }
+  }, [isDesktop, events.length, isHovered]);
+  
+  const cellContent = (
     <div
       ref={cellRef}
       role="gridcell"
@@ -68,18 +102,30 @@ export function DayCell({
       aria-selected={isFocused}
       aria-label={ariaLabel}
       onClick={() => {
-        // Store ref for focus restoration
-        onSetOriginRef(cellRef.current);
-        onClick();
-      }}
-      onFocus={onFocus}
-      onKeyDown={(e) => {
-        // Handle Enter/Space to open drawer
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          // Store ref for focus restoration
+        // Desktop: let popover handle click (already visible on hover)
+        // Mobile/no-events: open drawer
+        if (!isDesktop || events.length === 0) {
           onSetOriginRef(cellRef.current);
           onClick();
+        }
+      }}
+      onFocus={onFocus}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setPopoverOpen(false);
+      }}
+      onKeyDown={(e) => {
+        // Handle Enter/Space to open drawer (desktop) or trigger drawer (mobile)
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          
+          // On desktop with events, popover is visible on focus, Enter/Space opens drawer
+          // On mobile or no events, open drawer
+          if (events.length > 0) {
+            onSetOriginRef(cellRef.current);
+            onClick();
+          }
           return;
         }
         // Pass other keys to parent for navigation
@@ -130,4 +176,20 @@ export function DayCell({
       )}
     </div>
   );
+  
+  // Performance: Lazy-mount EventPopover only on hover/focus (desktop only)
+  if (shouldRenderPopover) {
+    return (
+      <EventPopover
+        dateISO={dateISO}
+        events={events}
+        open={popoverOpen}
+        onOpenChange={setPopoverOpen}
+      >
+        {cellContent}
+      </EventPopover>
+    );
+  }
+  
+  return cellContent;
 }

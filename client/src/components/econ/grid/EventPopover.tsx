@@ -78,8 +78,8 @@ export function EventPopover({
             className="w-full justify-start text-primary hover:text-primary"
             data-testid={`link-view-day-list-${dateISO}`}
             onClick={() => {
-              // TODO: Navigate to list view filtered to this date
-              window.location.href = `/features/calendar?view=list&date=${dateISO}`;
+              // Navigate to list view filtered to this date (from=to for single day)
+              window.location.href = `/features/calendar?view=list&from=${dateISO}&to=${dateISO}`;
             }}
           >
             <ExternalLink className="w-4 h-4 mr-2" />
