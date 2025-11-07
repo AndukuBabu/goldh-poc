@@ -171,11 +171,24 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
           aria-label={`${asset.name}, ${assetClassLabel}, price ${asset.price} dollars, ${isPositive ? 'up' : 'down'} ${Math.abs(asset.changePct24h)} percent in 24 hours. Press Enter to view details.`}
           data-testid={`snapshot-tile-${asset.symbol}`}
         >
-          {/* Header: Symbol + Asset Class Badge */}
+          {/* Header: Logo + Symbol + Asset Class Badge */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-bold text-foreground">
-              {asset.symbol}
-            </span>
+            <div className="flex items-center gap-2">
+              {asset.image && (
+                <img 
+                  src={asset.image} 
+                  alt={`${asset.name} logo`}
+                  className="w-5 h-5 rounded-full"
+                  onError={(e) => {
+                    // Hide image if it fails to load
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+              <span className="text-sm font-bold text-foreground">
+                {asset.symbol}
+              </span>
+            </div>
             <Badge 
               variant="outline" 
               className="text-xs bg-[#2a2a2a]/50 border-[#2a2a2a]"

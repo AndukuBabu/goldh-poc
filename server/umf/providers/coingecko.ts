@@ -37,10 +37,17 @@ const coinGeckoMarketItemSchema = z.object({
   id: z.string(),
   symbol: z.string(),
   name: z.string(),
+  image: z.string().nullable().optional(),
   current_price: z.number(),
   price_change_percentage_24h: z.number().nullable(),
   total_volume: z.number().nullable(),
   market_cap: z.number().nullable(),
+  market_cap_rank: z.number().nullable().optional(),
+  high_24h: z.number().nullable().optional(),
+  low_24h: z.number().nullable().optional(),
+  circulating_supply: z.number().nullable().optional(),
+  total_supply: z.number().nullable().optional(),
+  max_supply: z.number().nullable().optional(),
   last_updated: z.string(),
 });
 
@@ -146,20 +153,28 @@ export async function fetchMarkets(
  * Transform CoinGecko Market Item to UmfAssetLive
  * 
  * Maps CoinGecko API fields to our canonical live asset schema.
+ * Now includes all available CoinGecko data for comprehensive market intelligence.
  * 
  * Mapping:
  * - id → id (CoinGecko ID, e.g., 'bitcoin')
  * - symbol → symbol (uppercase, e.g., 'BTC')
  * - name → name (e.g., 'Bitcoin')
+ * - image → image (logo URL for UI display)
  * - class → 'crypto' (all CoinGecko assets are crypto)
  * - current_price → price
  * - price_change_percentage_24h → changePct24h (nullable)
  * - total_volume → volume24h (nullable)
  * - market_cap → marketCap (nullable)
+ * - market_cap_rank → marketCapRank (nullable)
+ * - high_24h → high24h (nullable)
+ * - low_24h → low24h (nullable)
+ * - circulating_supply → circulatingSupply (nullable)
+ * - total_supply → totalSupply (nullable)
+ * - max_supply → maxSupply (nullable)
  * - last_updated → updatedAt_utc (ensure ends with 'Z')
  * 
  * @param item - CoinGecko market item from API response
- * @returns UmfAssetLive object
+ * @returns UmfAssetLive object with all available data
  */
 function transformCoinGeckoToUmfAsset(item: CoinGeckoMarketItem): UmfAssetLive {
   return {
@@ -167,10 +182,17 @@ function transformCoinGeckoToUmfAsset(item: CoinGeckoMarketItem): UmfAssetLive {
     symbol: item.symbol.toUpperCase(), // Uppercase: btc → BTC
     name: item.name,
     class: 'crypto', // All CoinGecko assets are cryptocurrencies
+    image: item.image ?? null,
     price: item.current_price,
     changePct24h: item.price_change_percentage_24h ?? null,
     volume24h: item.total_volume ?? null,
     marketCap: item.market_cap ?? null,
+    marketCapRank: item.market_cap_rank ?? null,
+    high24h: item.high_24h ?? null,
+    low24h: item.low_24h ?? null,
+    circulatingSupply: item.circulating_supply ?? null,
+    totalSupply: item.total_supply ?? null,
+    maxSupply: item.max_supply ?? null,
     updatedAt_utc: ensureIsoWithZ(item.last_updated),
   };
 }

@@ -47,6 +47,14 @@ async function summarizeText(text: string, apiKey: string) {
 
 // Stub function to parse XML
 function extractItemsFromXML(xml: string) {
-  // You can use xml2js or fast-xml-parser to extract titles + links
-  return []; // Return array of { title, link, description }
+  const parser = new XMLParser();
+  const parsed = parser.parse(xml);
+
+  const items = parsed.rss?.channel?.item || [];
+  return items.map((entry: any) => ({
+    title: entry.title,
+    link: entry.link,
+    description: entry.description,
+  }));
 }
+

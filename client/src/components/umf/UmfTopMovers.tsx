@@ -180,24 +180,37 @@ function MoverItem({ mover, type, onClick }: MoverItemProps) {
       aria-label={`${mover.name}, ${isGainer ? 'up' : 'down'} ${Math.abs(mover.changePct24h)} percent at ${mover.price} dollars. Press Enter to view details.`}
       data-testid={`mover-${type}-${mover.symbol}`}
     >
-      {/* Left: Symbol + Name */}
-      <div className="flex flex-col min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span 
-            className="text-sm font-bold text-foreground"
-            data-testid={`mover-symbol-${mover.symbol}`}
-          >
-            {mover.symbol}
+      {/* Left: Logo + Symbol + Name */}
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        {mover.image && (
+          <img 
+            src={mover.image} 
+            alt={`${mover.name} logo`}
+            className="w-6 h-6 rounded-full flex-shrink-0"
+            onError={(e) => {
+              // Hide image if it fails to load
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        )}
+        <div className="flex flex-col min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span 
+              className="text-sm font-bold text-foreground"
+              data-testid={`mover-symbol-${mover.symbol}`}
+            >
+              {mover.symbol}
+            </span>
+            {isGainer ? (
+              <TrendingUp className="w-3 h-3 text-green-500" aria-label="Trending up icon" />
+            ) : (
+              <TrendingDown className="w-3 h-3 text-red-500" aria-label="Trending down icon" />
+            )}
+          </div>
+          <span className="text-xs text-muted-foreground truncate">
+            {mover.name}
           </span>
-          {isGainer ? (
-            <TrendingUp className="w-3 h-3 text-green-500" aria-label="Trending up icon" />
-          ) : (
-            <TrendingDown className="w-3 h-3 text-red-500" aria-label="Trending down icon" />
-          )}
         </div>
-        <span className="text-xs text-muted-foreground truncate">
-          {mover.name}
-        </span>
       </div>
 
       {/* Right: Price + Change Badge with icons */}

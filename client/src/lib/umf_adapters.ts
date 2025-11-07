@@ -39,6 +39,7 @@ export function mapSnapshotExtendedToAssets(
       symbol: asset.symbol,
       name: asset.name,
       class: asset.class,
+      image: asset.image,
       price: asset.price,
       changePct24h: asset.changePct24h, // Guaranteed non-null by filter
       volume24h: asset.volume24h,
@@ -74,6 +75,7 @@ export function mapMoversExtendedToMovers(
       symbol: asset.symbol,
       name: asset.name,
       class: asset.class,
+      image: asset.image,
       price: asset.price,
       changePct24h: asset.changePct24h,
       updatedAt_utc: asset.updatedAt_utc,
@@ -89,6 +91,7 @@ export function mapMoversExtendedToMovers(
       symbol: asset.symbol,
       name: asset.name,
       class: asset.class,
+      image: asset.image,
       price: asset.price,
       changePct24h: asset.changePct24h,
       updatedAt_utc: asset.updatedAt_utc,

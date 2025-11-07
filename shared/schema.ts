@@ -258,6 +258,10 @@ export const umfAssetSchema = z.object({
     }),
   }).describe("Asset classification for filtering and categorization"),
   
+  // Logo image (optional - may not be available for all assets)
+  image: z.string().url().nullable().optional()
+    .describe("Logo image URL (null if unavailable)"),
+  
   // Price data
   price: z.number()
     .positive("Price must be positive")
@@ -365,6 +369,9 @@ export const umfMoverSchema = z.object({
       message: "Asset class must be: crypto, index, forex, commodity, or etf" 
     }),
   }).describe("Asset classification"),
+  
+  image: z.string().url().nullable().optional()
+    .describe("Logo image URL (null if unavailable)"),
   
   direction: z.enum(["gainer", "loser"], {
     errorMap: () => ({ message: "Direction must be 'gainer' or 'loser'" }),
@@ -602,6 +609,9 @@ export const umfAssetLiveSchema = z.object({
   class: umfAssetClassEnum
     .describe("Asset classification"),
   
+  image: z.string().url().nullable().optional()
+    .describe("Logo image URL from CoinGecko (null if unavailable)"),
+  
   price: z.number()
     .positive("Price must be positive")
     .describe("Current spot price in USD"),
@@ -619,6 +629,43 @@ export const umfAssetLiveSchema = z.object({
     .positive("Market cap must be positive")
     .nullable()
     .describe("Total market capitalization in USD (null if unavailable)"),
+  
+  marketCapRank: z.number()
+    .int("Market cap rank must be an integer")
+    .positive("Rank must be positive")
+    .nullable()
+    .optional()
+    .describe("Market cap rank (1 = largest, null if unavailable)"),
+  
+  high24h: z.number()
+    .positive("High price must be positive")
+    .nullable()
+    .optional()
+    .describe("24-hour high price in USD (null if unavailable)"),
+  
+  low24h: z.number()
+    .positive("Low price must be positive")
+    .nullable()
+    .optional()
+    .describe("24-hour low price in USD (null if unavailable)"),
+  
+  circulatingSupply: z.number()
+    .nonnegative("Circulating supply cannot be negative")
+    .nullable()
+    .optional()
+    .describe("Circulating supply (null if unavailable)"),
+  
+  totalSupply: z.number()
+    .nonnegative("Total supply cannot be negative")
+    .nullable()
+    .optional()
+    .describe("Total supply (null if unavailable)"),
+  
+  maxSupply: z.number()
+    .nonnegative("Max supply cannot be negative")
+    .nullable()
+    .optional()
+    .describe("Maximum supply cap (null if unlimited or unavailable)"),
   
   updatedAt_utc: z.string()
     .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
