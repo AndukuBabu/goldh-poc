@@ -2,18 +2,32 @@
  * Guru & Insider Digest Updater
  * 
  * Fetches live crypto news from RSS feeds (CoinDesk, Cointelegraph),
- * summarizes each article using Hugging Face's facebook/bart-large-cnn model,
  * and stores the results in Firebase Firestore under the guruDigest collection.
  * 
  * Usage:
- *   tsx server/updateGuruDigest.ts
+ *   tsx server/updateGuruDigest.ts           # Add new articles
+ *   tsx server/updateGuruDigest.ts --clear   # Clear old entries first
  * 
- * Environment Variables:
- *   HUGGINGFACE_API_KEY - Required for AI summarization
+ * Note: Uses client-side Firebase SDK for compatibility with Replit environment
  */
 
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc } from 'firebase/firestore';
 import { XMLParser } from 'fast-xml-parser';
-import { db } from './firebase.js';
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCjEmAnHmKLZ8msjNeovJBF3ssg-OHzz0M",
+  authDomain: "goldh-c78ca.firebaseapp.com",
+  projectId: "goldh-c78ca",
+  storageBucket: "goldh-c78ca.firebasestorage.app",
+  messagingSenderId: "1050639201481",
+  appId: "1:1050639201481:web:71c433ebb31ccb2e6b4918",
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 /**
  * RSS Feed Sources
@@ -48,18 +62,41 @@ interface GuruDigestEntry {
 }
 
 /**
- * Main function to update Guru Digest with latest news
+ * Clear all existing entries from the guruDigest collection
+ * Use this to remove mock data or old entries before fetching new ones
  */
-export async function updateGuruDigest(): Promise<void> {
-  console.log('🚀 Starting Guru Digest update...');
+export async function clearGuruDigest(): Promise<void> {
+  console.log('🧹 Clearing existing Guru Digest entries...');
   
-  const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
-  if (!HUGGINGFACE_API_KEY) {
-    throw new Error('HUGGINGFACE_API_KEY is not set in environment variables.');
+  try {
+    const querySnapshot = await getDocs(collection(db, 'guruDigest'));
+    const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+    
+    console.log(`✅ Deleted ${querySnapshot.docs.length} existing entries`);
+  } catch (error) {
+    console.error('❌ Error clearing collection:', error);
+    throw error;
+  }
+}
+
+/**
+ * Main function to update Guru Digest with latest news
+ * 
+ * NOTE: Currently using article description excerpts instead of AI summarization
+ * for immediate data availability. AI summarization can be re-enabled later.
+ */
+export async function updateGuruDigest(clearFirst: boolean = false): Promise<void> {
+  console.log('🚀 Starting Guru Digest update...');
+  console.log('📝 Using article excerpts (AI summarization disabled for now)');
+
+  // Clear old entries if requested
+  if (clearFirst) {
+    await clearGuruDigest();
   }
 
   let totalArticles = 0;
-  let successfulSummaries = 0;
+  let successfulEntries = 0;
 
   for (const feedUrl of RSS_FEEDS) {
     console.log(`\n📡 Fetching RSS feed: ${feedUrl}`);
@@ -80,11 +117,11 @@ export async function updateGuruDigest(): Promise<void> {
         console.log(`\n📰 Processing: ${item.title.substring(0, 60)}...`);
         
         try {
-          // Summarize the article
-          const summary = await summarizeText(item.description, HUGGINGFACE_API_KEY);
+          // Create summary from description (skip AI for now)
+          const summary = createExcerpt(item.description);
           
           if (!summary) {
-            console.warn(`⚠️  Empty summary received, skipping article`);
+            console.warn(`⚠️  No description available, skipping article`);
             continue;
           }
 
@@ -96,8 +133,8 @@ export async function updateGuruDigest(): Promise<void> {
             date: new Date().toISOString(),
           };
 
-          await db.collection('guruDigest').add(entry);
-          successfulSummaries++;
+          await addDoc(collection(db, 'guruDigest'), entry);
+          successfulEntries++;
           console.log(`✅ Saved to Firestore`);
         } catch (error) {
           console.error(`❌ Error processing article:`, error);
@@ -110,11 +147,51 @@ export async function updateGuruDigest(): Promise<void> {
 
   console.log(`\n✨ Update complete!`);
   console.log(`   Total articles processed: ${totalArticles}`);
-  console.log(`   Successfully summarized: ${successfulSummaries}`);
+  console.log(`   Successfully saved: ${successfulEntries}`);
+}
+
+/**
+ * Create excerpt from article description
+ * 
+ * Extracts the first ~300 characters of meaningful text from the description,
+ * stripping HTML tags and ensuring clean sentence breaks.
+ * 
+ * @param text - Article description or content
+ * @returns Excerpt string (max ~300 chars)
+ */
+function createExcerpt(text: string): string {
+  if (!text || text.trim().length === 0) {
+    return '';
+  }
+
+  // Strip HTML tags
+  let clean = text.replace(/<[^>]*>/g, ' ');
+  
+  // Normalize whitespace
+  clean = clean.replace(/\s+/g, ' ').trim();
+  
+  // Limit to ~300 characters, breaking at sentence or word boundary
+  const maxLength = 300;
+  if (clean.length <= maxLength) {
+    return clean;
+  }
+  
+  // Try to break at sentence end
+  const sentenceEnd = clean.substring(0, maxLength).lastIndexOf('. ');
+  if (sentenceEnd > 200) {
+    return clean.substring(0, sentenceEnd + 1);
+  }
+  
+  // Otherwise break at last space
+  const lastSpace = clean.substring(0, maxLength).lastIndexOf(' ');
+  return clean.substring(0, lastSpace > 0 ? lastSpace : maxLength) + '...';
 }
 
 /**
  * Summarize text using Hugging Face's BART model
+ * 
+ * NOTE: Currently disabled - using createExcerpt() instead for immediate data.
+ * This function remains for future re-enablement of AI summarization.
  * 
  * Includes retry logic for handling cold starts and temporary API issues.
  * The Hugging Face Inference API may take 10-20s to load models on cold start.
@@ -207,10 +284,15 @@ function extractItemsFromXML(xml: string): RSSItem[] {
 
 /**
  * CLI Entry Point
- * Run this script directly with: tsx server/updateGuruDigest.ts
+ * 
+ * Usage:
+ *   tsx server/updateGuruDigest.ts           # Add new articles (keeps existing)
+ *   tsx server/updateGuruDigest.ts --clear   # Clear old entries first, then add new
  */
 if (import.meta.url === `file://${process.argv[1]}`) {
-  updateGuruDigest()
+  const clearFirst = process.argv.includes('--clear');
+  
+  updateGuruDigest(clearFirst)
     .then(() => {
       console.log('\n✅ Script completed successfully');
       process.exit(0);

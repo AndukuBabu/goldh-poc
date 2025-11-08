@@ -32,7 +32,7 @@
 
   --sidebar-border: 42 8% 15%;
 
-  --sidebar-primary: 42 42% 59%;
+  --sidebar-primary: 44 45% 60%;  /* #C7AE6A - GOLDH brand gold */
 
   --sidebar-primary-foreground: 0 0% 10%;
 
@@ -40,7 +40,7 @@
 
   --sidebar-accent-foreground: 42 25% 85%;
 
-  --sidebar-ring: 42 42% 59%;
+  --sidebar-ring: 44 45% 60%;  /* #C7AE6A - GOLDH brand gold */
 
   --popover: 0 0% 8%;
 
@@ -48,7 +48,7 @@
 
   --popover-border: 42 8% 15%;
 
-  --primary: 42 42% 59%;
+  --primary: 44 45% 60%;  /* #C7AE6A - GOLDH brand gold */
 
   --primary-foreground: 0 0% 10%;
 
@@ -69,7 +69,7 @@
   --destructive-foreground: 0 5% 98%;
 
   --input: 42 8% 20%;
-  --ring: 42 42% 59%;
+  --ring: 44 45% 60%;  /* #C7AE6A - GOLDH brand gold */
   --chart-1: 42 48% 59%;
   --chart-2: 42 40% 52%;
   --chart-3: 200 70% 45%;
@@ -150,7 +150,7 @@
 
   --sidebar-border: 42 8% 15%;
 
-  --sidebar-primary: 42 42% 59%;
+  --sidebar-primary: 44 45% 60%;  /* #C7AE6A - GOLDH brand gold */
 
   --sidebar-primary-foreground: 0 0% 10%;
 
@@ -158,7 +158,7 @@
 
   --sidebar-accent-foreground: 42 25% 85%;
 
-  --sidebar-ring: 42 42% 59%;
+  --sidebar-ring: 44 45% 60%;  /* #C7AE6A - GOLDH brand gold */
 
   --popover: 0 0% 8%;
 
@@ -166,7 +166,7 @@
 
   --popover-border: 42 8% 15%;
 
-  --primary: 42 42% 59%;
+  --primary: 44 45% 60%;  /* #C7AE6A - GOLDH brand gold */
 
   --primary-foreground: 0 0% 10%;
 
@@ -187,7 +187,7 @@
   --destructive-foreground: 0 5% 98%;
 
   --input: 42 8% 20%;
-  --ring: 42 42% 59%;
+  --ring: 44 45% 60%;  /* #C7AE6A - GOLDH brand gold */
   --chart-1: 42 52% 72%;
   --chart-2: 42 45% 65%;
   --chart-3: 200 80% 70%;
