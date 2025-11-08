@@ -8,6 +8,8 @@ import { z } from "zod";
 import { getFresh } from "./umf/lib/cache";
 import { readLiveSnapshot } from "./umf/lib/firestoreUmf";
 import type { UmfSnapshotLive, UmfAssetLive } from "@shared/schema";
+import { updateGuruDigest } from "./updateGuruDigest";
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -509,6 +511,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //   }
   // });
 
+  // Guru & Insider Digest Trigger Route
+  app.post("/api/update-guru-digest", async (req: Request, res: Response) => {
+    try {
+      await updateGuruDigest();
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Guru Digest update error:", error);
+      res.status(500).json({ error: "Failed to update Guru Digest" });
+    }
+  });
+
+  
   const httpServer = createServer(app);
 
   return httpServer;

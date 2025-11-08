@@ -1,57 +1,50 @@
 # GOLDH Crypto Intelligence Platform
 
 ## Overview
-GOLDH is a crypto intelligence platform providing real-time market intelligence, secure wallet integration, and educational resources. It caters to both experienced traders and beginners, aiming to simplify cryptocurrency navigation. The platform features a modern tech stack (React, Express, PostgreSQL) and a premium fintech aesthetic with a distinctive black-gold color scheme and beginner-friendly language. Its vision is to build wealth and bridge worlds in the crypto space.
+GOLDH is a crypto intelligence platform designed to provide real-time market intelligence, secure wallet integration, and educational resources. It aims to simplify cryptocurrency navigation for both experienced traders and beginners. The platform features a premium fintech aesthetic with a black-gold color scheme and user-friendly language. Its core purpose is to build wealth and bridge worlds within the crypto space.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
+### Frontend
 - **Framework & Routing**: React with TypeScript, Wouter for routing, Vite for bundling.
 - **UI Component System**: shadcn/ui (New York style), Radix UI primitives, Tailwind CSS with custom design tokens.
-- **State Management**: TanStack Query for server state, React Context API for authentication, local component state with React hooks.
-- **Design System**: Black-gold color palette with premium fintech aesthetic:
-  - Backgrounds: `#0f0f0f` (darkest), `#1a1a1a` (cards/tiles), `#2a2a2a` (borders)
-  - Gold accents: `#C7AE6A` (primary), `#d5c28f`, `#b99a45`, `#e3d6b4`
-  - Icon-enhanced badges (not color-only for accessibility)
-  - Responsive design with custom spacing and elevation classes
-  - Enhanced visual polish with shadows, gradients, and gold glow effects
-  - Logo integrated with blend modes
+- **State Management**: TanStack Query for server state, React Context API for authentication.
+- **Design System**: Premium black-gold aesthetic (`#0f0f0f`, `#1a1a1a`, `#2a2a2a` backgrounds; `#C7AE6A` accents), Inter and JetBrains Mono typography, responsive design, interactive elements with hover effects, gold border glows, and shadows.
 
-### Backend Architecture
+### Backend
 - **Server Framework**: Express.js on Node.js with TypeScript and ESM modules.
-- **API Design**: RESTful API under `/api`, session-based authentication with bearer tokens, structured error handling, and request/response logging.
-- **Authentication System**: Bcrypt for password hashing (10 salt rounds), database-backed session management (7-day expiration), bearer token authentication. Supports email/password and wallet-based authentication, and magic link functionality.
+- **API Design**: RESTful API under `/api`, session-based authentication with bearer tokens.
+- **Authentication System**: Bcrypt for password hashing, database-backed session management, email/password, wallet-based, and magic link authentication.
 
-### Data Storage Solutions
-- **Database Configuration**: PostgreSQL as the primary database using Drizzle ORM and Neon serverless driver.
-- **Schema Design**: `Users` table (id, name, email, password, phone, experienceLevel, agreeToUpdates, walletAddress, isPremium, createdAt), `Sessions` table (id, userId, expiresAt, createdAt). Interface definitions for `NewsArticle` and `LearningTopic`. Zod schemas for runtime validation.
-- **Storage Strategy**: PostgreSQL database storage implemented via Drizzle ORM, providing persistent data and session management with automatic cleanup.
-- **Database Management**: Schema migrations managed through Drizzle with `npm run db:push`.
+### Data Storage
+- **Primary Database**: PostgreSQL using Drizzle ORM and Neon serverless driver.
+- **Schema Design**: `Users` and `Sessions` tables, Zod schemas for validation.
+- **Database Management**: Schema migrations via Drizzle.
 
 ### UI/UX Decisions
-- **Color Scheme**: Predominantly black and gold for a premium, luxurious feel.
-- **Typography**: Inter for body text and JetBrains Mono for monospace content.
-- **Component Design**: Interactive elements with hover effects, gold border glows, and shadows.
-- **Feature Pages**: Dedicated full-screen pages for deep-dive feature exploration like Guru & Insider Digest, Universal Market Financials, and Economic Calendar.
-- **Dashboard**: Truncated previews of content (e.g., Guru Digest) with options to view all entries.
-- **Mobile Responsiveness**: All UI components are designed to be responsive and maintain readability across devices.
+- **Color Scheme**: Black and gold for a premium, luxurious feel.
+- **Typography**: Inter for body, JetBrains Mono for monospace.
+- **Component Design**: Interactive elements with hover, gold glows, shadows.
+- **Feature Pages**: Dedicated full-screen pages for Guru & Insider Digest, Universal Market Financials, Economic Calendar.
+- **Dashboard**: Truncated content previews.
+- **Mobile Responsiveness**: All components are responsive.
 
 ### Technical Implementations
-- **Authentication Flow**: Distinct sign-in and sign-up pages. Sign-up includes comprehensive waitlist registration with extended user profile fields.
-- **Session Management**: Database-backed session persistence with automatic cleanup of expired sessions.
-- **Client-side Validation**: Zod schemas for form validation, separated from server-side validation.
-- **Error Handling**: Graceful error handling for failed sign-in attempts and invalid data.
+- **Authentication Flow**: Distinct sign-in/sign-up, comprehensive waitlist registration.
+- **Session Management**: Database-backed session persistence with cleanup.
+- **Validation**: Zod schemas for client-side and server-side validation.
+- **Error Handling**: Graceful error handling for authentication and data.
 
 ### Feature Specifications
-- **Real-time Market Intelligence**: Display of crypto-relevant macroeconomic events and market data.
-- **Guru & Insider Digest**: Provides whale alerts, smart wallet movements, and institutional fund flows. Data is stored in Firestore.
-- **Universal Market Financials (UMF)**: A unified dashboard displaying live market snapshot (Top-20 crypto + indices + DXY), top movers (gainers/losers), morning intelligence briefs, and optional market alerts. UI-only MVP powered by Firestore mock data with planned migration to REST API. Features include asset tiles with prices/24h changes, two-column responsive layout, and severity-based alert cards. Located at `/features/umf`.
-- **Economic Calendar**: Full-featured economic events calendar with grid/list views, filtering by country/category/importance, and performance monitoring (<500ms first paint target).
-- **Educational Resources**: Content related to learning topics in cryptocurrency.
-- **Premium Access**: Pathways to premium features through GOLDH tokens or subscription.
+- **Real-time Market Intelligence**: Displays crypto macroeconomic events and market data.
+- **Guru & Insider Digest**: Provides whale alerts, smart wallet movements, and institutional fund flows.
+- **Universal Market Financials (UMF)**: Unified dashboard with live market snapshots (Top-20 crypto, indices, DXY), top movers, morning intelligence briefs, and market alerts. Features asset tiles, two-column responsive layout, and severity-based alert cards.
+- **Economic Calendar**: Full-featured calendar with filtering and performance targets.
+- **Educational Resources**: Content on cryptocurrency topics.
+- **Premium Access**: Access to premium features via GOLDH tokens or subscription.
 
 ## External Dependencies
 
@@ -60,7 +53,7 @@ Preferred communication style: Simple, everyday language.
 - TypeScript
 
 ### Database & ORM
-- PostgreSQL (via `DATABASE_URL` environment variable)
+- PostgreSQL
 - Drizzle Kit
 - Drizzle ORM
 
@@ -73,132 +66,25 @@ Preferred communication style: Simple, everyday language.
 
 ### UI Component Dependencies
 - Radix UI primitives
-- class-variance-authority
-- clsx and tailwind-merge
-- cmdk
+- shadcn/ui
+- Tailwind CSS
 
 ### Authentication & Security
-- bcryptjs (for password hashing)
+- bcryptjs
 
 ### Build Tools
 - Vite
 - esbuild
-- PostCSS with Tailwind CSS
-- tsx
+- PostCSS
 
-### Replit Integration
-- Replit-specific Vite plugins (error overlay, Cartographer, dev banner)
+### Cloud Services
+- Firebase/Firestore (for Guru & Insider Digest, UMF mock and live data)
+- Hugging Face API (for AI summarization of news articles)
+- CoinGecko API (for live UMF data, via scheduler)
 
 ### Font Resources
-- Google Fonts (Inter, JetBrains Mono) via CDN
+- Google Fonts (Inter, JetBrains Mono)
 
 ### Assets
-- GOLDH logo (`goldh-logo_1762272901250.png`)
+- GOLDH logo
 - Favicon
-
-### Firebase/Firestore Integration
-- Firebase SDK for Firestore database (client-side)
-- `guruDigest` collection for Guru & Insider Digest feature data
-- `umf_snapshot_mock` collection (25 assets: BTC, ETH, SOL, SPX, NDX, DXY, GOLD, WTI, etc.)
-- `umf_movers_mock` collection (10 movers: 5 gainers, 5 losers)
-- `umf_brief_mock` collection (daily morning intelligence briefs)
-- `umf_alerts_mock` collection (market alerts with info/warn/high severity)
-
-### Data Management Scripts
-- `scripts/uploadGuruDigest.ts` - Populates Firestore with mock Guru Digest entries
-- `scripts/uploadUmfMock.ts` - Seeds UMF Firestore collections with realistic mock market data
-
-### Quality Assurance
-- `qa/UMF-UI-Manual.md` - Comprehensive manual QA checklist for UMF feature with 9 test cases covering performance, functionality, accessibility, and responsive design
-- `qa/UMF-1ph-Policy.md` - QA & Operations policy for UMF live integration testing. Covers 6 test scenarios: scheduler setup, rate limiting validation, hourly tick behavior, degraded mode testing, history cleanup, and performance targets. Includes monitoring checklists, troubleshooting guide, and rollback procedures.
-
-### Performance Documentation
-- `docs/UMF-Perf-Notes.md` - Performance targets, optimization strategies, and observed bottlenecks. Targets: initial render < 2s, re-render < 300ms. Guards: memoized selectors, minimal DOM, lazy drawers, efficient caching. Bundle: ~88KB total.
-
-### Deployment Documentation
-- `docs/UMF-GoLive-UI-Only.md` - Production deployment checklist (150+ items) covering Firestore seeding, widget functionality, QA/a11y validation, API migration stubs, code quality, browser compatibility, and rollback procedures. Ensures UI-only MVP is production-ready.
-
-### Live API Integration Documentation
-- `docs/UMF-Live-Firestore.md` - Comprehensive plan for migrating from mock to live CoinGecko API with 1-call-per-hour rate limiting. Covers scheduler architecture, in-memory caching (TTL=3600s), Firestore storage (latest + history), API route implementation, failure policies (degraded mode), CoinGecko attribution requirements, and complete acceptance checklist.
-
-### UMF Live Integration (Complete)
-- **Architecture**: Scheduler-only CoinGecko calls (1/hour) → In-memory Cache (1hr TTL) → Firestore (live + 48hr history) → API routes → Frontend
-- **CoinGecko Provider**: `server/umf/providers/coingecko.ts` with exponential backoff retry (3 attempts, 1s/2s/4s delays)
-- **Configuration**: `server/umf/lib/config.ts` (20+ exports: COINGECKO_BASE_URL, rate limits, jitter ranges, TTLs, asset mappings)
-- **In-Memory Cache**: `server/umf/lib/cache.ts` (TTL-based with LRU eviction, thread-safe, 1hr default TTL)
-- **Firestore I/O**: `server/umf/lib/firestoreUmf.ts` (server-side admin SDK, writes to `umf_snapshot_live/latest` and `umf_snapshot_history/{id}`)
-- **Scheduler**: `server/umf/scheduler.ts` (THE ONLY COINGECKO CALLER)
-  - Runs every 55 minutes (safety margin for 60-min rate limit)
-  - ±15s jitter to prevent thundering herd
-  - Guarded by `UMF_SCHEDULER=1` environment variable
-  - Writes to cache (1hr TTL) and Firestore (live + history)
-  - Cleanup: deletes snapshots older than 48 hours
-- **API Routes**: `server/routes.ts` - GET `/api/umf/snapshot` and `/api/umf/movers`
-  - Serve from cache → Firestore → empty fallback (NEVER call CoinGecko)
-  - Return `x-umf-source` header: 'cache' | 'firestore' | 'empty'
-  - Structured responses with degraded flag
-- **Client Firestore Helpers**: `client/src/lib/umf_firestore.ts` (read-only, client SDK)
-  - `getUmfSnapshotLive()` - Read `umf_snapshot_live/latest`
-  - `getUmfSnapshotHistory(limit)` - Read history (newest first)
-  - `getUmfSnapshotHistoryCount()` - Count history entries
-- **Multi-Tier Fallback**: Frontend hooks cascade through API → Client Firestore → Mock with source tracking
-- **Rate Limiting**: 55-minute minimum between CoinGecko calls (24 calls/day vs 43,200 limit), rate limit guard enforced in scheduler
-
-### API Migration Placeholders (Future Implementation)
-- `client/src/lib/umf.client.ts` - API client functions (currently TODOs) for future REST API migration
-- `server/routes.ts` - Commented API endpoint stubs for GET /api/umf/snapshot, /movers, /brief, /alerts (lines 316-425)
-- `server/openapi/umf.draft.yaml` - Complete OpenAPI 3.0 specification for UMF REST API endpoints
-- `docs/UMF-UI-MVP.md` - Updated with detailed API migration guide (Section 17)
-
-### UMF Feature Implementation
-- **Data Layer**: 
-  - Live schemas: `UmfSnapshotLive` and `UmfAssetLive` with comprehensive CoinGecko data capture:
-    - Core fields: id, symbol, name, class, price, changePct24h, volume24h, marketCap, updatedAt_utc
-    - Image: Logo URLs from CoinGecko for visual display
-    - Market data: marketCapRank (1 = largest), high24h/low24h (24h price range)
-    - Supply metrics: circulatingSupply, totalSupply, maxSupply (null if unlimited)
-    - All new fields are nullable/optional to handle missing data gracefully
-  - Mock schemas: `UmfSnapshot`, `UmfMover`, `UmfBrief`, `UmfAlert` (extended with image field)
-  - 5 asset classes: crypto, index, forex, commodity, etf
-- **React Hooks**: 4 TanStack Query hooks in `client/src/hooks/useUmf.ts` with multi-tier fallback architecture:
-  - `useUmfSnapshot()` - Returns `UmfSnapshotExtended` with `{ data, degraded, sourceUi, ageMinutes }`
-    - Fallback: API route → Client Firestore → Mock data
-    - Reads `x-umf-source` header to determine data source
-    - Computes data age in minutes for UI transparency
-  - `useUmfMovers()` - Returns `UmfMoversExtended` with `{ gainers, losers, degraded, sourceUi }`
-    - Fallback: API route → Computed from snapshot → Mock data
-    - Top 5 gainers and losers with source transparency
-  - `useUmfBrief()` - Daily morning intelligence brief
-  - `useUmfAlerts()` - Active market alerts
-  - 6 derived selectors (useCryptoByMarketCap, useIndices, useDXY, useBtcEth, useAssetBySymbol, useAssetsByClass)
-- **UI Components**: 
-  - `UmfMorningBrief.tsx` - Displays headline, 3-5 bullets, timestamp, copy-to-clipboard button with toast feedback
-  - `UmfSnapshot.tsx` - Asset grid with coin logos (5px circular), hover elevation, keyboard-accessible tooltips showing UTC/local timestamps, 2-wide mobile grid
-  - `UmfTopMovers.tsx` - Clickable gainers/losers with coin logos (6px circular) that open detail sheets/drawers with asset info, market context, and timestamps
-  - `UmfAlertCard.tsx` - Severity-styled alert banners (info/warn/high) with optional dismiss functionality
-  - All logos display with graceful error handling (hide on load failure) and accessibility (alt text)
-- **Page**: `/features/umf` - Full-screen responsive layout (mobile stacked, desktop 2-column) with loading/empty states
-- **Interactive Features**:
-  - Copy morning brief to clipboard with formatted text
-  - Enhanced tooltips with UTC/local timestamps on asset tiles
-  - Clickable mover rows that open detail drawers (Sheet component)
-  - Full keyboard navigation (Tab + Enter/Space) with visible focus rings
-  - Hover elevation effects on all interactive elements
-  - Mobile-responsive 2-column grid for snapshot tiles
-- **Theming & Visual Design**:
-  - Black-gold premium aesthetic (#0f0f0f, #1a1a1a, #2a2a2a backgrounds with #C7AE6A accents)
-  - Icon-enhanced badges for all status indicators (positive/negative changes show icons + colors)
-  - Consistent use of TrendingUp/TrendingDown/ArrowUp/ArrowDown icons alongside color coding
-  - No inline styles or display: table usage
-  - All data-testid attributes preserved for testing
-- **Accessibility (WCAG 2.1 AA)**: 
-  - Full keyboard support with Tab navigation and Enter/Space activation
-  - ARIA regions (role="region") with descriptive labels on all sections
-  - aria-live="polite" on dynamic content (morning brief headline, alerts)
-  - Comprehensive aria-labels on interactive elements and asset tiles
-  - Icon-enhanced badges ensure information not conveyed by color alone
-  - Focus indicators with gold rings (#C7AE6A) for keyboard visibility
-  - Screen reader friendly with proper semantic structure (main, header, section elements)
-  - Tooltips accessible via keyboard focus
-- **Performance**: First paint <2s target, optimized caching (30s for prices, 5min for briefs)
-- **Future Migration**: Designed for seamless API migration from Firestore to `/api/umf/*` endpoints without UI refactor

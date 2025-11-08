@@ -57,11 +57,13 @@
     "express-session": "^1.18.1",
     "fast-xml-parser": "^5.3.1",
     "firebase": "^12.5.0",
+    "firebase-admin": "^13.6.0",
     "framer-motion": "^11.13.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.453.0",
     "memorystore": "^1.6.7",
     "next-themes": "^0.4.6",
+    "node-fetch": "^3.3.2",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "react": "^18.3.1",
@@ -79,6 +81,7 @@
     "wagmi": "^2.19.1",
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
+    "xml2js": "^0.6.2",
     "zod": "^3.24.2",
     "zod-validation-error": "^3.4.0"
   },
@@ -103,8 +106,9 @@
     "esbuild": "^0.25.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
-    "typescript": "5.6.3",
+    "typescript": "^5.6.3",
     "vite": "^5.4.20"
   },
   "optionalDependencies": {
