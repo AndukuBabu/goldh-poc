@@ -71,12 +71,12 @@ export default function GuruDigestList({ showAll = false, truncateSummary = fals
               data-testid={`link-digest-${idx}`}
             >
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base font-semibold text-primary leading-tight flex-1 group-hover:text-primary/90 transition-colors">
+                <h3 className="text-base font-semibold !text-white leading-tight flex-1 transition-colors">
                   {item.title}
                 </h3>
                 <ExternalLink className="w-4 h-4 text-primary flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
               </div>
-              <p className={`text-sm text-muted-foreground leading-relaxed ${truncateSummary ? 'line-clamp-2' : ''}`}>
+              <p className={`text-sm !text-zinc-400 leading-relaxed ${truncateSummary ? 'line-clamp-2' : ''}`}>
                 {item.summary}
               </p>
               {item.date && (() => {
