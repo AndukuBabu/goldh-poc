@@ -37,13 +37,17 @@ Preferred communication style: Simple, everyday language.
 - **Session Management**: Database-backed session persistence with cleanup.
 - **Validation**: Zod schemas for client-side and server-side validation.
 - **Error Handling**: Graceful error handling for authentication and data.
+- **Automated Data Refresh**:
+  - **UMF Scheduler**: Updates every 60 minutes (±15s jitter) via CoinGecko API. Enabled by `UMF_SCHEDULER=1` env var.
+  - **Guru Digest Scheduler**: Updates every 2.5 hours (±30s jitter) via RSS feeds from CoinDesk & Cointelegraph. Enabled by `GURU_SCHEDULER=1` env var. Clears old entries and fetches fresh articles automatically.
+  - Both schedulers have rate limit guards and performance logging.
 
 ### Feature Specifications
 - **Real-time Market Intelligence**: Displays crypto macroeconomic events and market data.
-- **Guru & Insider Digest**: Provides whale alerts, smart wallet movements, and institutional fund flows.
-- **Universal Market Financials (UMF)**: Unified dashboard with live market snapshots (Top-20 crypto, indices, DXY), top movers, morning intelligence briefs, and market alerts. Features asset tiles, two-column responsive layout, and severity-based alert cards.
-- **Economic Calendar**: Full-featured calendar with filtering and performance targets.
-- **Educational Resources**: Content on cryptocurrency topics.
+- **Guru & Insider Digest**: Real-time crypto news from CoinDesk and Cointelegraph RSS feeds. Automated scheduler updates every 2.5 hours (10x per day) for fresh content. Manual CLI script also available. Stores articles in Firestore with 300-character excerpts.
+- **Universal Market Financials (UMF)**: Unified dashboard with live market snapshots (Top-20 crypto, indices, DXY), top movers, morning intelligence briefs, and market alerts. Features asset tiles, two-column responsive layout, and severity-based alert cards. Automated scheduler updates every 60 minutes via CoinGecko API.
+- **Economic Calendar**: Full-featured calendar with filtering and performance targets. Currently uses mock data with "Coming Soon" notice for real API integration.
+- **Educational Resources**: Static Q&A content on cryptocurrency topics.
 - **Premium Access**: Access to premium features via GOLDH tokens or subscription.
 
 ## External Dependencies
@@ -78,9 +82,12 @@ Preferred communication style: Simple, everyday language.
 - PostCSS
 
 ### Cloud Services
-- Firebase/Firestore (for Guru & Insider Digest, UMF mock and live data)
-- Hugging Face API (for AI summarization of news articles)
-- CoinGecko API (for live UMF data, via scheduler)
+- **Firebase/Firestore**: Stores Guru & Insider Digest articles and UMF live/historical snapshots. All credentials managed via environment variables for security.
+- **RSS Feeds**: CoinDesk (`https://www.coindesk.com/arc/outboundfeeds/rss/`) and Cointelegraph (`https://cointelegraph.com/rss`) for Guru Digest news articles.
+- **CoinGecko API**: Free tier for live cryptocurrency market data (UMF feature). Rate-limited scheduler prevents over-calling.
+
+### CLI Scripts
+- **Guru Digest Manual Update**: `tsx server/updateGuruDigest.ts` (adds new articles) or `tsx server/updateGuruDigest.ts --clear` (clears old entries first).
 
 ### Font Resources
 - Google Fonts (Inter, JetBrains Mono)
