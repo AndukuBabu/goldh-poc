@@ -32,6 +32,7 @@ export interface GuruDigestEntry {
   summary: string;
   link: string;
   date: string;
+  assets: string[]; // Canonical asset symbols (e.g., ['BTC', 'ETH'])
 }
 
 /**

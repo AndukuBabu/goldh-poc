@@ -12,6 +12,7 @@
 
 import { fetchAllRSSFeeds, createExcerpt, type GuruDigestEntry } from './lib/rss';
 import { clearGuruDigest, addGuruDigestEntries } from './lib/firestore';
+import { extractAssetSymbols } from '../../shared/constants';
 
 /**
  * Update Guru Digest Options
@@ -72,12 +73,17 @@ export async function updateGuruDigest(
       continue;
     }
     
+    // Extract asset tags from title and summary
+    const textToTag = `${item.title} ${summary}`;
+    const assets = extractAssetSymbols(textToTag);
+    
     // Create entry
     const entry: GuruDigestEntry = {
       title: item.title,
       summary,
       link: item.link,
       date: new Date().toISOString(),
+      assets, // Store canonical asset symbols
     };
     
     entries.push(entry);

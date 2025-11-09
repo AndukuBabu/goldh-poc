@@ -798,3 +798,78 @@ export const umfMoversLiveSchema = z.object({
  * TypeScript type for UmfMovers (Live)
  */
 export type UmfMoversLive = z.infer<typeof umfMoversLiveSchema>;
+
+/**
+ * Asset Overview Schema
+ * 
+ * Aggregated view of a single asset combining data from multiple features:
+ * - UMF: Price, 24h change, volume, market cap
+ * - Guru Digest: Related news articles
+ * - Economic Calendar: Relevant upcoming events
+ * 
+ * Used by /api/asset/:symbol endpoint and /asset/[symbol] page
+ */
+export const assetOverviewSchema = z.object({
+  // Core asset identification
+  symbol: z.string().min(1, "Symbol is required")
+    .describe("Canonical asset symbol (e.g., BTC, ETH, SPX)"),
+  
+  name: z.string().min(1, "Asset name is required")
+    .describe("Full asset name (e.g., Bitcoin, Ethereum, S&P 500)"),
+  
+  class: z.enum(["crypto", "index", "forex", "commodity", "etf"], {
+    errorMap: () => ({ 
+      message: "Asset class must be: crypto, index, forex, commodity, or etf" 
+    }),
+  }).describe("Asset classification"),
+  
+  image: z.string().url().nullable().optional()
+    .describe("Logo image URL (null if unavailable)"),
+  
+  // Price summary (from UMF)
+  priceSummary: z.object({
+    price: z.number().positive("Price must be positive")
+      .describe("Current spot price in USD"),
+    
+    changePct24h: z.number()
+      .describe("24-hour percentage change"),
+    
+    volume24h: z.number().positive().nullable()
+      .describe("24-hour trading volume in USD (null for indices/forex)"),
+    
+    marketCap: z.number().positive().nullable()
+      .describe("Market capitalization in USD (null for forex/commodities)"),
+    
+    updatedAt_utc: z.string().datetime()
+      .describe("Last price update timestamp in UTC (ISO 8601)"),
+  }).nullable().describe("Current price data from UMF (null if unavailable)"),
+  
+  // Related news articles (from Guru Digest)
+  news: z.array(z.object({
+    title: z.string(),
+    summary: z.string(),
+    link: z.string().url(),
+    date: z.string().datetime(),
+  })).describe("Recent Guru Digest articles mentioning this asset"),
+  
+  // Related economic events (from Economic Calendar)
+  events: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    datetime_utc: z.string().datetime(),
+    importance: z.enum(["High", "Medium", "Low"]),
+    category: z.string(),
+  })).describe("Upcoming economic events affecting this asset"),
+  
+  // Degraded status flags
+  degraded: z.object({
+    price: z.boolean().describe("True if price data is stale or unavailable"),
+    news: z.boolean().describe("True if news data is stale or unavailable"),
+    events: z.boolean().describe("True if events data is stale or unavailable"),
+  }).describe("Degraded status flags for each data source"),
+});
+
+/**
+ * TypeScript type for AssetOverview
+ */
+export type AssetOverview = z.infer<typeof assetOverviewSchema>;
