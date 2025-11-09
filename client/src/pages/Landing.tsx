@@ -41,7 +41,7 @@ const features = [
 ];
 
 export default function Landing() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   
   const scrollToFeatures = () => {
@@ -58,6 +58,9 @@ export default function Landing() {
       setLocation("/signin");
     }
   };
+  
+  const buttonText = isLoading ? "Loading..." : (user ? "Go to Dashboard" : "Start Free");
+  const ctaButtonText = isLoading ? "Loading..." : (user ? "Go to Dashboard" : "Get Started Now");
 
   return (
     <div className="min-h-screen bg-background">
@@ -93,9 +96,10 @@ export default function Landing() {
                   size="lg" 
                   className="text-lg px-8" 
                   onClick={handleGetStarted}
+                  disabled={isLoading}
                   data-testid="button-hero-start"
                 >
-                  {user ? "Go to Dashboard" : "Start Free"}
+                  {buttonText}
                 </Button>
                 <Button
                   size="lg"
@@ -183,9 +187,10 @@ export default function Landing() {
               size="lg" 
               className="text-lg px-12 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all" 
               onClick={handleGetStarted}
+              disabled={isLoading}
               data-testid="button-cta-signup"
             >
-              {user ? "Go to Dashboard" : "Get Started Now"}
+              {ctaButtonText}
             </Button>
             <Link href="/learn">
               <Button 

@@ -6,7 +6,7 @@ import logoImage from "@assets/goldh-logo_1762272901250.png";
 
 export function Header() {
   const [location, setLocation] = useLocation();
-  const { user, signout } = useAuth();
+  const { user, signout, isLoading } = useAuth();
   
   const isActive = (path: string) => {
     if (path === "/features") {
@@ -61,7 +61,9 @@ export function Header() {
               Dashboard
             </Button>
           </Link>
-          {user ? (
+          {isLoading ? (
+            <div className="w-24 h-9 bg-muted/50 rounded-md animate-pulse" />
+          ) : user ? (
             <>
               <Link href="/profile">
                 <Button 
