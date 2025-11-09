@@ -12,6 +12,7 @@ import { assetOverviewSchema } from "@shared/schema";
 import { updateGuruDigest } from "./guru/updater";
 import { getGuruDigestByAsset, getAllGuruDigest } from "./guru/lib/firestore";
 import { CANONICAL_SYMBOLS, ASSET_DISPLAY_NAMES, ASSET_CLASSES } from "@shared/constants";
+import { createLeadFromUser } from "./zoho/leads";
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -36,6 +37,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const session = await sessionManager.createSession(user.id);
+      
+      // Send user data to Zoho CRM asynchronously (non-blocking)
+      createLeadFromUser(user).catch(error => {
+        console.error('[Signup] Failed to create Zoho lead (non-critical):', error);
+      });
       
       res.json({
         user: {

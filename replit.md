@@ -101,6 +101,7 @@ Preferred communication style: Simple, everyday language.
 - **Firebase/Firestore**: Stores Guru & Insider Digest articles and UMF live/historical snapshots. All credentials managed via environment variables for security.
 - **RSS Feeds**: CoinDesk (`https://www.coindesk.com/arc/outboundfeeds/rss/`) and Cointelegraph (`https://cointelegraph.com/rss`) for Guru Digest news articles.
 - **CoinGecko API**: Free tier for live cryptocurrency market data (UMF feature). Rate-limited scheduler prevents over-calling.
+- **Zoho CRM**: Automatically creates Leads in CRM when users sign up. Uses Self Client OAuth 2.0 with refresh token authentication. Integration is non-blocking - sign-ups succeed even if CRM API fails. Credentials managed via environment variables (`ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`, `ZOHO_API_DOMAIN`).
 
 ### CLI Scripts
 - **Guru Digest Manual Update**: `tsx server/updateGuruDigest.ts` (adds new articles) or `tsx server/updateGuruDigest.ts --clear` (clears old entries first).
