@@ -1,0 +1,100 @@
+Currently, your app treats Guru Digest, UMF, Economic Calendar, etc. as standalone feature modules. But you now want:
+Unified asset-level views (e.g., click on BTC → see everything about BTC from all features).
+
+
+A more dashboard-style landing page that ties your features together.
+
+
+Cross-feature linking (e.g., an economic event affecting ETH shows under ETH).
+
+
+
+✅ What You’ll Need to Do
+1. Restructure the Feature Architecture
+Today: Pages like /digest, /umf, etc. with mock filters.
+
+
+Tomorrow: A central page like /asset/BTC that pulls:
+
+
+Price + chart (from UMF)
+
+
+Whale/smart money alerts (from Guru Digest)
+
+
+Related economic events (from Economic Calendar)
+
+
+Fund flows, sentiment, etc. (later from other layers)
+
+
+Implementation Step:
+Create dynamic route: client/src/pages/asset/[symbol].tsx
+
+
+Use getAssetData(symbol) (or something like that) to fetch all pieces of info.
+
+
+
+2. Update Firestore Structure or Create Aggregation API
+You’ll want to fetch asset-centric data instead of module-centric data. This means either:
+You reorganize Firebase to nest data by asset (/assets/BTC/{umf, digest, events}), or
+
+
+You create an API that joins data from different Firestore collections (umfLive, guruDigest, etc.) based on asset tags.
+
+
+Recommended: Build a server function getAssetDetails(assetSymbol) to bundle this.
+
+3. Refactor Homepage
+Turn the homepage into a mini-dashboard:
+Show major assets (BTC, ETH, SOL, etc.) as cards
+
+
+Each card can show:
+
+
+Price change (from UMF)
+
+
+of alerts/news (from Digest)
+
+
+Badge if any high-impact economic event is pending
+
+
+Clicking on the card → goes to /asset/BTC.
+
+4. Improve Tagging Consistency
+To link features across assets, you'll need:
+Digest entries to have accurate token tags (["BTC", "SOL"])
+
+
+Economic events to reference affected assets (manual mapping if needed)
+
+
+UMF already handles price/snapshot per asset
+
+
+
+5. Design Update
+Replace isolated feature pages with dropdown filters and unified layout.
+
+
+Sidebar or tabs per asset could switch between price, news, events.
+
+
+
+🔧 What to Tell Replit
+Prompt:
+ “We want to restructure the app so that instead of siloed feature pages, the core interaction is asset-first. For example, if I click BTC on the homepage, I should see price charts, recent digest alerts, and any related economic events all in one view. Can you:
+Create a dynamic route for /asset/[symbol]
+
+
+Write a new API handler or server utility that joins UMF, Digest, and Economic Calendar data for a given symbol
+
+
+Refactor homepage to show major tokens as cards linking to their unified asset views.”
+
+	
