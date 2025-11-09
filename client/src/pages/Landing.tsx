@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { FeatureCard } from "@/components/FeatureCard";
 import { FOMABox } from "@/components/FOMABox";
+import { NewsScroller } from "@/components/NewsScroller";
+import { PreviewWidgets } from "@/components/PreviewWidgets";
 import { useAuth } from "@/lib/auth";
 import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
@@ -66,6 +68,9 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <Header />
       
+      {/* News Ticker */}
+      <NewsScroller />
+      
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 pt-20 sm:pt-0">
         <div className="container mx-auto py-12 sm:py-0">
@@ -115,6 +120,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Preview Widgets */}
+      <PreviewWidgets />
 
       {/* FOMO Boxes */}
       <section className="py-8 sm:py-12 px-4 sm:px-6 bg-card/30">

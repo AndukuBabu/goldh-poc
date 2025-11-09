@@ -10,7 +10,7 @@ import { readLiveSnapshot } from "./umf/lib/firestoreUmf";
 import type { UmfSnapshotLive, UmfAssetLive, AssetOverview } from "@shared/schema";
 import { assetOverviewSchema } from "@shared/schema";
 import { updateGuruDigest } from "./guru/updater";
-import { getGuruDigestByAsset } from "./guru/lib/firestore";
+import { getGuruDigestByAsset, getAllGuruDigest } from "./guru/lib/firestore";
 import { CANONICAL_SYMBOLS, ASSET_DISPLAY_NAMES, ASSET_CLASSES } from "@shared/constants";
 
 
@@ -678,7 +678,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Guru & Insider Digest Trigger Route
+  // Guru & Insider Digest Routes
+  app.get("/api/guru-digest", async (req: Request, res: Response) => {
+    try {
+      const entries = await getAllGuruDigest(50);
+      
+      const articles = entries.map((entry, index) => ({
+        id: `guru-${index}`,
+        title: entry.title,
+        publishedAt: entry.date,
+        source: entry.assets.length > 0 ? entry.assets.join(', ') : 'Crypto News',
+        url: entry.link,
+        summary: entry.summary,
+      }));
+      
+      res.status(200).json(articles);
+    } catch (error) {
+      console.error("Guru Digest fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch Guru Digest" });
+    }
+  });
+
   app.post("/api/update-guru-digest", async (req: Request, res: Response) => {
     try {
       const result = await updateGuruDigest({

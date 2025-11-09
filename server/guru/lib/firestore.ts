@@ -4,7 +4,7 @@
  * Handles all Firestore CRUD operations for the guruDigest collection.
  */
 
-import { collection, addDoc, getDocs, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, query, where, orderBy, limit } from 'firebase/firestore';
 import { getDb } from './firebase';
 import type { GuruDigestEntry } from './rss';
 
@@ -98,6 +98,41 @@ export async function getGuruDigestByAsset(symbol: string): Promise<GuruDigestEn
   const q = query(
     collection(db, COLLECTION_NAME),
     where('assets', 'array-contains', symbol)
+  );
+  
+  const querySnapshot = await getDocs(q);
+  
+  const entries: GuruDigestEntry[] = querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      title: data.title || '',
+      summary: data.summary || '',
+      link: data.link || '',
+      date: data.date || new Date().toISOString(),
+      assets: data.assets || [],
+    };
+  });
+  
+  return entries;
+}
+
+/**
+ * Get All Guru Digest Entries
+ * 
+ * Retrieves the latest N entries from Firestore, ordered by date descending.
+ * Useful for displaying recent news on the landing page or news feed.
+ * 
+ * @param maxEntries - Maximum number of entries to return (default: 50)
+ * @returns Array of entries ordered by date (newest first)
+ * @throws Error if Firestore query fails
+ */
+export async function getAllGuruDigest(maxEntries: number = 50): Promise<GuruDigestEntry[]> {
+  const db = getDb();
+  
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    orderBy('date', 'desc'),
+    limit(maxEntries)
   );
   
   const querySnapshot = await getDocs(q);

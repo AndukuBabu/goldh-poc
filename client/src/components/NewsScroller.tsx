@@ -1,72 +1,65 @@
-import { useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { TrendingUp } from "lucide-react";
 
 interface NewsArticle {
   id: string;
   title: string;
-  url: string;
+  publishedAt: string;
+  source: string;
 }
 
-interface NewsScrollerProps {
-  articles: NewsArticle[];
-}
+export function NewsScroller() {
+  const { data: articles = [], isLoading } = useQuery<NewsArticle[]>({
+    queryKey: ['/api/guru-digest'],
+  });
 
-export function NewsScroller({ articles }: NewsScrollerProps) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  if (isLoading) {
+    return (
+      <div className="bg-[#1a1a1a] border-b border-border py-3 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <TrendingUp className="w-4 h-4 text-primary flex-shrink-0" />
+            <div className="text-sm text-muted-foreground">Loading latest crypto news...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
+  if (!articles || articles.length === 0) {
+    return null;
+  }
 
-    let animationId: number;
-    let scrollPosition = 0;
-    const scrollSpeed = 0.5;
-
-    const animate = () => {
-      scrollPosition += scrollSpeed;
-      
-      if (scroller) {
-        scroller.scrollLeft = scrollPosition;
-        
-        if (scrollPosition >= scroller.scrollWidth / 2) {
-          scrollPosition = 0;
-        }
-      }
-      
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animationId = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, [articles]);
-
-  const doubledArticles = [...articles, ...articles];
+  const topArticles = articles.slice(0, 10);
 
   return (
-    <div className="w-full overflow-hidden bg-card border-y border-border py-4">
-      <div
-        ref={scrollerRef}
-        className="flex gap-6 overflow-x-hidden"
-        style={{ scrollBehavior: "auto" }}
-      >
-        {doubledArticles.map((article, index) => (
-          <a
-            key={`${article.id}-${index}`}
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-shrink-0 hover-elevate active-elevate-2 px-4 py-2 rounded-md border border-border transition-all"
-            data-testid={`link-news-${index}`}
-          >
-            <span className="text-sm text-foreground whitespace-nowrap">
-              {article.title}
-            </span>
-          </a>
-        ))}
+    <div className="bg-[#1a1a1a] border-b border-border py-3 overflow-hidden" data-testid="news-scroller">
+      <div className="relative">
+        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#1a1a1a] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#1a1a1a] to-transparent z-10 pointer-events-none" />
+        
+        <div className="flex items-center gap-8 animate-scroll whitespace-nowrap px-4 sm:px-6">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">Latest Crypto News:</span>
+          </div>
+          
+          {topArticles.map((article, index) => (
+            <div key={`${article.id}-${index}`} className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-sm text-muted-foreground">{article.source}</span>
+              <span className="text-sm text-foreground font-medium">{article.title}</span>
+              <span className="text-primary">•</span>
+            </div>
+          ))}
+          
+          {topArticles.map((article, index) => (
+            <div key={`${article.id}-repeat-${index}`} className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-sm text-muted-foreground">{article.source}</span>
+              <span className="text-sm text-foreground font-medium">{article.title}</span>
+              <span className="text-primary">•</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
