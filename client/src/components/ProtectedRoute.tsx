@@ -9,7 +9,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      setLocation("/signin");
+      // Capture the actual current path from window location (not wouter location which may be '/')
+      const currentPath = window.location.pathname + window.location.search;
+      const redirectPath = encodeURIComponent(currentPath);
+      setLocation(`/signin?redirect=${redirectPath}`);
     }
   }, [isLoading, user, setLocation]);
 

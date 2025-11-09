@@ -34,10 +34,17 @@ Preferred communication style: Simple, everyday language.
 - **Mobile Responsiveness**: All components are responsive.
 
 ### Technical Implementations
-- **Authentication Flow**: Distinct sign-in/sign-up, comprehensive waitlist registration.
-- **Session Management**: Database-backed session persistence with cleanup.
+- **Authentication Flow**: 
+  - Distinct sign-in/sign-up with comprehensive waitlist registration
+  - Auto-login after signup with 100ms state propagation delay
+  - Signin redirect flow: captures intended destination, validates security, redirects after auth
+  - Profile page with account management and password change capability
+  - Auth-aware UI: Header shows Profile/Sign Out when logged in, Sign In when not
+  - Landing page CTAs adapt based on auth state (Sign In → Dashboard when logged in)
+- **Route Protection**: `ProtectedRoute` wrapper guards premium features (Dashboard, Profile, Guru Digest, UMF, Economic Calendar, Asset pages). Captures current path and redirects to `/signin?redirect=${path}`. After successful signin, users navigate to their intended destination or dashboard (default). Security validation prevents open redirect attacks (only internal paths allowed).
+- **Session Management**: Database-backed session persistence with cleanup, bearer token authentication.
 - **Validation**: Zod schemas for client-side and server-side validation.
-- **Error Handling**: Graceful error handling for authentication and data.
+- **Error Handling**: Graceful error handling with user-friendly messages for authentication and data operations.
 - **Automated Data Refresh**:
   - **UMF Scheduler**: Updates every 60 minutes (±15s jitter) via CoinGecko API. Enabled by `UMF_SCHEDULER=1` env var.
   - **Guru Digest Scheduler**: Updates every 2.5 hours (±30s jitter) via RSS feeds from CoinDesk & Cointelegraph. Enabled by `GURU_SCHEDULER=1` env var. Clears old entries and fetches fresh articles automatically.

@@ -19,6 +19,27 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [showMagicLink, setShowMagicLink] = useState(false);
 
+  // Get redirect path from query params with security validation
+  const getRedirectPath = () => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    
+    if (!redirect) {
+      return '/dashboard';
+    }
+    
+    const decoded = decodeURIComponent(redirect);
+    
+    // Security: Only allow internal paths (must start with / but not //)
+    // Prevents open redirect attacks
+    if (!decoded.startsWith('/') || decoded.startsWith('//')) {
+      console.warn('Invalid redirect path, defaulting to dashboard:', decoded);
+      return '/dashboard';
+    }
+    
+    return decoded;
+  };
+
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -26,12 +47,17 @@ export default function SignIn() {
     try {
       await signin(email, password);
       
+      const redirectPath = getRedirectPath();
+      
       toast({
         title: "Success!",
         description: "You've been signed in successfully.",
       });
       
-      setLocation("/dashboard");
+      // Small delay to ensure auth state is updated before navigation
+      setTimeout(() => {
+        setLocation(redirectPath);
+      }, 100);
     } catch (error: any) {
       // Clear any stale session on signin failure
       localStorage.removeItem("sessionId");

@@ -70,7 +70,11 @@ export default function SignUp() {
         title: "Welcome to GOLDH!",
         description: "Your account has been created successfully.",
       });
-      setLocation("/dashboard");
+      
+      // Small delay to ensure auth state is updated before navigation
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
