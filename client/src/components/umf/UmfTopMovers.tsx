@@ -186,7 +186,7 @@ function MoverItem({ mover, type, onClick }: MoverItemProps) {
           <img 
             src={mover.image} 
             alt={`${mover.name} logo`}
-            className="w-5 h-5 rounded-full object-contain flex-shrink-0"
+            className="w-6 h-6 rounded-full flex-shrink-0"
             onError={(e) => {
               // Hide image if it fails to load
               e.currentTarget.style.display = 'none';
