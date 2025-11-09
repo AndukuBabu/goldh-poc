@@ -178,7 +178,7 @@ function AssetTile({ asset }: { asset: UmfAsset }) {
                 <img 
                   src={asset.image} 
                   alt={`${asset.name} logo`}
-                  className="w-5 h-5 rounded-full"
+                  className="w-4 h-4 rounded-full object-contain"
                   onError={(e) => {
                     // Hide image if it fails to load
                     e.currentTarget.style.display = 'none';
