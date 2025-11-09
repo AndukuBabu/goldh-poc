@@ -1,58 +1,57 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { NewsScroller } from "@/components/NewsScroller";
-import GuruDigestList from "@/components/GuruDigestList";
+import { AssetCard } from "@/components/AssetCard";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, TrendingUp, Clock, ExternalLink, Loader2, Wallet, Rocket, Zap } from "lucide-react";
+import { Sparkles, TrendingUp, Loader2, Wallet, Rocket, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
+import type { AssetOverview } from "@shared/schema";
 
-const newsArticles = [
-  {
-    id: "1",
-    title: "Bitcoin ETF approvals signal new era for institutional crypto",
-    source: "CryptoDaily",
-    time: "2h ago",
-    url: "#"
-  },
-  {
-    id: "2",
-    title: "Ethereum gas fees drop to lowest levels in months",
-    source: "DeFi Pulse",
-    time: "5h ago",
-    url: "#"
-  },
-  {
-    id: "3",
-    title: "Major exchange announces support for new altcoins",
-    source: "Blockchain News",
-    time: "8h ago",
-    url: "#"
-  },
-  {
-    id: "4",
-    title: "Stablecoin adoption grows 200% in emerging markets",
-    source: "Crypto Insights",
-    time: "12h ago",
-    url: "#"
-  }
+// Top tracked assets for the dashboard
+const TRACKED_ASSETS = [
+  'BTC', 'ETH', 'SOL', 'BNB', 'ADA', 'MATIC',
+  'TRX', 'LINK', 'TON', 'DOGE', 'DOT', 'LTC',
+  'NEAR', 'APT', 'AVAX'
 ];
+
+const INITIAL_DISPLAY_COUNT = 12;
 
 export default function Dashboard() {
   const { user, isLoading: authLoading, connectWallet } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isConnecting, setIsConnecting] = useState(false);
-  const { data: newsData, isLoading: newsLoading } = useQuery({
-    queryKey: ["/api/news"],
-  });
+  const [showAll, setShowAll] = useState(false);
 
   const isPremium = user?.isPremium || false;
   const hasWallet = !!user?.walletAddress;
+  
+  // Fetch asset data for tracked assets
+  const displayedAssets = showAll ? TRACKED_ASSETS : TRACKED_ASSETS.slice(0, INITIAL_DISPLAY_COUNT);
+  
+  const assetQueries = useQueries({
+    queries: displayedAssets.map(symbol => ({
+      queryKey: [`/api/asset/${symbol}`],
+      enabled: !!user,
+    })),
+  });
+  
+  const isLoadingAssets = assetQueries.some(q => q.isLoading);
+  
+  // Create asset display data, including error states
+  const assetDisplayData = displayedAssets.map((symbol, index) => {
+    const query = assetQueries[index];
+    return {
+      symbol,
+      data: query.data as AssetOverview | undefined,
+      isLoading: query.isLoading,
+      isError: query.isError,
+    };
+  });
 
   const handleWalletConnect = async () => {
     setIsConnecting(true);
@@ -89,13 +88,6 @@ export default function Dashboard() {
       setIsConnecting(false);
     }
   };
-  
-  const mockNews = (Array.isArray(newsData) && newsData.length > 0) ? newsData : [
-    { id: "1", title: "DeFi protocols see massive growth in user adoption", url: "#", publishedAt: new Date().toISOString() },
-    { id: "2", title: "Layer 2 solutions reduce gas fees by 90%", url: "#", publishedAt: new Date().toISOString() },
-    { id: "3", title: "Institutional investors increase crypto holdings", url: "#", publishedAt: new Date().toISOString() },
-  ];
-
   // Redirect to signin if not authenticated (using useEffect to avoid render-time state updates)
   useEffect(() => {
     // Check both user state and localStorage sessionId to handle timing issues
@@ -242,30 +234,67 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Guru & Insider Digest */}
-          <Card className="mb-8 border-2 border-primary/30">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-2">
-                  <CardTitle className="text-2xl flex items-center gap-2">
-                    <Zap className="w-6 h-6 text-primary" />
-                    Guru & Insider Digest
-                  </CardTitle>
-                  <CardDescription className="text-base">
-                    Real-time whale movements, institutional activity, and smart money signals
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <GuruDigestList truncateSummary={true} />
-            </CardContent>
-          </Card>
-
-          {/* News Scroller */}
+          {/* Asset Grid */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Trending Now</h2>
-            <NewsScroller articles={mockNews} />
+            <h2 className="text-2xl font-bold text-foreground mb-4" data-testid="text-assets-heading">
+              Market Overview
+            </h2>
+            
+            <div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6"
+              data-testid="grid-assets"
+            >
+              {assetDisplayData.map(({ symbol, data, isLoading: loading, isError }) => {
+                if (loading) {
+                  return (
+                    <Card key={symbol} className="h-full" data-testid={`card-asset-loading-${symbol}`}>
+                      <CardContent className="flex items-center justify-center py-12">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                
+                if (isError || !data) {
+                  return (
+                    <Card key={symbol} className="h-full border-destructive/50" data-testid={`card-asset-error-${symbol}`}>
+                      <CardHeader>
+                        <CardTitle className="text-lg text-foreground">{symbol}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          Failed to load data
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                
+                return <AssetCard key={symbol} asset={data} />;
+              })}
+            </div>
+            
+            {TRACKED_ASSETS.length > INITIAL_DISPLAY_COUNT && (
+              <div className="flex justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAll(!showAll)}
+                  data-testid="button-show-more"
+                >
+                  {showAll ? (
+                    <>
+                      <ChevronUp className="w-4 h-4 mr-2" />
+                      Show Less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4 mr-2" />
+                      Show More ({TRACKED_ASSETS.length - INITIAL_DISPLAY_COUNT} more)
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
