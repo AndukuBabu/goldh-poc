@@ -33,6 +33,9 @@ Preferred communication style: Simple, everyday language.
 - **Asset Detail Pages**: Dynamic `/asset/:symbol` routes providing unified views of price data, news articles, and economic events.
 - **Logo**: SVG format for crisp rendering at all sizes. Responsive sizing: h-12 (mobile) → h-14 (tablet) → h-16 (desktop).
 - **Mobile Responsiveness**: Comprehensive responsive design with mobile-first approach. Landing page features controlled line breaks for tagline, responsive font scaling (text-3xl → text-6xl), adaptive spacing/padding, full-width buttons on mobile, and optimized layouts across all breakpoints (sm/md/lg).
+- **Landing Page Components**:
+  - **NewsScroller**: Horizontal scrolling ticker displaying latest crypto news from Guru & Insider Digest. Uses CSS animation for smooth infinite scroll. Fetches from `/api/guru-digest` endpoint with loading states. Shows top 10 articles with gradient fades on edges.
+  - **PreviewWidgets**: Three-card preview section showing limited data for unauthenticated users (with blur overlays and "Sign In to View All" CTAs) and full preview for authenticated users (with "View All" navigation links). Cards include: Guru Digest (latest 3 news articles), Market Financials (top 4 assets with prices), and Economic Calendar (3 upcoming events).
 
 ### Technical Implementations
 - **Authentication Flow**: 
