@@ -4,7 +4,7 @@
  * Handles all Firestore CRUD operations for the guruDigest collection.
  */
 
-import { collection, addDoc, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, query, where } from 'firebase/firestore';
 import { getDb } from './firebase';
 import type { GuruDigestEntry } from './rss';
 
@@ -80,4 +80,38 @@ export async function addGuruDigestEntries(entries: GuruDigestEntry[]): Promise<
   await Promise.all(promises);
   
   return successCount;
+}
+
+/**
+ * Get Guru Digest Entries by Asset Symbol
+ * 
+ * Queries Firestore for articles tagged with the specified asset symbol.
+ * Uses array-contains query to filter by the 'assets' field.
+ * 
+ * @param symbol - Canonical asset symbol (e.g., 'BTC', 'ETH')
+ * @returns Array of matching entries (empty if none found)
+ * @throws Error if Firestore query fails
+ */
+export async function getGuruDigestByAsset(symbol: string): Promise<GuruDigestEntry[]> {
+  const db = getDb();
+  
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('assets', 'array-contains', symbol)
+  );
+  
+  const querySnapshot = await getDocs(q);
+  
+  const entries: GuruDigestEntry[] = querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      title: data.title || '',
+      summary: data.summary || '',
+      link: data.link || '',
+      date: data.date || new Date().toISOString(),
+      assets: data.assets || [],
+    };
+  });
+  
+  return entries;
 }

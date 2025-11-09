@@ -5,10 +5,13 @@ import { hashPassword, verifyPassword, sessionManager } from "./auth";
 import { requireAuth } from "./middleware";
 import { insertUserSchema, serverSignUpSchema } from "@shared/schema";
 import { z } from "zod";
-import { getFresh } from "./umf/lib/cache";
+import { getFresh, setFresh } from "./umf/lib/cache";
 import { readLiveSnapshot } from "./umf/lib/firestoreUmf";
-import type { UmfSnapshotLive, UmfAssetLive } from "@shared/schema";
+import type { UmfSnapshotLive, UmfAssetLive, AssetOverview } from "@shared/schema";
+import { assetOverviewSchema } from "@shared/schema";
 import { updateGuruDigest } from "./guru/updater";
+import { getGuruDigestByAsset } from "./guru/lib/firestore";
+import { CANONICAL_SYMBOLS, ASSET_DISPLAY_NAMES, ASSET_CLASSES } from "@shared/constants";
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -510,6 +513,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //     res.status(500).json({ error: "Failed to fetch market alerts" });
   //   }
   // });
+
+  /**
+   * GET /api/asset/:symbol
+   * 
+   * Asset Overview Aggregation Endpoint
+   * 
+   * Aggregates data from multiple sources for a single asset:
+   * - UMF: Price, 24h change, volume, market cap
+   * - Guru Digest: Related news articles
+   * - Economic Calendar: Relevant upcoming events (mock for MVP)
+   * 
+   * Response: AssetOverview (validated against schema)
+   * Cache: 90 seconds TTL per symbol
+   * 
+   * Features:
+   * - Validates symbol against CANONICAL_SYMBOLS
+   * - Graceful degradation: returns partial data if sources fail
+   * - Degraded flags indicate stale/unavailable data per source
+   * - Schema validation before response
+   */
+  app.get("/api/asset/:symbol", async (req: Request, res: Response) => {
+    try {
+      const symbol = req.params.symbol.toUpperCase();
+      
+      // Validate symbol
+      if (!CANONICAL_SYMBOLS.includes(symbol as any)) {
+        return res.status(404).json({ error: `Asset not found: ${symbol}` });
+      }
+      
+      // Check cache first
+      const cacheKey = `asset:overview:${symbol}`;
+      const cached = getFresh<AssetOverview>(cacheKey);
+      
+      if (cached) {
+        return res.json(cached);
+      }
+      
+      // Aggregate data from sources
+      console.log(`[Asset API] Aggregating data for ${symbol}...`);
+      
+      // 1. UMF Price Data
+      let priceSummary: AssetOverview['priceSummary'] = null;
+      let priceDegraded = true;
+      
+      try {
+        // Try cache first, then Firestore
+        const snapshot = getFresh<UmfSnapshotLive>('umf:snapshot') || await readLiveSnapshot();
+        
+        if (snapshot) {
+          const asset = snapshot.assets.find(a => a.symbol === symbol);
+          
+          if (asset) {
+            priceSummary = {
+              price: asset.price,
+              changePct24h: asset.changePct24h ?? 0,
+              volume24h: asset.volume24h ?? null,
+              marketCap: asset.marketCap ?? null,
+              updatedAt_utc: snapshot.timestamp_utc,
+            };
+            priceDegraded = snapshot.degraded || false;
+          } else {
+            // Asset not found in snapshot - provide fallback to prevent null
+            console.warn(`[Asset API] ${symbol} not found in UMF snapshot`);
+          }
+        } else {
+          console.warn(`[Asset API] No UMF snapshot available`);
+        }
+      } catch (error) {
+        console.error(`[Asset API] UMF data error for ${symbol}:`, error);
+      }
+      
+      // 2. Guru Digest News
+      let news: AssetOverview['news'] = [];
+      let newsDegraded = false;
+      
+      try {
+        const guruEntries = await getGuruDigestByAsset(symbol);
+        
+        news = guruEntries.map(entry => ({
+          title: entry.title,
+          summary: entry.summary,
+          link: entry.link,
+          date: entry.date,
+        }));
+        
+        // Only mark degraded on query failure (not on legitimately empty results)
+        newsDegraded = false;
+      } catch (error) {
+        console.error(`[Asset API] Guru Digest error for ${symbol}:`, error);
+        newsDegraded = true;
+      }
+      
+      // 3. Economic Calendar Events (Mock for MVP)
+      let events: AssetOverview['events'] = [];
+      const eventsDegraded = true; // Always degraded for MVP (mock data)
+      
+      // TODO: Implement real event filtering when Economic Calendar is connected
+      // For MVP, return empty array with degraded flag
+      
+      // Build AssetOverview response
+      const overview: AssetOverview = {
+        symbol,
+        name: ASSET_DISPLAY_NAMES[symbol] || symbol,
+        class: ASSET_CLASSES[symbol] || 'crypto',
+        image: null, // TODO: Add asset logos in future
+        priceSummary,
+        news,
+        events,
+        degraded: {
+          price: priceDegraded,
+          news: newsDegraded,
+          events: eventsDegraded,
+        },
+      };
+      
+      // Validate against schema
+      const validated = assetOverviewSchema.parse(overview);
+      
+      // Cache for 90 seconds
+      setFresh(cacheKey, validated, 90);
+      
+      res.json(validated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error("[Asset API] Schema validation error:", error.errors);
+        return res.status(500).json({ error: "Invalid response format", details: error.errors });
+      }
+      console.error("[Asset API] Unexpected error:", error);
+      res.status(500).json({ error: "Failed to fetch asset overview" });
+    }
+  });
 
   // Guru & Insider Digest Trigger Route
   app.post("/api/update-guru-digest", async (req: Request, res: Response) => {
