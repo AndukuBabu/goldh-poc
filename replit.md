@@ -44,7 +44,7 @@ Preferred communication style: Simple, everyday language.
   - Both schedulers have rate limit guards and performance logging.
 
 ### Feature Specifications
-- **Asset-First Dashboard**: Home page displays grid of tracked assets (BTC, ETH, SOL, BNB, ADA, MATIC, TRX, LINK, TON, DOGE, DOT, LTC, NEAR, APT, AVAX) with live prices from UMF, 24h change indicators, and news count badges. Asset cards are clickable and navigate to dedicated asset detail pages.
+- **Asset-First Dashboard**: Home page displays grid of 30 tracked crypto assets (BTC, ETH, SOL, BNB, XRP, ADA, DOGE, MATIC, TRX, LINK, TON, DOT, SHIB, LTC, UNI, AVAX, ATOM, NEAR, APT, ARB, OP, SUI, INJ, SEI, FTM, PEPE, WIF, RUNE, IMX, STX) with live prices from UMF, 24h change indicators, and news count badges. Shows 12 assets initially with "Show More" expansion. Asset cards are clickable and navigate to dedicated asset detail pages.
 - **Asset Detail Pages**: Dynamic `/asset/:symbol` routes aggregate data from multiple sources (UMF prices, Guru Digest news, Economic Calendar events) into a unified view. Features tabbed interface for Price summary, News articles, and Events. Implements graceful degradation when data sources are unavailable.
 - **Asset Tagging System**: Intelligent article tagging during RSS ingest using deterministic regex extraction. Canonical symbols (BTC, ETH, etc.) validated against whitelist and stored in Firestore for efficient filtering.
 - **Asset API Endpoint**: `/api/asset/:symbol` provides aggregated data with 90-second caching, degraded flags for each data source, and Zod schema validation.

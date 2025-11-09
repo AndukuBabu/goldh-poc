@@ -87,6 +87,79 @@ export const ASSET_SYMBOL_MAP: Record<string, string> = {
   'AVALANCHE': 'AVAX',
   'avalanche': 'AVAX',
   
+  // Ripple
+  'XRP': 'XRP',
+  'RIPPLE': 'XRP',
+  'ripple': 'XRP',
+  
+  // Shiba Inu
+  'SHIB': 'SHIB',
+  'SHIBA': 'SHIB',
+  'shiba': 'SHIB',
+  'shiba inu': 'SHIB',
+  
+  // Uniswap
+  'UNI': 'UNI',
+  'UNISWAP': 'UNI',
+  'uniswap': 'UNI',
+  
+  // Cosmos
+  'ATOM': 'ATOM',
+  'COSMOS': 'ATOM',
+  'cosmos': 'ATOM',
+  
+  // Arbitrum
+  'ARB': 'ARB',
+  'ARBITRUM': 'ARB',
+  'arbitrum': 'ARB',
+  
+  // Optimism
+  'OP': 'OP',
+  'OPTIMISM': 'OP',
+  'optimism': 'OP',
+  
+  // Sui
+  'SUI': 'SUI',
+  'sui': 'SUI',
+  
+  // Injective
+  'INJ': 'INJ',
+  'INJECTIVE': 'INJ',
+  'injective': 'INJ',
+  
+  // Sei
+  'SEI': 'SEI',
+  'sei': 'SEI',
+  
+  // Fantom
+  'FTM': 'FTM',
+  'FANTOM': 'FTM',
+  'fantom': 'FTM',
+  
+  // Pepe
+  'PEPE': 'PEPE',
+  'pepe': 'PEPE',
+  
+  // dogwifhat
+  'WIF': 'WIF',
+  'wif': 'WIF',
+  'dogwifhat': 'WIF',
+  
+  // THORChain
+  'RUNE': 'RUNE',
+  'THORCHAIN': 'RUNE',
+  'thorchain': 'RUNE',
+  
+  // Immutable X
+  'IMX': 'IMX',
+  'IMMUTABLE': 'IMX',
+  'immutable': 'IMX',
+  
+  // Stacks
+  'STX': 'STX',
+  'STACKS': 'STX',
+  'stacks': 'STX',
+  
   // Traditional Assets
   'SPX': 'SPX',
   'S&P 500': 'SPX',
@@ -120,17 +193,32 @@ export const CANONICAL_SYMBOLS = [
   'ETH',
   'SOL',
   'BNB',
+  'XRP',
   'ADA',
+  'DOGE',
   'MATIC',
   'TRX',
   'LINK',
   'TON',
-  'DOGE',
   'DOT',
+  'SHIB',
   'LTC',
+  'UNI',
+  'AVAX',
+  'ATOM',
   'NEAR',
   'APT',
-  'AVAX',
+  'ARB',
+  'OP',
+  'SUI',
+  'INJ',
+  'SEI',
+  'FTM',
+  'PEPE',
+  'WIF',
+  'RUNE',
+  'IMX',
+  'STX',
   
   // Traditional Indices
   'SPX',
@@ -155,17 +243,32 @@ export const ASSET_DISPLAY_NAMES: Record<string, string> = {
   'ETH': 'Ethereum',
   'SOL': 'Solana',
   'BNB': 'Binance Coin',
+  'XRP': 'Ripple',
   'ADA': 'Cardano',
+  'DOGE': 'Dogecoin',
   'MATIC': 'Polygon',
   'TRX': 'Tron',
   'LINK': 'Chainlink',
   'TON': 'Toncoin',
-  'DOGE': 'Dogecoin',
   'DOT': 'Polkadot',
+  'SHIB': 'Shiba Inu',
   'LTC': 'Litecoin',
+  'UNI': 'Uniswap',
+  'AVAX': 'Avalanche',
+  'ATOM': 'Cosmos',
   'NEAR': 'NEAR Protocol',
   'APT': 'Aptos',
-  'AVAX': 'Avalanche',
+  'ARB': 'Arbitrum',
+  'OP': 'Optimism',
+  'SUI': 'Sui',
+  'INJ': 'Injective',
+  'SEI': 'Sei',
+  'FTM': 'Fantom',
+  'PEPE': 'Pepe',
+  'WIF': 'dogwifhat',
+  'RUNE': 'THORChain',
+  'IMX': 'Immutable X',
+  'STX': 'Stacks',
   'SPX': 'S&P 500',
   'NDX': 'Nasdaq 100',
   'DXY': 'US Dollar Index',
@@ -182,17 +285,32 @@ export const ASSET_CLASSES: Record<string, 'crypto' | 'index' | 'forex' | 'commo
   'ETH': 'crypto',
   'SOL': 'crypto',
   'BNB': 'crypto',
+  'XRP': 'crypto',
   'ADA': 'crypto',
+  'DOGE': 'crypto',
   'MATIC': 'crypto',
   'TRX': 'crypto',
   'LINK': 'crypto',
   'TON': 'crypto',
-  'DOGE': 'crypto',
   'DOT': 'crypto',
+  'SHIB': 'crypto',
   'LTC': 'crypto',
+  'UNI': 'crypto',
+  'AVAX': 'crypto',
+  'ATOM': 'crypto',
   'NEAR': 'crypto',
   'APT': 'crypto',
-  'AVAX': 'crypto',
+  'ARB': 'crypto',
+  'OP': 'crypto',
+  'SUI': 'crypto',
+  'INJ': 'crypto',
+  'SEI': 'crypto',
+  'FTM': 'crypto',
+  'PEPE': 'crypto',
+  'WIF': 'crypto',
+  'RUNE': 'crypto',
+  'IMX': 'crypto',
+  'STX': 'crypto',
   'SPX': 'index',
   'NDX': 'index',
   'DXY': 'forex',

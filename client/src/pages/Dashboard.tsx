@@ -10,13 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Sparkles, TrendingUp, Loader2, Wallet, Rocket, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { AssetOverview } from "@shared/schema";
+import { CANONICAL_SYMBOLS, ASSET_CLASSES } from "@shared/constants";
 
-// Top tracked assets for the dashboard
-const TRACKED_ASSETS = [
-  'BTC', 'ETH', 'SOL', 'BNB', 'ADA', 'MATIC',
-  'TRX', 'LINK', 'TON', 'DOGE', 'DOT', 'LTC',
-  'NEAR', 'APT', 'AVAX'
-];
+// Tracked crypto assets for the dashboard (filter out non-crypto assets)
+const TRACKED_ASSETS = CANONICAL_SYMBOLS.filter(symbol => ASSET_CLASSES[symbol] === 'crypto');
 
 const INITIAL_DISPLAY_COUNT = 12;
 
