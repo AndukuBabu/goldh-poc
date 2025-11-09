@@ -135,22 +135,37 @@ export default function FeaturesCalendar() {
 
           {/* Page Header */}
           <div className="mb-8 space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center">
-                  <Calendar className="w-8 h-8 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold text-foreground">
-                    Economic Calendar
-                  </h1>
-                  <p className="text-muted-foreground text-lg mt-2">
-                    Never miss a market-moving event.
-                  </p>
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center">
+                <Calendar className="w-8 h-8 text-primary" />
               </div>
-              
-              {/* View Toggle */}
+              <div>
+                <h1 className="text-4xl font-bold text-foreground">
+                  Economic Calendar
+                </h1>
+                <p className="text-muted-foreground text-lg mt-2">
+                  Never miss a market-moving event.
+                </p>
+              </div>
+            </div>
+            <p className="text-lg text-muted-foreground leading-relaxed max-w-4xl">
+              Track global macroeconomic events that impact crypto markets. From Fed rate decisions to employment reports, 
+              stay informed with upcoming releases, forecasts, and live data updates. Filter by region, category, and importance 
+              to focus on what matters most to your portfolio.
+            </p>
+          </div>
+
+
+          {/* Main Economic Calendar Section */}
+          <section 
+            data-testid="econ-section"
+            className="space-y-6"
+          >
+            {/* Summary KPIs - Shared across both views */}
+            <EconSummary events={events} isLoading={isLoading} />
+
+            {/* View Toggle - Above filters */}
+            <div className="flex justify-end">
               <ToggleGroup 
                 type="single" 
                 value={currentView} 
@@ -178,31 +193,6 @@ export default function FeaturesCalendar() {
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
-            <p className="text-lg text-muted-foreground leading-relaxed max-w-4xl">
-              Track global macroeconomic events that impact crypto markets. From Fed rate decisions to employment reports, 
-              stay informed with upcoming releases, forecasts, and live data updates. Filter by region, category, and importance 
-              to focus on what matters most to your portfolio.
-            </p>
-          </div>
-
-          {/* Coming Soon Note */}
-          <div className="mb-6 p-3 border border-primary/20 rounded-lg bg-card/50 backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-sm">
-              <AlertCircle className="w-4 h-4 text-primary flex-shrink-0" />
-              <p className="text-foreground/80">
-                <span className="font-semibold text-primary">Coming Soon:</span> Real-time API integration, ML impact predictions, and live notifications. 
-                Currently showing mock data for preview.
-              </p>
-            </div>
-          </div>
-
-          {/* Main Economic Calendar Section */}
-          <section 
-            data-testid="econ-section"
-            className="space-y-6"
-          >
-            {/* Summary KPIs - Shared across both views */}
-            <EconSummary events={events} isLoading={isLoading} />
 
             {/* Filters - Shared across both views */}
             <EconFilters 

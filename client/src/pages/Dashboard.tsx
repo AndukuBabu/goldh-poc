@@ -267,39 +267,6 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold text-foreground mb-4">Trending Now</h2>
             <NewsScroller articles={mockNews} />
           </div>
-
-          {/* Crypto News Feed */}
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Crypto News Feed</h2>
-            <div className="grid gap-4">
-              {newsArticles.map((article) => (
-                <Card key={article.id} className="hover-elevate active-elevate-2 transition-all cursor-pointer">
-                  <CardContent className="p-6">
-                    <a
-                      href={article.url}
-                      className="block space-y-2"
-                      data-testid={`link-news-article-${article.id}`}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <h3 className="text-lg font-semibold text-foreground leading-tight flex-1">
-                          {article.title}
-                        </h3>
-                        <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
-                      </div>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <span>{article.source}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {article.time}
-                        </span>
-                      </div>
-                    </a>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -314,11 +314,16 @@ export default function Landing() {
             </div>
             
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-foreground">Company</h4>
+              <h4 className="text-sm font-semibold text-foreground">Contact</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Contact</a></li>
+                <li>
+                  <a href="mailto:hello@goldh.ai" className="hover:text-primary transition-colors flex items-center gap-2">
+                    Email: hello@goldh.ai
+                  </a>
+                </li>
+                <li className="text-muted-foreground/60">
+                  Instagram: Coming Soon
+                </li>
               </ul>
             </div>
           </div>
