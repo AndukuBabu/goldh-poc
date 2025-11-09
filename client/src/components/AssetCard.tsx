@@ -24,17 +24,17 @@ export function AssetCard({ asset }: AssetCardProps) {
         className="hover-elevate active-elevate-2 cursor-pointer transition-all duration-200 h-full"
         data-testid={`card-asset-${symbol}`}
       >
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2 p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <h3 
-                className="text-lg font-semibold text-foreground truncate"
+                className="text-base font-semibold text-foreground truncate"
                 data-testid={`text-symbol-${symbol}`}
               >
                 {symbol}
               </h3>
               <p 
-                className="text-sm text-muted-foreground truncate"
+                className="text-xs text-muted-foreground truncate"
                 data-testid={`text-name-${symbol}`}
               >
                 {name}
@@ -54,7 +54,7 @@ export function AssetCard({ asset }: AssetCardProps) {
           </div>
         </CardHeader>
         
-        <CardContent>
+        <CardContent className="p-4 pt-0">
           {isPriceDegraded ? (
             <div 
               className="text-sm text-muted-foreground"
@@ -63,9 +63,9 @@ export function AssetCard({ asset }: AssetCardProps) {
               Price unavailable
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <div 
-                className="text-2xl font-bold text-foreground"
+                className="text-xl font-bold text-foreground"
                 data-testid={`text-price-${symbol}`}
               >
                 ${priceSummary!.price.toLocaleString(undefined, {
@@ -78,7 +78,7 @@ export function AssetCard({ asset }: AssetCardProps) {
                 className={`flex items-center gap-1 text-sm font-medium ${changeColor}`}
                 data-testid={`text-change-${symbol}`}
               >
-                <TrendIcon className="w-4 h-4" />
+                <TrendIcon className="w-3.5 h-3.5" />
                 {priceSummary!.changePct24h.toFixed(2)}%
               </div>
             </div>
