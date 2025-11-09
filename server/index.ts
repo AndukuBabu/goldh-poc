@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startScheduler } from "./umf/scheduler";
+import { startGuruScheduler } from "./guru/scheduler";
 
 const app = express();
 
@@ -85,6 +86,14 @@ app.use((req, res, next) => {
       startScheduler();
     } else {
       log('UMF Scheduler disabled (set UMF_SCHEDULER=1 to enable)');
+    }
+    
+    // Start Guru Digest scheduler if enabled
+    if (process.env.GURU_SCHEDULER === '1') {
+      log('Guru Digest Scheduler enabled - automatic RSS updates every 2.5 hours');
+      startGuruScheduler();
+    } else {
+      log('Guru Digest Scheduler disabled (set GURU_SCHEDULER=1 to enable)');
     }
   });
 })();

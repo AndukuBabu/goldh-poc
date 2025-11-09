@@ -8,7 +8,7 @@ import { z } from "zod";
 import { getFresh } from "./umf/lib/cache";
 import { readLiveSnapshot } from "./umf/lib/firestoreUmf";
 import type { UmfSnapshotLive, UmfAssetLive } from "@shared/schema";
-import { updateGuruDigest } from "./updateGuruDigest";
+import { updateGuruDigest } from "./guru/updater";
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -514,8 +514,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Guru & Insider Digest Trigger Route
   app.post("/api/update-guru-digest", async (req: Request, res: Response) => {
     try {
-      await updateGuruDigest();
-      res.status(200).json({ success: true });
+      const result = await updateGuruDigest({
+        clearFirst: req.body?.clearFirst || false,
+        logPrefix: '[API]',
+      });
+      res.status(200).json({ 
+        success: true,
+        ...result,
+      });
     } catch (error) {
       console.error("Guru Digest update error:", error);
       res.status(500).json({ error: "Failed to update Guru Digest" });
