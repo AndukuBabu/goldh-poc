@@ -130,13 +130,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* News Scroller */}
-      <section className="py-8">
-        <div className="container mx-auto px-6 mb-4">
-          <h2 className="text-2xl font-bold text-foreground">Latest Crypto News</h2>
-        </div>
-        <NewsScroller articles={mockNews} />
-      </section>
 
       {/* Features Section */}
       <section id="features" className="py-24 px-6 scroll-mt-16 bg-[#1a1a1a]">
@@ -275,11 +268,11 @@ export default function Landing() {
 
           <div className="mt-12 text-center">
             <p className="text-muted-foreground mb-4">Still have questions?</p>
-            <Link href="/signin">
+            <a href="mailto:hello@goldh.ai">
               <Button variant="outline" className="border-primary/30 hover:border-primary/50 hover:bg-primary/5">
                 Contact Support
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -308,8 +301,7 @@ export default function Landing() {
               <h4 className="text-sm font-semibold text-foreground">Resources</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">API</a></li>
+                <li><Link href="/learn" className="hover:text-primary transition-colors">Learning Hub</Link></li>
               </ul>
             </div>
             

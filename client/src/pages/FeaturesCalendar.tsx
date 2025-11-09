@@ -164,7 +164,14 @@ export default function FeaturesCalendar() {
             {/* Summary KPIs - Shared across both views */}
             <EconSummary events={events} isLoading={isLoading} />
 
-            {/* View Toggle - Above filters */}
+            {/* Filters - Shared across both views */}
+            <EconFilters 
+              filters={filters} 
+              onFiltersChange={setFilters}
+              activeFilterCount={activeFilterCount}
+            />
+
+            {/* View Toggle - Right above event list */}
             <div className="flex justify-end">
               <ToggleGroup 
                 type="single" 
@@ -193,13 +200,6 @@ export default function FeaturesCalendar() {
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
-
-            {/* Filters - Shared across both views */}
-            <EconFilters 
-              filters={filters} 
-              onFiltersChange={setFilters}
-              activeFilterCount={activeFilterCount}
-            />
 
             {/* Conditional rendering based on view */}
             {currentView === 'list' ? (
@@ -230,77 +230,6 @@ export default function FeaturesCalendar() {
               /* GRID VIEW - Monthly calendar grid */
               <EconCalendarGrid filters={filters} />
             )}
-
-            {/* Future Features Teaser */}
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <span className="text-2xl">🚀</span>
-                  Coming in Phase 2
-                </CardTitle>
-                <CardDescription>
-                  Advanced features currently under development
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                    <div>
-                      <p className="font-semibold text-foreground">Real-time API Integration</p>
-                      <p className="text-muted-foreground">
-                        Live data from Trading Economics, Alpha Vantage, and Benzinga
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                    <div>
-                      <p className="font-semibold text-foreground">ML Impact Predictions</p>
-                      <p className="text-muted-foreground">
-                        AI models predict market volatility and asset price reactions
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                    <div>
-                      <p className="font-semibold text-foreground">Live Notifications</p>
-                      <p className="text-muted-foreground">
-                        Browser and mobile alerts for high-impact events before release
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                    <div>
-                      <p className="font-semibold text-foreground">Personalized Filters</p>
-                      <p className="text-muted-foreground">
-                        Save filter preferences and get custom event feeds by asset class
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                    <div>
-                      <p className="font-semibold text-foreground">Event Alerts & Watchlists</p>
-                      <p className="text-muted-foreground">
-                        Set custom alerts for specific events and track your favorite indicators
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
-                    <div>
-                      <p className="font-semibold text-foreground">UMF Integration</p>
-                      <p className="text-muted-foreground">
-                        See event impact on asset prices with real-time correlation charts
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </section>
         </div>
       </div>

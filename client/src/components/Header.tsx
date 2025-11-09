@@ -20,7 +20,7 @@ export function Header() {
             <img 
               src={logoImage} 
               alt="GOLDH Logo" 
-              className="h-16 w-auto" 
+              className="h-10 w-auto" 
             />
           </div>
         </Link>
