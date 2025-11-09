@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { User, LogOut } from "lucide-react";
-import logoImage from "@assets/goldh-logo_1762272901250.png";
+import logoImage from "@assets/goldh-logo.svg";
 
 export function Header() {
   const [location, setLocation] = useLocation();
@@ -28,7 +28,7 @@ export function Header() {
             <img 
               src={logoImage} 
               alt="GOLDH Logo" 
-              className="h-10 w-auto" 
+              className="h-12 md:h-14 lg:h-16 w-auto" 
             />
           </div>
         </Link>
