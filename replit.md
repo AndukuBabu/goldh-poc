@@ -29,7 +29,8 @@ Preferred communication style: Simple, everyday language.
 - **Typography**: Inter for body, JetBrains Mono for monospace.
 - **Component Design**: Interactive elements with hover, gold glows, shadows.
 - **Feature Pages**: Dedicated full-screen pages for Guru & Insider Digest, Universal Market Financials, Economic Calendar.
-- **Dashboard**: Truncated content previews.
+- **Dashboard**: Asset-first grid layout showing tracked crypto assets with live prices, 24h changes, and news counts.
+- **Asset Detail Pages**: Dynamic `/asset/:symbol` routes providing unified views of price data, news articles, and economic events.
 - **Mobile Responsiveness**: All components are responsive.
 
 ### Technical Implementations
@@ -43,10 +44,14 @@ Preferred communication style: Simple, everyday language.
   - Both schedulers have rate limit guards and performance logging.
 
 ### Feature Specifications
+- **Asset-First Dashboard**: Home page displays grid of tracked assets (BTC, ETH, SOL, BNB, ADA, MATIC, TRX, LINK, TON, DOGE, DOT, LTC, NEAR, APT, AVAX) with live prices from UMF, 24h change indicators, and news count badges. Asset cards are clickable and navigate to dedicated asset detail pages.
+- **Asset Detail Pages**: Dynamic `/asset/:symbol` routes aggregate data from multiple sources (UMF prices, Guru Digest news, Economic Calendar events) into a unified view. Features tabbed interface for Price summary, News articles, and Events. Implements graceful degradation when data sources are unavailable.
+- **Asset Tagging System**: Intelligent article tagging during RSS ingest using deterministic regex extraction. Canonical symbols (BTC, ETH, etc.) validated against whitelist and stored in Firestore for efficient filtering.
+- **Asset API Endpoint**: `/api/asset/:symbol` provides aggregated data with 90-second caching, degraded flags for each data source, and Zod schema validation.
 - **Real-time Market Intelligence**: Displays crypto macroeconomic events and market data.
-- **Guru & Insider Digest**: Real-time crypto news from CoinDesk and Cointelegraph RSS feeds. Automated scheduler updates every 2.5 hours (10x per day) for fresh content. Manual CLI script also available. Stores articles in Firestore with 300-character excerpts.
-- **Universal Market Financials (UMF)**: Unified dashboard with live market snapshots (Top-20 crypto, indices, DXY), top movers, morning intelligence briefs, and market alerts. Features asset tiles, two-column responsive layout, and severity-based alert cards. Automated scheduler updates every 60 minutes via CoinGecko API.
-- **Economic Calendar**: Full-featured calendar with filtering and performance targets. Currently uses mock data with "Coming Soon" notice for real API integration.
+- **Guru & Insider Digest**: Real-time crypto news from CoinDesk and Cointelegraph RSS feeds. Automated scheduler updates every 2.5 hours (10x per day) for fresh content. Articles auto-tagged with asset symbols during ingest. Manual CLI script also available. Stores articles in Firestore with 300-character excerpts and asset tags.
+- **Universal Market Financials (UMF)**: Unified dashboard with live market snapshots (Top-20 crypto, indices, DXY), top movers, morning intelligence briefs, and market alerts. Features asset tiles, two-column responsive layout, and severity-based alert cards. Automated scheduler updates every 60 minutes via CoinGecko API. Data cached in Firestore for asset aggregation.
+- **Economic Calendar**: Full-featured calendar with filtering and performance targets. Currently uses mock data.
 - **Educational Resources**: Static Q&A content on cryptocurrency topics.
 - **Premium Access**: Access to premium features via GOLDH tokens or subscription.
 
