@@ -17,8 +17,8 @@ interface MarketAsset {
   id: string;
   name: string;
   symbol: string;
-  currentPrice: number;
-  priceChange24h: number;
+  price: number;
+  changePct24h: number;
 }
 
 interface CalendarEvent {
@@ -35,9 +35,11 @@ export function PreviewWidgets() {
     queryKey: ['/api/guru-digest'],
   });
 
-  const { data: marketData = [] } = useQuery<MarketAsset[]>({
-    queryKey: ['/api/umf/live'],
+  const { data: marketSnapshot } = useQuery<{ assets: MarketAsset[] }>({
+    queryKey: ['/api/umf/snapshot'],
   });
+
+  const marketData = marketSnapshot?.assets || [];
 
   const guruPreview = newsArticles.slice(0, 3);
   const marketPreview = marketData.slice(0, 4);
@@ -99,7 +101,7 @@ export function PreviewWidgets() {
             </div>
 
             {user && (
-              <Link href="/guru">
+              <Link href="/features/guru">
                 <Button variant="outline" size="sm" className="w-full mt-4 gap-2" data-testid="link-guru-digest">
                   View All News
                   <ArrowRight className="w-4 h-4" />
@@ -129,13 +131,13 @@ export function PreviewWidgets() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-foreground">
-                      ${asset.currentPrice?.toLocaleString() || 'N/A'}
+                      ${asset.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
                     </p>
                     <Badge 
-                      variant={asset.priceChange24h >= 0 ? "default" : "destructive"}
+                      variant={asset.changePct24h >= 0 ? "default" : "destructive"}
                       className="text-xs"
                     >
-                      {asset.priceChange24h >= 0 ? '+' : ''}{asset.priceChange24h?.toFixed(2)}%
+                      {asset.changePct24h >= 0 ? '+' : ''}{asset.changePct24h?.toFixed(2)}%
                     </Badge>
                   </div>
                 </div>
@@ -157,7 +159,7 @@ export function PreviewWidgets() {
             </div>
 
             {user && (
-              <Link href="/umf">
+              <Link href="/features/umf">
                 <Button variant="outline" size="sm" className="w-full mt-4 gap-2" data-testid="link-umf">
                   View Full Dashboard
                   <ArrowRight className="w-4 h-4" />
@@ -217,7 +219,7 @@ export function PreviewWidgets() {
             </div>
 
             {user && (
-              <Link href="/calendar">
+              <Link href="/features/calendar">
                 <Button variant="outline" size="sm" className="w-full mt-4 gap-2" data-testid="link-calendar">
                   View Full Calendar
                   <ArrowRight className="w-4 h-4" />

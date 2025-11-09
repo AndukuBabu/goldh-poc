@@ -25,7 +25,7 @@ import type { UmfSnapshotExtended, UmfMoversExtended } from "@/hooks/useUmf";
 export function mapSnapshotExtendedToAssets(
   snapshotExtended: UmfSnapshotExtended | undefined
 ): UmfAsset[] {
-  if (!snapshotExtended) return [];
+  if (!snapshotExtended || !snapshotExtended.data) return [];
   
   const snapshot = snapshotExtended.data;
   

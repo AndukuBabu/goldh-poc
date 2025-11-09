@@ -144,7 +144,7 @@ export default function FeaturesUMF() {
                   )}
                   
                   {/* Last Updated */}
-                  {snapshotMeta && (
+                  {snapshotMeta && snapshotMeta.ageMinutes !== undefined && (
                     <Badge 
                       variant="outline" 
                       className="text-xs bg-muted/50 border-muted-foreground/20 text-muted-foreground"
