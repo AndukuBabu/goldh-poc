@@ -1,15 +1,23 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import { User, LogOut } from "lucide-react";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
 
 export function Header() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const { user, signout } = useAuth();
   
   const isActive = (path: string) => {
     if (path === "/features") {
       return location === path || location.startsWith("/features/");
     }
     return location === path;
+  };
+
+  const handleSignOut = async () => {
+    await signout();
+    setLocation("/");
   };
 
   return (
@@ -53,11 +61,35 @@ export function Header() {
               Dashboard
             </Button>
           </Link>
-          <Link href="/signin">
-            <Button variant="default" data-testid="button-nav-signin">
-              Sign In
-            </Button>
-          </Link>
+          {user ? (
+            <>
+              <Link href="/profile">
+                <Button 
+                  variant={isActive("/profile") ? "default" : "ghost"} 
+                  data-testid="button-nav-profile"
+                  className={isActive("/profile") ? "" : "text-foreground"}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Profile
+                </Button>
+              </Link>
+              <Button 
+                variant="ghost" 
+                onClick={handleSignOut}
+                data-testid="button-nav-signout"
+                className="text-foreground"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Link href="/signin">
+              <Button variant="default" data-testid="button-nav-signin">
+                Sign In
+              </Button>
+            </Link>
+          )}
         </nav>
       </div>
     </header>

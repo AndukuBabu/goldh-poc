@@ -36,9 +36,21 @@ export default function SignIn() {
       // Clear any stale session on signin failure
       localStorage.removeItem("sessionId");
       
+      // Provide user-friendly error messages
+      let errorTitle = "Sign In Failed";
+      let errorDescription = "Please check your credentials and try again.";
+      
+      if (error.message?.includes("401") || error.message?.includes("Invalid credentials")) {
+        errorTitle = "Invalid Email or Password";
+        errorDescription = "The email or password you entered is incorrect. Please try again.";
+      } else if (error.message?.includes("network") || error.message?.includes("fetch")) {
+        errorTitle = "Connection Error";
+        errorDescription = "Unable to connect. Please check your internet connection.";
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to sign in. Please try again.",
+        title: errorTitle,
+        description: errorDescription,
         variant: "destructive",
       });
     } finally {

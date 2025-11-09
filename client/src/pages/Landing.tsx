@@ -1,20 +1,11 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
-import { NewsScroller } from "@/components/NewsScroller";
 import { FeatureCard } from "@/components/FeatureCard";
 import { FOMABox } from "@/components/FOMABox";
+import { useAuth } from "@/lib/auth";
 import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
-
-const mockNews = [
-  { id: "1", title: "Bitcoin surges past $50K as institutional adoption grows", url: "#" },
-  { id: "2", title: "Ethereum 2.0 staking rewards reach new highs", url: "#" },
-  { id: "3", title: "DeFi protocols see 200% growth in TVL this quarter", url: "#" },
-  { id: "4", title: "Major banks announce blockchain integration plans", url: "#" },
-  { id: "5", title: "NFT marketplace volume breaks all-time records", url: "#" },
-  { id: "6", title: "Crypto regulation clarity expected in Q2", url: "#" },
-];
 
 const features = [
   {
@@ -50,10 +41,21 @@ const features = [
 ];
 
 export default function Landing() {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+  
   const scrollToFeatures = () => {
     const element = document.getElementById("features");
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handleGetStarted = () => {
+    if (user) {
+      setLocation("/dashboard");
+    } else {
+      setLocation("/signin");
     }
   };
 
@@ -87,11 +89,14 @@ export default function Landing() {
               </div>
 
               <div className="flex flex-wrap gap-4">
-                <Link href="/signin">
-                  <Button size="lg" className="text-lg px-8" data-testid="button-hero-start">
-                    Start Free
-                  </Button>
-                </Link>
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8" 
+                  onClick={handleGetStarted}
+                  data-testid="button-hero-start"
+                >
+                  {user ? "Go to Dashboard" : "Start Free"}
+                </Button>
                 <Button
                   size="lg"
                   variant="outline"
@@ -174,15 +179,14 @@ export default function Landing() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Link href="/signin">
-              <Button 
-                size="lg" 
-                className="text-lg px-12 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all" 
-                data-testid="button-cta-signup"
-              >
-                Get Started Now
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              className="text-lg px-12 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all" 
+              onClick={handleGetStarted}
+              data-testid="button-cta-signup"
+            >
+              {user ? "Go to Dashboard" : "Get Started Now"}
+            </Button>
             <Link href="/learn">
               <Button 
                 size="lg" 
