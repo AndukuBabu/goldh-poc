@@ -27,15 +27,21 @@ Preferred communication style: Simple, everyday language.
 ### UI/UX Decisions
 - **Color Scheme**: Black and gold for a premium, luxurious feel.
 - **Typography**: Inter for body, JetBrains Mono for monospace.
-- **Component Design**: Interactive elements with hover, gold glows, shadows.
+- **Component Design**: Interactive elements with hover, gold glows, shadows. No emojis - all icons use lucide-react library.
 - **Feature Pages**: Dedicated full-screen pages for Guru & Insider Digest, Universal Market Financials, Economic Calendar.
-- **Dashboard**: Asset-first grid layout showing tracked crypto assets with live prices, 24h changes, and news counts.
+- **Dashboard**: Asset-first grid layout showing tracked crypto assets with live prices, 24h changes, and news counts. Filters out assets with unavailable prices while preserving error states for failed queries.
 - **Asset Detail Pages**: Dynamic `/asset/:symbol` routes providing unified views of price data, news articles, and economic events.
-- **Logo**: SVG format for crisp rendering at all sizes. Responsive sizing: h-12 (mobile) → h-14 (tablet) → h-16 (desktop).
+- **Logo**: SVG format for crisp rendering at all sizes. Responsive sizing: h-14 (mobile) → h-16 (tablet) → h-20 (desktop).
 - **Mobile Responsiveness**: Comprehensive responsive design with mobile-first approach. Landing page features controlled line breaks for tagline, responsive font scaling (text-3xl → text-6xl), adaptive spacing/padding, full-width buttons on mobile, and optimized layouts across all breakpoints (sm/md/lg).
 - **Landing Page Components**:
   - **NewsScroller**: Horizontal scrolling ticker displaying latest crypto news from Guru & Insider Digest. Uses CSS animation for smooth infinite scroll. Fetches from `/api/guru-digest` endpoint with loading states. Shows top 10 articles with gradient fades on edges.
   - **PreviewWidgets**: Three-card preview section showing limited data for unauthenticated users (with blur overlays and "Sign In to View All" CTAs) and full preview for authenticated users (with "View All" navigation links). Cards include: Guru Digest (latest 3 news articles), Market Financials (top 4 assets with prices), and Economic Calendar (3 upcoming events).
+  - **ComingSoon**: Feature showcase section with 9 upcoming features (Whale Tracker, Smart Token Screener, Risk Score Engine, Token Deep Dives, AI Smart Alerts, Smart Contract Scanner, Airdrop Finder, Pre-Token Detection, Portfolio Center) in responsive grid layout with hover effects.
+- **Welcome Experience**:
+  - **WelcomeAnimation**: First-visit overlay displaying "Congratulations, You've found Golden Horizon!!" with gold gradient text and blur/fade-out animation. Uses localStorage tracking to show only once.
+  - **SignInPrompt**: Dismissable modal appearing on feature pages for unauthenticated users. Encourages sign-up with benefits list and dual CTAs. Session storage prevents repeated displays.
+  - **ExitIntentModal**: Mouse-leave detection at viewport top triggers persuasive modal with benefits list and sign-up CTA. Session storage prevents repeated displays. Uses lucide-react icons only (no emojis).
+- **Authentication-Free Access**: All feature pages (Dashboard, Guru Digest, UMF, Economic Calendar, Asset pages) viewable without authentication. Only Profile page requires login. Sign-in prompts are dismissable overlays, not hard blocks.
 
 ### Technical Implementations
 - **Authentication Flow**: 
@@ -45,7 +51,8 @@ Preferred communication style: Simple, everyday language.
   - Profile page with account management and password change capability
   - Auth-aware UI: Header shows Profile/Sign Out when logged in, Sign In when not
   - Landing page CTAs adapt based on auth state (Sign In → Dashboard when logged in)
-- **Route Protection**: `ProtectedRoute` wrapper guards premium features (Dashboard, Profile, Guru Digest, UMF, Economic Calendar, Asset pages). Captures current path and redirects to `/signin?redirect=${path}`. After successful signin, users navigate to their intended destination or dashboard (default). Security validation prevents open redirect attacks (only internal paths allowed).
+  - **Soft Authentication**: Feature pages viewable without login. Dismissable sign-in prompts encourage registration without blocking content access.
+- **Route Protection**: `ProtectedRoute` wrapper now only guards Profile page. All feature pages (Dashboard, Guru Digest, UMF, Economic Calendar, Asset pages) are accessible without authentication. Security validation prevents open redirect attacks (only internal paths allowed).
 - **Session Management**: Database-backed session persistence with cleanup, bearer token authentication.
 - **Validation**: Zod schemas for client-side and server-side validation.
 - **Error Handling**: Graceful error handling with user-friendly messages for authentication and data operations.
