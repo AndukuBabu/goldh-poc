@@ -20,14 +20,17 @@ export function ExitIntentModal() {
     }
 
     const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0 && !hasShown) {
+      // Only trigger when mouse leaves through the top of the viewport
+      // and the mouse is actually leaving the browser window (not going to address bar)
+      if (e.clientY <= 0 && e.relatedTarget === null && !hasShown) {
         setShow(true);
         setHasShown(true);
       }
     };
 
-    document.addEventListener("mouseleave", handleMouseLeave);
-    return () => document.removeEventListener("mouseleave", handleMouseLeave);
+    // Use document.documentElement instead of document to catch true browser exits
+    document.documentElement.addEventListener("mouseleave", handleMouseLeave);
+    return () => document.documentElement.removeEventListener("mouseleave", handleMouseLeave);
   }, [user, hasShown]);
 
   const handleClose = () => {
@@ -54,7 +57,7 @@ export function ExitIntentModal() {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: -20 }}
           transition={{ type: "spring", duration: 0.5 }}
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg"
+          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg px-4"
           onClick={(e) => e.stopPropagation()}
         >
           <div
