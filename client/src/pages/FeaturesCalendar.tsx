@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Header } from "@/components/Header";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +120,7 @@ export default function FeaturesCalendar() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <SignInPrompt />
       
       <div className="pt-24 pb-16 px-6">
         <div className="container mx-auto max-w-7xl">

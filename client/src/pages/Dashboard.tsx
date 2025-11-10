@@ -2,6 +2,7 @@ import { useQueries } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { Header } from "@/components/Header";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,6 @@ export default function Dashboard() {
   const assetQueries = useQueries({
     queries: displayedAssets.map(symbol => ({
       queryKey: [`/api/asset/${symbol}`],
-      enabled: !!user,
     })),
   });
   
@@ -85,14 +85,6 @@ export default function Dashboard() {
       setIsConnecting(false);
     }
   };
-  // Redirect to signin if not authenticated (using useEffect to avoid render-time state updates)
-  useEffect(() => {
-    // Check both user state and localStorage sessionId to handle timing issues
-    const storedSessionId = localStorage.getItem("sessionId");
-    if (!authLoading && !user && !storedSessionId) {
-      setLocation("/signin");
-    }
-  }, [authLoading, user, setLocation]);
 
   if (authLoading) {
     return (
@@ -105,13 +97,10 @@ export default function Dashboard() {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <SignInPrompt />
       
       <div className="pt-24 pb-16 px-6">
         <div className="container mx-auto max-w-6xl">
@@ -231,6 +220,22 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
+          {/* Real-Time Feeds Coming Soon Banner */}
+          <Card className="mb-8 border-2 border-[#C7AE6A]/30 bg-gradient-to-r from-[#C7AE6A]/10 to-[#C7AE6A]/5">
+            <CardContent className="py-6">
+              <div className="flex items-center justify-center gap-3 text-center">
+                <Sparkles className="w-5 h-5 text-[#C7AE6A]" />
+                <p className="text-lg font-semibold text-foreground">
+                  Real-time feeds coming soon
+                </p>
+                <Sparkles className="w-5 h-5 text-[#C7AE6A]" />
+              </div>
+              <p className="text-sm text-muted-foreground text-center mt-2">
+                Live WebSocket data streams and instant price updates are on the way
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Asset Grid */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-foreground mb-4" data-testid="text-assets-heading">
@@ -265,6 +270,10 @@ export default function Dashboard() {
                       </CardContent>
                     </Card>
                   );
+                }
+                
+                if (data.degraded?.price || !data.priceSummary) {
+                  return null;
                 }
                 
                 return <AssetCard key={symbol} asset={data} />;

@@ -1,4 +1,5 @@
 import { Header } from "@/components/Header";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import GuruDigestList from "@/components/GuruDigestList";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ export default function FeaturesGuru() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <SignInPrompt />
       
       <div className="pt-24 pb-16 px-6">
         <div className="container mx-auto max-w-6xl">

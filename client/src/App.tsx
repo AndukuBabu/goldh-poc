@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./lib/auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { WelcomeAnimation } from "@/components/WelcomeAnimation";
+import { ExitIntentModal } from "@/components/ExitIntentModal";
 import Landing from "@/pages/Landing";
 import Features from "@/pages/Features";
 import FeaturesGuru from "@/pages/FeaturesGuru";
@@ -23,33 +25,13 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/features" component={Features} />
-      <Route path="/features/guru">
-        <ProtectedRoute>
-          <FeaturesGuru />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/features/umf">
-        <ProtectedRoute>
-          <FeaturesUMF />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/features/calendar">
-        <ProtectedRoute>
-          <FeaturesCalendar />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/asset/:symbol">
-        <ProtectedRoute>
-          <AssetPage />
-        </ProtectedRoute>
-      </Route>
+      <Route path="/features/guru" component={FeaturesGuru} />
+      <Route path="/features/umf" component={FeaturesUMF} />
+      <Route path="/features/calendar" component={FeaturesCalendar} />
+      <Route path="/asset/:symbol" component={AssetPage} />
       <Route path="/signin" component={SignIn} />
       <Route path="/signup" component={SignUp} />
-      <Route path="/dashboard">
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      </Route>
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/profile">
         <ProtectedRoute>
           <Profile />
@@ -66,6 +48,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
+          <WelcomeAnimation />
+          <ExitIntentModal />
           <Toaster />
           <Router />
         </TooltipProvider>

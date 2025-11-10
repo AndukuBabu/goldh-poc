@@ -14,6 +14,7 @@
  */
 
 import { Header } from "@/components/Header";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,7 @@ export default function FeaturesUMF() {
   return (
     <div className="min-h-screen bg-background" data-testid="umf-page">
       <Header />
+      <SignInPrompt />
       
       <main className="pt-24 pb-16 px-6" role="main" aria-label="Universal Market Financials page">
         <div className="container mx-auto max-w-7xl">

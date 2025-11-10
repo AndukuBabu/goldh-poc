@@ -5,6 +5,7 @@ import { FeatureCard } from "@/components/FeatureCard";
 import { FOMABox } from "@/components/FOMABox";
 import { NewsScroller } from "@/components/NewsScroller";
 import { PreviewWidgets } from "@/components/PreviewWidgets";
+import { ComingSoon } from "@/components/ComingSoon";
 import { useAuth } from "@/lib/auth";
 import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
@@ -80,7 +81,7 @@ export default function Landing() {
               <img
                 src={logoImage}
                 alt="GOLDH - Golden Horizon"
-                className="w-3/4 md:w-full h-auto max-w-md mx-auto"
+                className="h-14 md:h-16 lg:h-20 w-auto mx-auto"
                 data-testid="img-hero-logo"
               />
             </div>
@@ -123,6 +124,9 @@ export default function Landing() {
 
       {/* Preview Widgets */}
       <PreviewWidgets />
+
+      {/* Coming Soon Features */}
+      <ComingSoon />
 
       {/* FOMO Boxes */}
       <section className="py-8 sm:py-12 px-4 sm:px-6 bg-card/30">

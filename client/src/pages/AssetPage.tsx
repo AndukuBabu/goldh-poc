@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { Header } from "@/components/Header";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ export default function AssetPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <SignInPrompt />
       
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <Button
