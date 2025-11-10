@@ -81,7 +81,7 @@ export default function Landing() {
               <img
                 src={logoImage}
                 alt="GOLDH - Golden Horizon"
-                className="h-32 md:h-40 lg:h-48 w-auto mx-auto"
+                className="h-80 md:h-96 lg:h-120 w-auto mx-auto"
                 data-testid="img-hero-logo"
               />
             </div>
