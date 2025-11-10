@@ -31,7 +31,7 @@ Preferred communication style: Simple, everyday language.
 - **Feature Pages**: Dedicated full-screen pages for Guru & Insider Digest, Universal Market Financials, Economic Calendar.
 - **Dashboard**: Asset-first grid layout showing tracked crypto assets with live prices, 24h changes, and news counts. Filters out assets with unavailable prices while preserving error states for failed queries.
 - **Asset Detail Pages**: Dynamic `/asset/:symbol` routes providing unified views of price data, news articles, and economic events.
-- **Logo**: SVG format for crisp rendering at all sizes. Responsive sizing: 400px (mobile) → 480px (tablet) → 560px (desktop).
+- **Logo**: SVG format for crisp rendering at all sizes. Responsive sizing: 800px (mobile) → 960px (tablet) → 1120px (desktop).
 - **Mobile Responsiveness**: Comprehensive responsive design with mobile-first approach. Landing page features controlled line breaks for tagline, responsive font scaling (text-3xl → text-6xl), adaptive spacing/padding, full-width buttons on mobile, and optimized layouts across all breakpoints (sm/md/lg).
 - **Landing Page Components**:
   - **NewsScroller**: Horizontal scrolling ticker displaying latest crypto news from Guru & Insider Digest. Uses CSS animation for smooth infinite scroll. Fetches from `/api/guru-digest` endpoint with loading states. Shows top 10 articles with gradient fades on edges.
