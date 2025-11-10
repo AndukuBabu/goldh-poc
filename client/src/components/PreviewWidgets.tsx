@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
-import { TrendingUp, DollarSign, Calendar, ArrowRight, Lock } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, ArrowRight } from "lucide-react";
 
 interface NewsArticle {
   id: string;
@@ -29,8 +28,6 @@ interface CalendarEvent {
 }
 
 export function PreviewWidgets() {
-  const { user } = useAuth();
-
   const { data: newsArticles = [] } = useQuery<NewsArticle[]>({
     queryKey: ['/api/guru-digest'],
   });
@@ -84,30 +81,14 @@ export function PreviewWidgets() {
                   <p className="text-xs text-muted-foreground mt-1">{article.source}</p>
                 </div>
               ))}
-              
-              {!user && (
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent flex items-end justify-center pb-6 backdrop-blur-[2px]">
-                  <div className="text-center space-y-3">
-                    <Lock className="w-6 h-6 text-primary mx-auto" />
-                    <Link href="/signin">
-                      <Button size="sm" className="gap-2" data-testid="button-signin-guru">
-                        Sign In to View All
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {user && (
-              <Link href="/features/guru">
-                <Button variant="outline" size="sm" className="w-full mt-4 gap-2" data-testid="link-guru-digest">
-                  View All News
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            )}
+            <Link href="/features/guru">
+              <Button variant="outline" size="sm" className="w-full mt-4 gap-2" data-testid="link-guru-digest">
+                View All News
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
           </Card>
 
           {/* Universal Market Financials Widget */}
@@ -142,30 +123,14 @@ export function PreviewWidgets() {
                   </div>
                 </div>
               ))}
-              
-              {!user && (
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent flex items-end justify-center pb-6 backdrop-blur-[2px]">
-                  <div className="text-center space-y-3">
-                    <Lock className="w-6 h-6 text-primary mx-auto" />
-                    <Link href="/signin">
-                      <Button size="sm" className="gap-2" data-testid="button-signin-umf">
-                        Sign In to View All
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {user && (
-              <Link href="/features/umf">
-                <Button variant="outline" size="sm" className="w-full mt-4 gap-2" data-testid="link-umf">
-                  View Full Dashboard
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            )}
+            <Link href="/features/umf">
+              <Button variant="outline" size="sm" className="w-full mt-4 gap-2" data-testid="link-umf">
+                View Full Dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
           </Card>
 
           {/* Economic Calendar Widget */}
@@ -184,7 +149,7 @@ export function PreviewWidgets() {
               {mockEvents.map((event, index) => (
                 <div 
                   key={event.id} 
-                  className={`pb-3 border-b border-border last:border-0 ${index >= 1 && !user ? 'blur-sm' : ''}`}
+                  className="pb-3 border-b border-border last:border-0"
                 >
                   <div className="flex items-start gap-2 mb-1">
                     <Badge 
@@ -202,30 +167,14 @@ export function PreviewWidgets() {
                   </p>
                 </div>
               ))}
-              
-              {!user && (
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent flex items-end justify-center pb-6 backdrop-blur-[2px]">
-                  <div className="text-center space-y-3">
-                    <Lock className="w-6 h-6 text-primary mx-auto" />
-                    <Link href="/signin">
-                      <Button size="sm" className="gap-2" data-testid="button-signin-calendar">
-                        Sign In to View All
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {user && (
-              <Link href="/features/calendar">
-                <Button variant="outline" size="sm" className="w-full mt-4 gap-2" data-testid="link-calendar">
-                  View Full Calendar
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            )}
+            <Link href="/features/calendar">
+              <Button variant="outline" size="sm" className="w-full mt-4 gap-2" data-testid="link-calendar">
+                View Full Calendar
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
           </Card>
         </div>
       </div>

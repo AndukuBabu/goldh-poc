@@ -142,7 +142,7 @@ export default function Landing() {
             <FOMABox
               title="Early User Status"
               description="Sign up early and get exclusive benefits. More rewards, more features, more opportunities. Your journey to crypto mastery starts here."
-              variant="default"
+              variant="premium"
             />
           </div>
         </div>
