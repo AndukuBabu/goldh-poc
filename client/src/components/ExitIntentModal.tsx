@@ -19,18 +19,37 @@ export function ExitIntentModal() {
       return;
     }
 
+    let mouseY = 0;
+    let lastMouseY = 0;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      lastMouseY = mouseY;
+      mouseY = e.clientY;
+    };
+
     const handleMouseLeave = (e: MouseEvent) => {
-      // Only trigger when mouse leaves through the top of the viewport
-      // and the mouse is actually leaving the browser window (not going to address bar)
-      if (e.clientY <= 0 && e.relatedTarget === null && !hasShown) {
+      // Only trigger when:
+      // 1. Mouse is leaving through the top of the viewport (towards tabs/address bar)
+      // 2. Mouse was moving upward (clientY < lastMouseY)
+      // 3. Mouse is very close to the top edge (clientY <= 5)
+      // 4. relatedTarget is null (leaving the document entirely)
+      const isLeavingTop = e.clientY <= 5;
+      const wasMovingUp = mouseY < lastMouseY;
+      const isLeavingDocument = e.relatedTarget === null;
+      
+      if (isLeavingTop && wasMovingUp && isLeavingDocument && !hasShown) {
         setShow(true);
         setHasShown(true);
       }
     };
 
-    // Use document.documentElement instead of document to catch true browser exits
-    document.documentElement.addEventListener("mouseleave", handleMouseLeave);
-    return () => document.documentElement.removeEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseout", handleMouseLeave);
+    
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseout", handleMouseLeave);
+    };
   }, [user, hasShown]);
 
   const handleClose = () => {
@@ -52,16 +71,16 @@ export function ExitIntentModal() {
         onClick={handleClose}
         data-testid="exit-intent-overlay"
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: -20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: -20 }}
-          transition={{ type: "spring", duration: 0.5 }}
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg px-4"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div
-            className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-2 border-[#C7AE6A]/40 rounded-lg p-8 relative"
+        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-lg">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: -20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: -20 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-2 border-[#C7AE6A]/40 rounded-lg p-8 relative"
             style={{
               boxShadow: "0 0 60px rgba(199, 174, 106, 0.3)"
             }}
@@ -145,7 +164,8 @@ export function ExitIntentModal() {
               </button>
             </div>
           </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </motion.div>
     </AnimatePresence>
   );

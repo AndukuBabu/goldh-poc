@@ -11,22 +11,33 @@ interface SignInPromptProps {
 
 export function SignInPrompt({ onClose }: SignInPromptProps) {
   const { user } = useAuth();
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(true);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     const hasDismissed = sessionStorage.getItem("goldh-signin-prompt-dismissed");
-    if (hasDismissed) {
+    if (hasDismissed || user) {
       setDismissed(true);
+      return;
     }
-  }, []);
+
+    // Show the modal automatically after a short delay on page load
+    const timer = setTimeout(() => {
+      setDismissed(false);
+      setShow(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [user]);
 
   const handleDismiss = () => {
+    setShow(false);
     setDismissed(true);
     sessionStorage.setItem("goldh-signin-prompt-dismissed", "true");
     onClose?.();
   };
 
-  if (user || dismissed) {
+  if (user || dismissed || !show) {
     return null;
   }
 
@@ -40,16 +51,16 @@ export function SignInPrompt({ onClose }: SignInPromptProps) {
         onClick={handleDismiss}
         data-testid="signin-prompt-overlay"
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ type: "spring", duration: 0.5 }}
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div
-            className="bg-[#1a1a1a] border border-[#C7AE6A]/20 rounded-lg p-8 relative"
+        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="bg-[#1a1a1a] border border-[#C7AE6A]/20 rounded-lg p-8 relative"
             style={{
               boxShadow: "0 0 40px rgba(199, 174, 106, 0.2)"
             }}
@@ -105,7 +116,8 @@ export function SignInPrompt({ onClose }: SignInPromptProps) {
               </button>
             </div>
           </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </motion.div>
     </AnimatePresence>
   );
