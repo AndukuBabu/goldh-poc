@@ -81,7 +81,7 @@ export default function Landing() {
               <img
                 src={logoImage}
                 alt="GOLDH - Golden Horizon"
-                className="h-14 md:h-16 lg:h-20 w-auto mx-auto"
+                className="h-32 md:h-40 lg:h-48 w-auto mx-auto"
                 data-testid="img-hero-logo"
               />
             </div>
@@ -122,13 +122,10 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Preview Widgets */}
+      {/* Preview Widgets - Crypto Intelligence */}
       <PreviewWidgets />
 
-      {/* Coming Soon Features */}
-      <ComingSoon />
-
-      {/* FOMO Boxes */}
+      {/* FOMO Boxes - Token Launching */}
       <section className="py-8 sm:py-12 px-4 sm:px-6 bg-card/30">
         <div className="container mx-auto">
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
@@ -151,8 +148,7 @@ export default function Landing() {
         </div>
       </section>
 
-
-      {/* Features Section */}
+      {/* Features Section - Everything You Need */}
       <section id="features" className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 scroll-mt-16 bg-[#1a1a1a]">
         <div className="container mx-auto">
           <div className="text-center mb-12 sm:mb-16 md:mb-20 space-y-3 sm:space-y-4">
@@ -177,7 +173,10 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Coming Soon to GOLDH */}
+      <ComingSoon />
+
+      {/* CTA Section - Ready to Start */}
       <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#C7AE6A]/10 via-background to-[#b99a45]/10"></div>
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
