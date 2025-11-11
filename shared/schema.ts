@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   agreeToUpdates: boolean("agree_to_updates").default(false),
   walletAddress: text("wallet_address"),
   isPremium: boolean("is_premium").default(false),
+  isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
