@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
   - **ComingSoon**: Feature showcase section with 9 upcoming features (Whale Tracker, Smart Token Screener, Risk Score Engine, Token Deep Dives, AI Smart Alerts, Smart Contract Scanner, Airdrop Finder, Pre-Token Detection, Portfolio Center) in responsive grid layout with hover effects.
   - **FOMABox**: Three promotional cards with consistent gold premium styling promoting GOLDH Token launch, Premium Access, and Early User benefits.
 - **Welcome Experience**:
-  - **WelcomeAnimation**: First-visit overlay displaying "Congratulations, You've found Golden Horizon!!" with gold gradient text and blur/fade-out animation. Shows every time user visits landing page, auto-dismisses after 3.5 seconds.
+  - **WelcomeAnimation**: First-visit overlay displaying "Congratulations, You've found Golden Horizon!!" with gold gradient text and blur/fade-out animation. Shows every time user visits landing page ("/"), auto-dismisses after 3.5 seconds. Only displays on landing page, not on other routes.
   - **SignInPrompt**: Auto-appearing modal (1-second delay) on feature pages and dashboard for unauthenticated users only. Encourages sign-up with benefits list and dual CTAs. Shows every time user visits these pages (dismissible per page visit). Does not show for authenticated users.
   - **ExitIntentModal**: Mouse-leave detection at viewport top triggers persuasive modal with benefits list and sign-up CTA. Session storage prevents repeated displays. Uses lucide-react icons only (no emojis).
 - **Authentication-Free Access**: All feature pages (Dashboard, Guru Digest, UMF, Economic Calendar, Asset pages) viewable without authentication. Only Profile page requires login. Sign-in prompts are dismissable overlays, not hard blocks.
@@ -54,6 +54,23 @@ Preferred communication style: Simple, everyday language.
   - Landing page CTAs adapt based on auth state (Sign In → Dashboard when logged in)
   - **Soft Authentication**: Feature pages viewable without login. Dismissable sign-in prompts encourage registration without blocking content access.
 - **Route Protection**: `ProtectedRoute` wrapper now only guards Profile page. All feature pages (Dashboard, Guru Digest, UMF, Economic Calendar, Asset pages) are accessible without authentication. Security validation prevents open redirect attacks (only internal paths allowed).
+- **Admin System**: 
+  - **Access Control**: Managed via `ADMIN_EMAILS` environment variable (comma-separated list of admin email addresses)
+  - **Auto-Grant**: On signup/signin, if user's email matches any in ADMIN_EMAILS, the `isAdmin` database field is automatically set to true
+  - **Admin Routes**: `/admin/guru-digest` - Management dashboard for Guru & Insider Digest articles
+  - **Security**: Non-admin users accessing admin routes receive 404 responses (not 403) to completely hide existence of admin features
+  - **Middleware**: `requireAdmin` checks both authentication and admin status before allowing access
+  - **UI Elements**: Admin navigation link (gold-styled with Shield icon) only visible in header when `user.isAdmin === true`
+  - **Admin Features**:
+    - Manual article entry form (title, URL, source, date, summary, asset tags)
+    - View/delete all Firestore articles with document IDs
+    - Manual RSS refresh button to trigger immediate feed updates
+    - Toast notifications for all operations
+  - **API Endpoints** (require auth + admin):
+    - `GET /api/admin/guru-digest` - List all articles with IDs
+    - `POST /api/admin/guru-digest` - Add new article
+    - `DELETE /api/admin/guru-digest/:id` - Delete article by Firestore doc ID
+    - `POST /api/admin/guru-digest/refresh` - Trigger manual RSS feed refresh
 - **Session Management**: Database-backed session persistence with cleanup, bearer token authentication.
 - **Validation**: Zod schemas for client-side and server-side validation.
 - **Error Handling**: Graceful error handling with user-friendly messages for authentication and data operations.
