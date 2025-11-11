@@ -38,7 +38,10 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
     .from(users)
     .where(eq(users.id, session.userId));
 
+  console.log(`[Admin Middleware Debug] User: ${user?.email}, isAdmin: ${user?.isAdmin}`);
+
   if (!user || !user.isAdmin) {
+    console.log(`[Admin Middleware Debug] Access denied - user.isAdmin is ${user?.isAdmin}`);
     return res.status(404).json({ error: "Not found" });
   }
 

@@ -124,6 +124,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to process admin access" });
       }
 
+      console.log(`[Signin Debug] User: ${updatedUser.email}, isAdmin: ${updatedUser.isAdmin}`);
+
       const session = await sessionManager.createSession(updatedUser.id);
       
       res.json({
