@@ -5,6 +5,7 @@ interface User {
   id: string;
   email: string;
   isPremium: boolean;
+  isAdmin: boolean;
   walletAddress: string | null;
 }
 
@@ -112,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...user,
         walletAddress: data.walletAddress,
         isPremium: data.isPremium,
+        isAdmin: user.isAdmin,
       });
     }
   };

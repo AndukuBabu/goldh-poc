@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, verifyPassword, sessionManager } from "./auth";
-import { requireAuth } from "./middleware";
+import { requireAuth, requireAdmin } from "./middleware";
 import { insertUserSchema, serverSignUpSchema } from "@shared/schema";
 import { z } from "zod";
 import { getFresh, setFresh } from "./umf/lib/cache";
@@ -10,8 +10,9 @@ import { readLiveSnapshot } from "./umf/lib/firestoreUmf";
 import type { UmfSnapshotLive, UmfAssetLive, AssetOverview } from "@shared/schema";
 import { assetOverviewSchema } from "@shared/schema";
 import { updateGuruDigest } from "./guru/updater";
-import { getGuruDigestByAsset, getAllGuruDigest } from "./guru/lib/firestore";
-import { CANONICAL_SYMBOLS, ASSET_DISPLAY_NAMES, ASSET_CLASSES } from "@shared/constants";
+import { getGuruDigestByAsset, getAllGuruDigest, getAllGuruDigestWithIds, deleteGuruDigestEntry, addGuruDigestEntry } from "./guru/lib/firestore";
+import type { GuruDigestEntry } from "./guru/lib/rss";
+import { CANONICAL_SYMBOLS, ASSET_DISPLAY_NAMES, ASSET_CLASSES, extractAssetSymbols } from "@shared/constants";
 import { createLeadFromUser } from "./zoho/leads";
 
 /**
@@ -806,6 +807,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Guru Digest update error:", error);
       res.status(500).json({ error: "Failed to update Guru Digest" });
+    }
+  });
+
+  // Admin Routes for Guru & Insider Digest Management
+  app.get("/api/admin/guru-digest", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const entries = await getAllGuruDigestWithIds(100);
+      res.status(200).json(entries);
+    } catch (error) {
+      console.error("[Admin] Failed to fetch GID entries:", error);
+      res.status(500).json({ error: "Failed to fetch entries" });
+    }
+  });
+
+  app.post("/api/admin/guru-digest", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { title, summary, link, assets } = req.body;
+      
+      if (!title || !summary || !link) {
+        return res.status(400).json({ error: "Title, summary, and link are required" });
+      }
+
+      // Validate and extract asset symbols if provided
+      let assetSymbols: string[] = [];
+      if (assets && Array.isArray(assets)) {
+        assetSymbols = assets.filter(symbol => CANONICAL_SYMBOLS.includes(symbol));
+      } else if (typeof assets === 'string') {
+        // If assets is a string, try to extract symbols from it
+        assetSymbols = extractAssetSymbols(assets);
+      }
+
+      const entry: GuruDigestEntry = {
+        title: title.trim(),
+        summary: summary.trim(),
+        link: link.trim(),
+        date: new Date().toISOString(),
+        assets: assetSymbols,
+      };
+
+      const entryId = await addGuruDigestEntry(entry);
+      console.log(`[Admin] Added custom GID entry: ${title.substring(0, 60)}...`);
+      
+      res.status(201).json({ 
+        success: true, 
+        entryId,
+        message: "Entry added successfully" 
+      });
+    } catch (error) {
+      console.error("[Admin] Failed to add GID entry:", error);
+      res.status(500).json({ error: "Failed to add entry" });
+    }
+  });
+
+  app.delete("/api/admin/guru-digest/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      if (!id) {
+        return res.status(400).json({ error: "Entry ID is required" });
+      }
+
+      await deleteGuruDigestEntry(id);
+      console.log(`[Admin] Deleted GID entry: ${id}`);
+      
+      res.status(200).json({ 
+        success: true,
+        message: "Entry deleted successfully" 
+      });
+    } catch (error) {
+      console.error("[Admin] Failed to delete GID entry:", error);
+      res.status(500).json({ error: "Failed to delete entry" });
+    }
+  });
+
+  app.post("/api/admin/guru-digest/refresh", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const result = await updateGuruDigest({
+        clearFirst: req.body?.clearFirst || false,
+        logPrefix: '[Admin]',
+      });
+      
+      console.log(`[Admin] Triggered RSS feed refresh`);
+      
+      res.status(200).json({ 
+        success: true,
+        ...result,
+        message: "RSS feed refreshed successfully"
+      });
+    } catch (error) {
+      console.error("[Admin] Failed to refresh RSS feed:", error);
+      res.status(500).json({ error: "Failed to refresh RSS feed" });
     }
   });
 

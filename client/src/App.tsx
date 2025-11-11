@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "./lib/auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedAdminRoute } from "@/components/ProtectedAdminRoute";
 import { WelcomeAnimation } from "@/components/WelcomeAnimation";
 import { ExitIntentModal } from "@/components/ExitIntentModal";
 import Landing from "@/pages/Landing";
@@ -18,6 +19,7 @@ import SignUp from "@/pages/SignUp";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
 import Learn from "@/pages/Learn";
+import AdminGuruDigest from "@/pages/AdminGuruDigest";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -38,6 +40,11 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/learn" component={Learn} />
+      <Route path="/admin/guru-digest">
+        <ProtectedAdminRoute>
+          <AdminGuruDigest />
+        </ProtectedAdminRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Shield } from "lucide-react";
 import logoImage from "@assets/goldh-logo.svg";
 
 export function Header() {
@@ -75,6 +75,18 @@ export function Header() {
                   Profile
                 </Button>
               </Link>
+              {user.isAdmin && (
+                <Link href="/admin/guru-digest">
+                  <Button 
+                    variant={isActive("/admin/guru-digest") ? "default" : "ghost"} 
+                    data-testid="button-nav-admin"
+                    className={isActive("/admin/guru-digest") ? "border-[#C7AE6A]" : "text-[#C7AE6A] border-[#C7AE6A]/30 border"}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Button 
                 variant="ghost" 
                 onClick={handleSignOut}
