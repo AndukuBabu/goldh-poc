@@ -10,9 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Trash2, RefreshCw, Plus, Loader2 } from "lucide-react";
+import { Trash2, RefreshCw, Plus, Loader2, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Header } from "@/components/Header";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const addEntrySchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -36,6 +38,7 @@ export default function AdminGuruDigest() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [viewingEntry, setViewingEntry] = useState<GuruDigestEntry | null>(null);
 
   const form = useForm<AddEntryForm>({
     resolver: zodResolver(addEntrySchema),
@@ -117,8 +120,10 @@ export default function AdminGuruDigest() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <>
+      <Header />
+      <div className="min-h-screen bg-[#0f0f0f] text-white pt-20">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-[#C7AE6A] mb-2">Admin Dashboard</h1>
@@ -307,16 +312,27 @@ export default function AdminGuruDigest() {
                             )}
                           </div>
                         </div>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => deleteMutation.mutate(entry.id)}
-                          disabled={deleteMutation.isPending}
-                          className="text-red-500 hover:text-red-400 hover:bg-red-500/10 shrink-0"
-                          data-testid={`button-delete-${entry.id}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2 shrink-0">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setViewingEntry(entry)}
+                            className="text-[#C7AE6A] hover:text-[#C7AE6A] hover:bg-[#C7AE6A]/10"
+                            data-testid={`button-view-${entry.id}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => deleteMutation.mutate(entry.id)}
+                            disabled={deleteMutation.isPending}
+                            className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                            data-testid={`button-delete-${entry.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -331,5 +347,65 @@ export default function AdminGuruDigest() {
         </div>
       </div>
     </div>
+
+      {/* View Article Dialog */}
+      <Dialog open={!!viewingEntry} onOpenChange={() => setViewingEntry(null)}>
+        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-[#C7AE6A] text-xl">Article Details</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              View full article information
+            </DialogDescription>
+          </DialogHeader>
+          {viewingEntry && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 mb-1">Title</h3>
+                <p className="text-white">{viewingEntry.title}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 mb-1">Summary</h3>
+                <p className="text-white whitespace-pre-wrap">{viewingEntry.summary}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 mb-1">URL</h3>
+                <a 
+                  href={viewingEntry.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-[#C7AE6A] hover:underline break-all"
+                >
+                  {viewingEntry.link}
+                </a>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 mb-1">Published Date</h3>
+                <p className="text-white">{new Date(viewingEntry.date).toLocaleString()}</p>
+              </div>
+              {viewingEntry.assets && viewingEntry.assets.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-400 mb-2">Asset Tags</h3>
+                  <div className="flex gap-2 flex-wrap">
+                    {viewingEntry.assets.map((asset) => (
+                      <Badge
+                        key={asset}
+                        variant="outline"
+                        className="border-[#C7AE6A] text-[#C7AE6A]"
+                      >
+                        {asset}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 mb-1">Entry ID</h3>
+                <p className="text-gray-500 text-xs font-mono">{viewingEntry.id}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
