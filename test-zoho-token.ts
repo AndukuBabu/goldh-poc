@@ -7,7 +7,7 @@ import axios from 'axios';
 
 const CLIENT_ID = '1000.ZD6Y4MDQNAZ0VAZ1M6EYH28B19B7DY';        // From Step 3
 const CLIENT_SECRET = '8870783ff0657e0cd77803a5ea638a6ebd8d6f75ea'; // From Step 3
-const CODE = 'YOUR_CODE_HERE';                   // From Step 4 (expires in 3 minutes!)
+const CODE = '1000.25406c987c07f0854d7a2ae23515f6e3.a447bc421174b9534016ab37093be712';                   // From Step 4 (expires in 3 minutes!)
 
 async function generateRefreshToken() {
   try {
