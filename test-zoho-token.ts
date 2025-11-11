@@ -5,8 +5,8 @@ import axios from 'axios';
 // 2. Run: npx tsx test-zoho-token.ts
 // 3. Copy the refresh_token from the output
 
-const CLIENT_ID = 'YOUR_CLIENT_ID_HERE';        // From Step 3
-const CLIENT_SECRET = 'YOUR_CLIENT_SECRET_HERE'; // From Step 3
+const CLIENT_ID = '1000.ZD6Y4MDQNAZ0VAZ1M6EYH28B19B7DY';        // From Step 3
+const CLIENT_SECRET = '8870783ff0657e0cd77803a5ea638a6ebd8d6f75ea'; // From Step 3
 const CODE = 'YOUR_CODE_HERE';                   // From Step 4 (expires in 3 minutes!)
 
 async function generateRefreshToken() {
