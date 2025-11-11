@@ -153,6 +153,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Zoho CRM Test Endpoint (development only)
+  app.get("/api/test/zoho", async (req: Request, res: Response) => {
+    try {
+      const { zohoClient } = await import("./zoho/client");
+      
+      if (!zohoClient.isConfigured()) {
+        return res.json({
+          configured: false,
+          message: "Zoho CRM credentials not configured",
+          credentials: {
+            hasClientId: !!process.env.ZOHO_CLIENT_ID,
+            hasClientSecret: !!process.env.ZOHO_CLIENT_SECRET,
+            hasRefreshToken: !!process.env.ZOHO_REFRESH_TOKEN,
+            hasApiDomain: !!process.env.ZOHO_API_DOMAIN,
+          }
+        });
+      }
+
+      console.log('[Zoho Test] Testing access token...');
+      const accessToken = await zohoClient.getAccessToken();
+      
+      console.log('[Zoho Test] Testing API request...');
+      const response = await zohoClient.makeRequest('GET', '/crm/v2/settings/modules');
+      
+      res.json({
+        configured: true,
+        authenticated: true,
+        message: "Zoho CRM connection successful",
+        hasAccessToken: !!accessToken,
+        apiResponse: response
+      });
+    } catch (error: any) {
+      console.error('[Zoho Test] Error:', error);
+      res.status(500).json({
+        configured: true,
+        authenticated: false,
+        error: error.message,
+        details: error.response?.data || null
+      });
+    }
+  });
+
   app.post("/api/user/change-password", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).userId;
