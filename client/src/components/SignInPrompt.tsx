@@ -11,19 +11,17 @@ interface SignInPromptProps {
 
 export function SignInPrompt({ onClose }: SignInPromptProps) {
   const { user } = useAuth();
-  const [dismissed, setDismissed] = useState(true);
+  const [dismissed, setDismissed] = useState(false);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const hasDismissed = sessionStorage.getItem("goldh-signin-prompt-dismissed");
-    if (hasDismissed || user) {
-      setDismissed(true);
+    // Don't show if user is authenticated
+    if (user) {
       return;
     }
 
     // Show the modal automatically after a short delay on page load
     const timer = setTimeout(() => {
-      setDismissed(false);
       setShow(true);
     }, 1000);
 
@@ -33,7 +31,6 @@ export function SignInPrompt({ onClose }: SignInPromptProps) {
   const handleDismiss = () => {
     setShow(false);
     setDismissed(true);
-    sessionStorage.setItem("goldh-signin-prompt-dismissed", "true");
     onClose?.();
   };
 

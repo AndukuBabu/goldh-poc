@@ -39,8 +39,8 @@ Preferred communication style: Simple, everyday language.
   - **ComingSoon**: Feature showcase section with 9 upcoming features (Whale Tracker, Smart Token Screener, Risk Score Engine, Token Deep Dives, AI Smart Alerts, Smart Contract Scanner, Airdrop Finder, Pre-Token Detection, Portfolio Center) in responsive grid layout with hover effects.
   - **FOMABox**: Three promotional cards with consistent gold premium styling promoting GOLDH Token launch, Premium Access, and Early User benefits.
 - **Welcome Experience**:
-  - **WelcomeAnimation**: First-visit overlay displaying "Congratulations, You've found Golden Horizon!!" with gold gradient text and blur/fade-out animation. Uses localStorage tracking to show only once.
-  - **SignInPrompt**: Dismissable modal appearing on feature pages for unauthenticated users. Encourages sign-up with benefits list and dual CTAs. Session storage prevents repeated displays.
+  - **WelcomeAnimation**: First-visit overlay displaying "Congratulations, You've found Golden Horizon!!" with gold gradient text and blur/fade-out animation. Shows every time user visits landing page, auto-dismisses after 3.5 seconds.
+  - **SignInPrompt**: Auto-appearing modal (1-second delay) on feature pages and dashboard for unauthenticated users only. Encourages sign-up with benefits list and dual CTAs. Shows every time user visits these pages (dismissible per page visit). Does not show for authenticated users.
   - **ExitIntentModal**: Mouse-leave detection at viewport top triggers persuasive modal with benefits list and sign-up CTA. Session storage prevents repeated displays. Uses lucide-react icons only (no emojis).
 - **Authentication-Free Access**: All feature pages (Dashboard, Guru Digest, UMF, Economic Calendar, Asset pages) viewable without authentication. Only Profile page requires login. Sign-in prompts are dismissable overlays, not hard blocks.
 

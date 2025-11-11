@@ -5,18 +5,14 @@ export function WelcomeAnimation() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem("goldh-welcome-seen");
+    // Show the welcome animation every time
+    setShow(true);
     
-    if (!hasSeenWelcome) {
-      setShow(true);
-      localStorage.setItem("goldh-welcome-seen", "true");
-      
-      const timer = setTimeout(() => {
-        setShow(false);
-      }, 3500);
-      
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => {
+      setShow(false);
+    }, 3500);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return (
