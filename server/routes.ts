@@ -14,6 +14,40 @@ import { getGuruDigestByAsset, getAllGuruDigest } from "./guru/lib/firestore";
 import { CANONICAL_SYMBOLS, ASSET_DISPLAY_NAMES, ASSET_CLASSES } from "@shared/constants";
 import { createLeadFromUser } from "./zoho/leads";
 
+/**
+ * Auto-Grant Admin Access
+ * 
+ * Checks if user email is in ADMIN_EMAILS environment variable.
+ * If yes, grants admin access by setting isAdmin flag to true.
+ * 
+ * @param user - User object to check and potentially grant admin access
+ * @returns Promise<User> - Updated user with admin status
+ */
+async function checkAndGrantAdminAccess(user: any): Promise<any> {
+  // Short-circuit if user is already admin
+  if (user.isAdmin) {
+    return user;
+  }
+  
+  const adminEmails = process.env.ADMIN_EMAILS;
+  
+  if (!adminEmails) {
+    return user; // No admin emails configured
+  }
+  
+  const adminEmailList = adminEmails.split(',').map(email => email.trim().toLowerCase());
+  const shouldBeAdmin = adminEmailList.includes(user.email.toLowerCase());
+  
+  if (shouldBeAdmin) {
+    // Grant admin access by updating the user's isAdmin flag
+    const updatedUser = await storage.updateUserAdminStatus(user.id, true);
+    console.log(`[Admin] Granted admin access to ${user.email}`);
+    return updatedUser || user;
+  }
+  
+  return user;
+}
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -27,7 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const hashedPassword = await hashPassword(validatedData.password);
-      const user = await storage.createUser({ 
+      let user = await storage.createUser({ 
         email: validatedData.email, 
         password: hashedPassword,
         name: validatedData.name,
@@ -35,6 +69,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         experienceLevel: validatedData.experienceLevel,
         agreeToUpdates: validatedData.agreeToUpdates,
       });
+      
+      // Check and grant admin access if user email is in ADMIN_EMAILS
+      user = await checkAndGrantAdminAccess(user);
       
       const session = await sessionManager.createSession(user.id);
       
@@ -48,6 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: user.id,
           email: user.email,
           isPremium: user.isPremium,
+          isAdmin: user.isAdmin,
           walletAddress: user.walletAddress,
         },
         sessionId: session.id,
@@ -69,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Email and password required" });
       }
 
-      const user = await storage.getUserByEmail(email);
+      let user = await storage.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
@@ -79,14 +117,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      const session = await sessionManager.createSession(user.id);
+      // Check and grant admin access if user email is in ADMIN_EMAILS
+      const updatedUser = await checkAndGrantAdminAccess(user);
+      if (!updatedUser) {
+        return res.status(500).json({ error: "Failed to process admin access" });
+      }
+
+      const session = await sessionManager.createSession(updatedUser.id);
       
       res.json({
         user: {
-          id: user.id,
-          email: user.email,
-          isPremium: user.isPremium,
-          walletAddress: user.walletAddress,
+          id: updatedUser.id,
+          email: updatedUser.email,
+          isPremium: updatedUser.isPremium,
+          isAdmin: updatedUser.isAdmin,
+          walletAddress: updatedUser.walletAddress,
         },
         sessionId: session.id,
       });
@@ -145,6 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: user.id,
         email: user.email,
         isPremium: user.isPremium,
+        isAdmin: user.isAdmin,
         walletAddress: user.walletAddress,
       });
     } catch (error) {

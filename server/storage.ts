@@ -8,6 +8,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserWallet(id: string, walletAddress: string, isPremium: boolean): Promise<User | undefined>;
   updateUserPassword(id: string, hashedPassword: string): Promise<void>;
+  updateUserAdminStatus(id: string, isAdmin: boolean): Promise<User | undefined>;
   getNewsArticles(): Promise<NewsArticle[]>;
   getLearningTopics(): Promise<LearningTopic[]>;
 }
@@ -45,6 +46,15 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ password: hashedPassword })
       .where(eq(users.id, id));
+  }
+
+  async updateUserAdminStatus(id: string, isAdmin: boolean): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ isAdmin })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
   }
 
   async getNewsArticles(): Promise<NewsArticle[]> {
