@@ -1,19 +1,23 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "wouter";
 
 export function WelcomeAnimation() {
   const [show, setShow] = useState(false);
+  const [location] = useLocation();
 
   useEffect(() => {
-    // Show the welcome animation every time
-    setShow(true);
-    
-    const timer = setTimeout(() => {
-      setShow(false);
-    }, 3500);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    // Only show the welcome animation on the landing page
+    if (location === "/") {
+      setShow(true);
+      
+      const timer = setTimeout(() => {
+        setShow(false);
+      }, 3500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
 
   return (
     <AnimatePresence>
