@@ -75,7 +75,7 @@ export function SignInPrompt({ onClose }: SignInPromptProps) {
                 Unlock Full Access
               </h3>
               <p className="text-gray-400 text-sm">
-                Sign in to track your portfolio, set alerts, and access premium insights.
+                Sign in to get the most out of Golden Horizon
               </p>
             </div>
 

@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { TrendingUp, DollarSign, Calendar, ArrowRight } from "lucide-react";
+import { useEconEvents } from "@/hooks/useEcon";
+import { ECON_IMPACT_COLORS } from "@/lib/econ";
 
 interface NewsArticle {
   id: string;
@@ -20,12 +23,7 @@ interface MarketAsset {
   changePct24h: number;
 }
 
-interface CalendarEvent {
-  id: string;
-  title: string;
-  date: string;
-  impact: 'high' | 'medium' | 'low';
-}
+// Note: CalendarEvent type removed - now using EconEvent from schema directly
 
 export function PreviewWidgets() {
   const { data: newsArticles = [] } = useQuery<NewsArticle[]>({
@@ -41,11 +39,30 @@ export function PreviewWidgets() {
   const guruPreview = newsArticles.slice(0, 3);
   const marketPreview = marketData.slice(0, 4);
 
-  const mockEvents: CalendarEvent[] = [
-    { id: '1', title: 'Federal Reserve Interest Rate Decision', date: '2025-01-29', impact: 'high' },
-    { id: '2', title: 'Bitcoin Halving Event', date: '2024-04-20', impact: 'high' },
-    { id: '3', title: 'Ethereum Network Upgrade', date: '2025-03-15', impact: 'medium' },
-  ];
+  // Fetch High impact economic events from Firestore
+  // Use start of today (00:00:00) to capture all events for today and beyond
+  // Memoize date values to prevent infinite re-renders (changing query key)
+  const dateRange = useMemo(() => {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    
+    return { from: startOfToday, to: thirtyDaysFromNow };
+  }, []);
+  
+  const { data: econEvents = [] } = useEconEvents({
+    impact: ['High'],
+    from: dateRange.from,
+    to: dateRange.to,
+  });
+
+  // Sort by date (ascending) to get upcoming events first, then take top 3
+  const sortedEvents = [...econEvents].sort((a, b) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+  const calendarPreview = sortedEvents.slice(0, 3);
 
   return (
     <section className="py-12 sm:py-16 px-4 sm:px-6 bg-background">
@@ -146,27 +163,32 @@ export function PreviewWidgets() {
             </div>
 
             <div className="space-y-3">
-              {mockEvents.map((event, index) => (
-                <div 
-                  key={event.id} 
-                  className="pb-3 border-b border-border last:border-0"
-                >
-                  <div className="flex items-start gap-2 mb-1">
-                    <Badge 
-                      variant={event.impact === 'high' ? 'destructive' : event.impact === 'medium' ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {event.impact.toUpperCase()}
-                    </Badge>
+              {calendarPreview.length > 0 ? (
+                calendarPreview.map((event) => (
+                  <div 
+                    key={event.id} 
+                    className="pb-3 border-b border-border last:border-0"
+                  >
+                    <div className="flex items-start gap-2 mb-1">
+                      <Badge 
+                        variant={event.impact === 'High' ? 'destructive' : event.impact === 'Medium' ? 'default' : 'secondary'}
+                        className="text-xs"
+                        style={{ backgroundColor: ECON_IMPACT_COLORS[event.impact] }}
+                      >
+                        {event.impact.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <p className="text-sm font-medium text-foreground line-clamp-2">
+                      {event.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
                   </div>
-                  <p className="text-sm font-medium text-foreground line-clamp-2">
-                    {event.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No upcoming high-impact events</p>
+              )}
             </div>
 
             <Link href="/features/calendar">
