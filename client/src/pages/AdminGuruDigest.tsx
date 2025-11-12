@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Trash2, RefreshCw, Plus, Loader2, Eye } from "lucide-react";
+import { Trash2, RefreshCw, Plus, Loader2, Eye, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Header } from "@/components/Header";
@@ -39,6 +39,8 @@ export default function AdminGuruDigest() {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<GuruDigestEntry | null>(null);
+  const [isUploadingEC, setIsUploadingEC] = useState(false);
+  const [ecFilePreview, setEcFilePreview] = useState<{ filename: string; count: number } | null>(null);
 
   const form = useForm<AddEntryForm>({
     resolver: zodResolver(addEntrySchema),
@@ -116,6 +118,62 @@ export default function AdminGuruDigest() {
       });
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleECFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const events = JSON.parse(text);
+      
+      if (!Array.isArray(events)) {
+        toast({
+          title: "Invalid File",
+          description: "JSON file must contain an array of events",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setEcFilePreview({ filename: file.name, count: events.length });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to parse JSON file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleECUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingEC(true);
+    try {
+      const text = await file.text();
+      const events = JSON.parse(text);
+
+      const result = await apiRequest("POST", "/api/admin/econ-events/upload", { events });
+      
+      setEcFilePreview(null);
+      e.target.value = "";
+      
+      toast({
+        title: "Success",
+        description: `Uploaded ${result.uploaded} events (deleted ${result.deleted} old events). Total: ${result.total} events.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to upload events",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingEC(false);
     }
   };
 
@@ -345,6 +403,62 @@ export default function AdminGuruDigest() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Economic Calendar Upload Section */}
+        <Separator className="bg-[#2a2a2a] my-8" />
+        
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-[#C7AE6A] mb-2">Market Events Calendar</h2>
+          <p className="text-gray-400">Upload Economic Calendar Data</p>
+        </div>
+
+        <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
+          <CardHeader>
+            <CardTitle className="text-[#C7AE6A] flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Upload JSON Events
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Upload economic calendar events from JSON file. Auto-deletes events older than 2 months.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Select JSON File
+              </label>
+              <input
+                type="file"
+                accept="application/json,.json"
+                onChange={handleECUpload}
+                disabled={isUploadingEC}
+                className="block w-full text-sm text-gray-400
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-[#C7AE6A] file:text-black
+                  hover:file:bg-[#D4BD7A]
+                  file:cursor-pointer cursor-pointer
+                  disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="input-ec-upload"
+              />
+            </div>
+
+            {isUploadingEC && (
+              <div className="flex items-center gap-2 text-[#C7AE6A]">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Uploading events...</span>
+              </div>
+            )}
+
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>• JSON file must contain an array of event objects</p>
+              <p>• Required fields: title, country, date, impact, forecast, previous</p>
+              <p>• Automatically removes events older than 2 months during upload</p>
+              <p>• Preserves existing events from previous uploads</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
 

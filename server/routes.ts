@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, verifyPassword, sessionManager } from "./auth";
 import { requireAuth, requireAdmin } from "./middleware";
-import { insertUserSchema, serverSignUpSchema } from "@shared/schema";
+import { insertUserSchema, serverSignUpSchema, econEventSchema } from "@shared/schema";
 import { z } from "zod";
 import { getFresh, setFresh } from "./umf/lib/cache";
 import { readLiveSnapshot } from "./umf/lib/firestoreUmf";
@@ -14,6 +14,8 @@ import { getGuruDigestByAsset, getAllGuruDigest, getAllGuruDigestWithIds, delete
 import type { GuruDigestEntry } from "./guru/lib/rss";
 import { CANONICAL_SYMBOLS, ASSET_DISPLAY_NAMES, ASSET_CLASSES, extractAssetSymbols } from "@shared/constants";
 import { createLeadFromUser } from "./zoho/leads";
+import { collection, getDocs, query, where, writeBatch, doc } from "firebase/firestore";
+import { getDb } from "./guru/lib/firebase";
 
 /**
  * Auto-Grant Admin Access
@@ -900,6 +902,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("[Admin] Failed to refresh RSS feed:", error);
       res.status(500).json({ error: "Failed to refresh RSS feed" });
+    }
+  });
+
+  // ===================  ADMIN: Economic Calendar Upload ====================
+  
+  app.post("/api/admin/econ-events/upload", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { events } = req.body;
+      
+      if (!Array.isArray(events) || events.length === 0) {
+        return res.status(400).json({ error: "Invalid request: events array is required" });
+      }
+
+      console.log(`[Admin] Processing Economic Calendar upload: ${events.length} events`);
+
+      // Validate each event against the Zod schema
+      const validatedEvents = events.map((event, index) => {
+        try {
+          // Remove id field if present in JSON (we'll use Firestore auto-generated IDs)
+          const { id, ...eventData } = event as any;
+          return econEventSchema.omit({ id: true }).parse(eventData);
+        } catch (error) {
+          console.error(`[Admin] Invalid event at index ${index}:`, error);
+          throw new Error(`Event validation failed at index ${index}: ${event.title || 'Unknown'}`);
+        }
+      });
+
+      // Calculate 2-month cutoff date for cleanup
+      const twoMonthsAgo = new Date();
+      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+      const cutoffDateISO = twoMonthsAgo.toISOString();
+
+      console.log(`[Admin] Cleaning up events older than ${cutoffDateISO}...`);
+
+      // Get Firestore DB instance
+      const db = getDb();
+
+      // Delete events older than 2 months
+      const econEventsRef = collection(db, "econEvents");
+      const oldEventsQuery = query(
+        econEventsRef,
+        where("date", "<", cutoffDateISO)
+      );
+      
+      const oldEventsSnapshot = await getDocs(oldEventsQuery);
+      let deletedCount = 0;
+      
+      // Batch delete old events (max 500 per batch in Firestore)
+      if (!oldEventsSnapshot.empty) {
+        const batch = writeBatch(db);
+        oldEventsSnapshot.docs.forEach((docSnap) => {
+          batch.delete(docSnap.ref);
+          deletedCount++;
+        });
+        await batch.commit();
+        console.log(`[Admin] Deleted ${deletedCount} old events`);
+      }
+
+      // Add new events to Firestore (preserving existing events from previous uploads)
+      const addBatch = writeBatch(db);
+      validatedEvents.forEach(event => {
+        const docRef = doc(collection(db, "econEvents"));
+        addBatch.set(docRef, event);
+      });
+      
+      await addBatch.commit();
+      console.log(`[Admin] Added ${validatedEvents.length} new events`);
+
+      // Count total events in collection after upload
+      const allEventsSnapshot = await getDocs(collection(db, "econEvents"));
+      const totalEvents = allEventsSnapshot.size;
+
+      res.status(200).json({
+        success: true,
+        uploaded: validatedEvents.length,
+        deleted: deletedCount,
+        total: totalEvents,
+        message: `Successfully uploaded ${validatedEvents.length} events (deleted ${deletedCount} old events)`
+      });
+      
+    } catch (error) {
+      console.error("[Admin] Failed to upload Economic Calendar events:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      res.status(500).json({ error: `Failed to upload events: ${errorMessage}` });
     }
   });
 
