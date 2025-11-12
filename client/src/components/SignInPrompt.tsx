@@ -72,7 +72,7 @@ export function SignInPrompt({ onClose }: SignInPromptProps) {
 
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold mb-2" style={{ color: "#C7AE6A" }}>
-                Unlock Full Access
+                Golden Horizon
               </h3>
               <p className="text-gray-400 text-sm">
                 Sign in to get the most out of Golden Horizon
