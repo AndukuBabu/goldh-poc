@@ -87,7 +87,7 @@ Preferred communication style: Simple, everyday language.
 - **Real-time Market Intelligence**: Displays crypto macroeconomic events and market data.
 - **Guru Talk** (formerly Guru & Insider Digest): Real-time crypto news from CoinDesk and Cointelegraph RSS feeds. Automated scheduler updates every 2.5 hours (10x per day) for fresh content. Articles auto-tagged with asset symbols during ingest. Manual CLI script also available. Stores articles in Firestore with 300-character excerpts and asset tags.
 - **GOLDH Pulse** (formerly Universal Market Financials/UMF): Unified dashboard with live market snapshots (Top-20 crypto, indices, DXY), top movers, morning intelligence briefs, and market alerts. Features asset tiles, two-column responsive layout, and severity-based alert cards. Automated scheduler updates every 60 minutes via CoinGecko API. Data cached in Firestore for asset aggregation.
-- **Market Events** (formerly Economic Calendar): Full-featured calendar with filtering and performance targets. Currently uses mock data.
+- **Market Events** (formerly Economic Calendar): Full-featured economic calendar with event filtering, impact levels (High/Medium/Low/Holiday), and admin-managed data upload. Simplified 6-field schema: title, country, date, impact, forecast, previous. Admin dashboard supports JSON file uploads with automatic 2-month cleanup (preserves recent events while removing old data). Events stored in Firestore `econEvents` collection.
 - **Educational Resources**: Static Q&A content on cryptocurrency topics.
 - **Premium Access**: Access to premium features via GOLDH tokens or subscription.
 
@@ -123,7 +123,9 @@ Preferred communication style: Simple, everyday language.
 - PostCSS
 
 ### Cloud Services
-- **Firebase/Firestore**: Stores Guru & Insider Digest articles and UMF live/historical snapshots. All credentials managed via environment variables for security.
+- **Firebase/Firestore**: Stores Guru & Insider Digest articles, UMF live/historical snapshots, and Economic Calendar events. All credentials managed via environment variables for security.
+  - Collections: `guruDigest` (news articles), `umfSnapshots` (market data), `econEvents` (economic calendar events)
+  - EC Events Schema: title (string), country (string), date (ISO string), impact (High/Medium/Low/Holiday), forecast (string), previous (string)
 - **RSS Feeds**: CoinDesk (`https://www.coindesk.com/arc/outboundfeeds/rss/`) and Cointelegraph (`https://cointelegraph.com/rss`) for Guru Digest news articles.
 - **CoinGecko API**: Free tier for live cryptocurrency market data (UMF feature). Rate-limited scheduler prevents over-calling.
 - **Zoho CRM**: Automatically creates Leads in CRM when users sign up. Uses Self Client OAuth 2.0 with refresh token authentication. Integration is non-blocking - sign-ups succeed even if CRM API fails. Credentials managed via environment variables (`ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`, `ZOHO_API_DOMAIN`).
