@@ -47,7 +47,7 @@ export function CalendarGrid({
   }, [focusedDate, flatDates]);
 
   // Handle keyboard navigation
-  const handleKeyDown = useCallback((e: KeyboardEvent, currentIndex: number) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, currentIndex: number) => {
     let newIndex = currentIndex;
 
     switch (e.key) {

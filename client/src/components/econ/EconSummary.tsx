@@ -17,12 +17,13 @@ interface EconSummaryProps {
 export function EconSummary({ events = [], isLoading = false }: EconSummaryProps) {
   // Calculate KPIs
   const totalEvents = events.length;
-  const highImpactCount = events.filter(e => e.impactScore >= 70).length;
+  const highImpactCount = events.filter(e => e.impact === 'High').length;
   
   // Find next upcoming release (earliest future event)
+  const now = new Date();
   const upcomingEvents = events
-    .filter(e => e.status === 'upcoming')
-    .sort((a, b) => new Date(a.datetime_utc).getTime() - new Date(b.datetime_utc).getTime());
+    .filter(e => new Date(e.date) > now)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
   const nextRelease = upcomingEvents[0];
 
@@ -85,7 +86,7 @@ export function EconSummary({ events = [], isLoading = false }: EconSummaryProps
               <p 
                 className="text-2xl font-bold text-foreground"
                 data-testid="stat-high-impact"
-                aria-label={`${highImpactCount} high impact events with score above 70`}
+                aria-label={`${highImpactCount} high impact events`}
               >
                 {highImpactCount}
               </p>
@@ -111,10 +112,10 @@ export function EconSummary({ events = [], isLoading = false }: EconSummaryProps
                   <p 
                     className="text-base font-semibold text-foreground truncate"
                     data-testid="stat-next-release-time"
-                    aria-label={`Next event ${nextRelease.title} releasing ${getRelativeTime(nextRelease.datetime_utc)}`}
+                    aria-label={`Next event ${nextRelease.title} releasing ${getRelativeTime(nextRelease.date)}`}
                     title={nextRelease.title}
                   >
-                    {getRelativeTime(nextRelease.datetime_utc)}
+                    {getRelativeTime(nextRelease.date)}
                   </p>
                   <p className="text-xs text-foreground/70 truncate" title={nextRelease.title}>
                     {nextRelease.title}

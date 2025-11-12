@@ -85,12 +85,11 @@ function getDefaultDateRange(): { from: Date; to: Date } {
  * // With filters
  * const { data: events } = useEconEvents({
  *   country: ['US', 'EU'],
- *   category: ['Inflation'],
- *   importance: ['High']
+ *   impact: ['High']
  * });
  * 
  * // Access memoized selectors
- * const { regions, categories, counts } = useEconEventSelectors(events);
+ * const { regions, impactCounts } = useEconEventSelectors(events);
  * ```
  * 
  * Future Migration:
@@ -111,17 +110,13 @@ export function useEconEvents(params: UseEconEventsParams = {}) {
       from: typeof from === 'string' ? from : from.toISOString(),
       to: typeof to === 'string' ? to : to.toISOString(),
       country: params.country,
-      category: params.category,
-      importance: params.importance,
-      status: params.status,
+      impact: params.impact,
     };
   }, [
     params.from,
     params.to,
     params.country,
-    params.category,
-    params.importance,
-    params.status,
+    params.impact,
     defaultRange,
   ]);
 
@@ -191,11 +186,10 @@ export function useEconEvents(params: UseEconEventsParams = {}) {
  * @example
  * ```typescript
  * const { data: events } = useEconEvents();
- * const { regions, categories, importanceCounts } = useEconEventSelectors(events);
+ * const { regions, impactCounts } = useEconEventSelectors(events);
  * 
- * console.log(regions);           // ['US', 'EU', 'UK']
- * console.log(categories);        // ['Inflation', 'Employment']
- * console.log(importanceCounts);  // { High: 12, Medium: 8, Low: 5 }
+ * console.log(regions);        // ['US', 'EU', 'UK']
+ * console.log(impactCounts);   // { High: 12, Medium: 8, Low: 5, Holiday: 2 }
  * ```
  */
 export function useEconEventSelectors(events?: EconEvent[]) {
@@ -207,34 +201,16 @@ export function useEconEventSelectors(events?: EconEvent[]) {
     return Array.from(uniqueRegions).sort();
   }, [events]);
 
-  // Get unique categories present in events
-  const categories = useMemo(() => {
-    if (!events || events.length === 0) return [];
-    
-    const uniqueCategories = new Set(events.map(e => e.category));
-    return Array.from(uniqueCategories).sort();
-  }, [events]);
-
-  // Count events by importance level
-  const importanceCounts = useMemo(() => {
+  // Count events by impact level
+  const impactCounts = useMemo(() => {
     if (!events || events.length === 0) {
-      return { High: 0, Medium: 0, Low: 0 };
+      return { High: 0, Medium: 0, Low: 0, Holiday: 0 };
     }
     
     return events.reduce((acc, event) => {
-      acc[event.importance] = (acc[event.importance] || 0) + 1;
+      acc[event.impact] = (acc[event.impact] || 0) + 1;
       return acc;
-    }, {} as Record<'High' | 'Medium' | 'Low', number>);
-  }, [events]);
-
-  // Count events by category
-  const categoryCounts = useMemo(() => {
-    if (!events || events.length === 0) return {};
-    
-    return events.reduce((acc, event) => {
-      acc[event.category] = (acc[event.category] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<'High' | 'Medium' | 'Low' | 'Holiday', number>);
   }, [events]);
 
   // Count events by region/country
@@ -247,58 +223,17 @@ export function useEconEventSelectors(events?: EconEvent[]) {
     }, {} as Record<string, number>);
   }, [events]);
 
-  // Count events by status (upcoming vs released)
-  const statusCounts = useMemo(() => {
-    if (!events || events.length === 0) {
-      return { upcoming: 0, released: 0 };
-    }
-    
-    return events.reduce((acc, event) => {
-      acc[event.status] = (acc[event.status] || 0) + 1;
-      return acc;
-    }, { upcoming: 0, released: 0 });
-  }, [events]);
-
-  // Get high-impact events (impact score >= 70)
-  const highImpactEvents = useMemo(() => {
-    if (!events || events.length === 0) return [];
-    
-    return events.filter(e => e.impactScore >= 70);
-  }, [events]);
-
-  // Get upcoming events only
-  const upcomingEvents = useMemo(() => {
-    if (!events || events.length === 0) return [];
-    
-    return events.filter(e => e.status === 'upcoming');
-  }, [events]);
-
-  // Get released events only
-  const releasedEvents = useMemo(() => {
-    if (!events || events.length === 0) return [];
-    
-    return events.filter(e => e.status === 'released');
-  }, [events]);
-
   // Total event count
   const totalCount = events?.length || 0;
 
   return {
     // Unique values (for filter dropdowns)
     regions,
-    categories,
     
     // Count aggregations
-    importanceCounts,
-    categoryCounts,
+    impactCounts,
     regionCounts,
-    statusCounts,
     totalCount,
-    
-    // Filtered subsets
-    highImpactEvents,
-    upcomingEvents,
-    releasedEvents,
   };
 }
 
@@ -318,7 +253,7 @@ export function useEventsForDate(events: EconEvent[] | undefined, date: string |
     const targetDateStr = targetDate.toISOString().split('T')[0]; // YYYY-MM-DD
     
     return events.filter(event => {
-      const eventDateStr = event.datetime_utc.split('T')[0];
+      const eventDateStr = event.date.split('T')[0];
       return eventDateStr === targetDateStr;
     });
   }, [events, date]);
@@ -338,7 +273,7 @@ export function useEventsByDate(events?: EconEvent[]) {
     const grouped = new Map<string, EconEvent[]>();
     
     events.forEach(event => {
-      const dateKey = event.datetime_utc.split('T')[0]; // YYYY-MM-DD
+      const dateKey = event.date.split('T')[0]; // YYYY-MM-DD
       
       if (!grouped.has(dateKey)) {
         grouped.set(dateKey, []);
@@ -350,7 +285,7 @@ export function useEventsByDate(events?: EconEvent[]) {
     // Sort events within each date by time
     grouped.forEach((dateEvents) => {
       dateEvents.sort((a, b) => 
-        new Date(a.datetime_utc).getTime() - new Date(b.datetime_utc).getTime()
+        new Date(a.date).getTime() - new Date(b.date).getTime()
       );
     });
     

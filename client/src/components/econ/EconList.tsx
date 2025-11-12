@@ -1,6 +1,6 @@
 /**
  * Economic Calendar Event List
- * Paginated list of events sorted by datetime_utc (ascending)
+ * Paginated list of events sorted by date (ascending)
  */
 
 import { useState, useMemo } from "react";
@@ -20,10 +20,10 @@ interface EconListProps {
 export function EconList({ events, isLoading = false, pageSize = 20 }: EconListProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Sort events by datetime_utc ascending (earliest first)
+  // Sort events by date ascending (earliest first)
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => 
-      new Date(a.datetime_utc).getTime() - new Date(b.datetime_utc).getTime()
+      new Date(a.date).getTime() - new Date(b.date).getTime()
     );
   }, [events]);
 

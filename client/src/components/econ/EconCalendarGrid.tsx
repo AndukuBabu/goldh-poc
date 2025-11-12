@@ -70,8 +70,8 @@ export function EconCalendarGrid({ filters = {} }: EconCalendarGridProps) {
     const map = new Map<string, EconEvent[]>();
     
     events.forEach((event) => {
-      // Extract date portion from datetime_utc (YYYY-MM-DD)
-      const dateKey = event.datetime_utc.split('T')[0];
+      // Extract date portion from date (YYYY-MM-DD)
+      const dateKey = event.date.split('T')[0];
       
       if (!map.has(dateKey)) {
         map.set(dateKey, []);
@@ -79,17 +79,17 @@ export function EconCalendarGrid({ filters = {} }: EconCalendarGridProps) {
       map.get(dateKey)!.push(event);
     });
 
-    // Sort events within each day by time, then importance
+    // Sort events within each day by time, then impact
     map.forEach((dayEvents, dateKey) => {
       dayEvents.sort((a, b) => {
         // Sort by time first
-        const timeA = new Date(a.datetime_utc).getTime();
-        const timeB = new Date(b.datetime_utc).getTime();
+        const timeA = new Date(a.date).getTime();
+        const timeB = new Date(b.date).getTime();
         if (timeA !== timeB) return timeA - timeB;
         
-        // Then by importance (High > Medium > Low)
-        const importanceOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
-        return importanceOrder[a.importance] - importanceOrder[b.importance];
+        // Then by impact (High > Medium > Low > Holiday)
+        const impactOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2, Holiday: 3 };
+        return impactOrder[a.impact] - impactOrder[b.impact];
       });
     });
 

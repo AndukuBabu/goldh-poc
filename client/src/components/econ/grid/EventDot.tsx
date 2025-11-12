@@ -5,7 +5,7 @@
  */
 
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Info, Circle } from "lucide-react";
+import { AlertTriangle, Info, Circle, Calendar } from "lucide-react";
 import { formatTimeUTC } from "@/lib/econDate";
 import type { EconEvent } from "@/lib/econ";
 
@@ -22,8 +22,8 @@ export function EventDot({
   tabIndex = -1,
   cellDateISO,
 }: EventDotProps) {
-  // Icon and color by importance
-  const importanceConfig: Record<string, {
+  // Icon and color by impact
+  const impactConfig: Record<string, {
     icon: React.ComponentType<any>;
     colorClass: string;
     dotClass: string;
@@ -43,13 +43,18 @@ export function EventDot({
       colorClass: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20',
       dotClass: 'bg-yellow-500',
     },
+    Holiday: {
+      icon: Calendar,
+      colorClass: 'text-muted-foreground bg-muted/10 border-border',
+      dotClass: 'bg-muted-foreground',
+    },
   };
 
-  const config = importanceConfig[event.importance];
+  const config = impactConfig[event.impact];
   const Icon = config.icon;
 
   // Format time for display
-  const timeUTC = formatTimeUTC(event.datetime_utc);
+  const timeUTC = formatTimeUTC(event.date);
 
   // Truncate title for display (max 20 chars)
   const truncatedTitle = event.title.length > 20 
@@ -57,8 +62,8 @@ export function EventDot({
     : event.title;
 
   // Build detailed ARIA label
-  // Format: "High importance: US CPI (YoY) at 13:30 UTC"
-  const ariaLabel = `${event.importance} importance: ${event.title} at ${timeUTC} UTC`;
+  // Format: "High impact: US CPI (YoY) at 13:30 UTC"
+  const ariaLabel = `${event.impact} impact: ${event.title} at ${timeUTC} UTC`;
 
   if (variant === 'dot') {
     // Simple colored dot (mobile view)

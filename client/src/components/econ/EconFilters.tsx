@@ -8,20 +8,11 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { X, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { 
   ECON_COUNTRIES, 
-  ECON_COUNTRY_LABELS, 
-  ECON_CATEGORIES, 
-  ECON_CATEGORY_LABELS,
+  ECON_COUNTRY_LABELS,
   type EconEventFilters 
 } from "@/lib/econ";
 
@@ -44,21 +35,11 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
     onFiltersChange({ ...filters, country: updated.length > 0 ? updated : undefined });
   };
 
-  // Handle category filter toggle
-  const toggleCategory = (category: string) => {
-    const current = filters.category || [];
-    const updated = current.includes(category)
-      ? current.filter(c => c !== category)
-      : [...current, category];
-    
-    onFiltersChange({ ...filters, category: updated.length > 0 ? updated : undefined });
-  };
-
-  // Handle importance filter
-  const handleImportanceChange = (values: string[]) => {
+  // Handle impact filter
+  const handleImpactChange = (values: string[]) => {
     onFiltersChange({ 
       ...filters, 
-      importance: values.length > 0 ? values as ('High' | 'Medium' | 'Low')[] : undefined 
+      impact: values.length > 0 ? values as ('High' | 'Medium' | 'Low' | 'Holiday')[] : undefined 
     });
   };
 
@@ -166,65 +147,26 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
             </div>
           </div>
 
-          {/* Category Filter */}
+          {/* Impact Filter */}
           <div className="space-y-2">
             <label 
               className="text-sm font-medium text-foreground"
-              id="filter-category-label"
+              id="filter-impact-label"
             >
-              Category
-            </label>
-            <div 
-              className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide"
-              role="group"
-              aria-labelledby="filter-category-label"
-              style={{
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-              }}
-            >
-              {ECON_CATEGORIES.map((category) => {
-                const isActive = (filters.category || []).includes(category);
-                return (
-                  <Button
-                    key={category}
-                    variant={isActive ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleCategory(category)}
-                    className="h-8 snap-start flex-shrink-0"
-                    data-testid={`filter-category-${category.toLowerCase()}`}
-                    aria-label={`Filter by ${ECON_CATEGORY_LABELS[category].label}`}
-                    aria-pressed={isActive}
-                    title={ECON_CATEGORY_LABELS[category].description}
-                    tabIndex={0}
-                  >
-                    {ECON_CATEGORY_LABELS[category].label}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Importance Filter */}
-          <div className="space-y-2">
-            <label 
-              className="text-sm font-medium text-foreground"
-              id="filter-importance-label"
-            >
-              Importance Level
+              Impact Level
             </label>
             <ToggleGroup
               type="multiple"
-              value={filters.importance || []}
-              onValueChange={handleImportanceChange}
+              value={filters.impact || []}
+              onValueChange={handleImpactChange}
               className="justify-start flex-wrap gap-2"
-              aria-labelledby="filter-importance-label"
+              aria-labelledby="filter-impact-label"
             >
               <ToggleGroupItem 
                 value="High" 
                 className="h-8"
-                data-testid="filter-importance-high"
-                aria-label="Filter by high importance events"
+                data-testid="filter-impact-high"
+                aria-label="Filter by high impact events"
                 tabIndex={0}
               >
                 High
@@ -232,8 +174,8 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
               <ToggleGroupItem 
                 value="Medium" 
                 className="h-8"
-                data-testid="filter-importance-medium"
-                aria-label="Filter by medium importance events"
+                data-testid="filter-impact-medium"
+                aria-label="Filter by medium impact events"
                 tabIndex={0}
               >
                 Medium
@@ -241,45 +183,22 @@ export function EconFilters({ filters, onFiltersChange, activeFilterCount = 0 }:
               <ToggleGroupItem 
                 value="Low" 
                 className="h-8"
-                data-testid="filter-importance-low"
-                aria-label="Filter by low importance events"
+                data-testid="filter-impact-low"
+                aria-label="Filter by low impact events"
                 tabIndex={0}
               >
                 Low
               </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-
-          {/* Status Filter */}
-          <div className="space-y-2">
-            <label 
-              className="text-sm font-medium text-foreground"
-              id="filter-status-label"
-            >
-              Event Status
-            </label>
-            <Select
-              value={filters.status || "all"}
-              onValueChange={(value) => 
-                onFiltersChange({ 
-                  ...filters, 
-                  status: value === "all" ? undefined : value as "upcoming" | "released"
-                })
-              }
-            >
-              <SelectTrigger 
-                className="w-full md:w-48 h-8"
-                data-testid="filter-status"
-                aria-labelledby="filter-status-label"
+              <ToggleGroupItem 
+                value="Holiday" 
+                className="h-8"
+                data-testid="filter-impact-holiday"
+                aria-label="Filter by holidays"
+                tabIndex={0}
               >
-                <SelectValue placeholder="All Events" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Events</SelectItem>
-                <SelectItem value="upcoming">Upcoming Only</SelectItem>
-                <SelectItem value="released">Released Only</SelectItem>
-              </SelectContent>
-            </Select>
+                Holiday
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           {/* Active Filters Summary */}

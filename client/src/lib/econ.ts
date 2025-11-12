@@ -39,21 +39,17 @@ export interface EconEventFilters {
   to?: string | Date;
   /** Filter by country/region (optional) */
   country?: string[];
-  /** Filter by event category (optional) */
-  category?: string[];
-  /** Filter by importance level (optional) */
-  importance?: string[];
-  /** Filter by status (optional) */
-  status?: "upcoming" | "released";
+  /** Filter by impact level (optional) */
+  impact?: string[];
 }
 
 /**
  * Fetch economic events from Firestore with optional filters
  * 
- * MVP: Reads from Firestore collection 'econEvents_mock'
+ * MVP: Reads from Firestore collection 'econEvents'
  * Future: Will be replaced with API call to /api/econ/events
  * 
- * @param filters - Optional filters for date range, country, category, etc.
+ * @param filters - Optional filters for date range, country, impact, etc.
  * @returns Promise<EconEvent[]> - Array of validated economic events
  * 
  * @example
@@ -67,10 +63,10 @@ export interface EconEventFilters {
  *   to: '2025-01-31'
  * });
  * 
- * // Get US inflation events only
+ * // Get US high impact events only
  * const events = await getEconEventsMock({
  *   country: ['US'],
- *   category: ['Inflation']
+ *   impact: ['High']
  * });
  * ```
  * 
@@ -101,14 +97,14 @@ export async function getEconEventsMock(filters: EconEventFilters = {}): Promise
       : defaultTo;
 
     // Build Firestore query
-    const eventsRef = collection(db, "econEvents_mock");
+    const eventsRef = collection(db, "econEvents");
     
     // Start with date range query (Firestore requires orderBy field to match where clause)
     let q = query(
       eventsRef,
-      where("datetime_utc", ">=", fromDate.toISOString()),
-      where("datetime_utc", "<=", toDate.toISOString()),
-      orderBy("datetime_utc", "asc")
+      where("date", ">=", fromDate.toISOString()),
+      where("date", "<=", toDate.toISOString()),
+      orderBy("date", "asc")
     );
 
     // Execute query
@@ -129,16 +125,8 @@ export async function getEconEventsMock(filters: EconEventFilters = {}): Promise
       events = events.filter(e => filters.country!.includes(e.country));
     }
 
-    if (filters.category && filters.category.length > 0) {
-      events = events.filter(e => filters.category!.includes(e.category));
-    }
-
-    if (filters.importance && filters.importance.length > 0) {
-      events = events.filter(e => filters.importance!.includes(e.importance));
-    }
-
-    if (filters.status) {
-      events = events.filter(e => e.status === filters.status);
+    if (filters.impact && filters.impact.length > 0) {
+      events = events.filter(e => filters.impact!.includes(e.impact));
     }
 
     // Validate each event against Zod schema
@@ -193,110 +181,28 @@ export const ECON_COUNTRY_LABELS: Record<typeof ECON_COUNTRIES[number], string> 
 };
 
 /**
- * All event categories
- * Used for filter dropdowns and category-based styling
- * 
- * These match the Zod schema enum in shared/schema.ts
- */
-export const ECON_CATEGORIES = [
-  "Inflation",
-  "Employment",
-  "GDP",
-  "Rates",
-  "Earnings",
-  "Other",
-] as const;
-
-/**
- * Human-readable category labels with descriptions
- */
-export const ECON_CATEGORY_LABELS: Record<typeof ECON_CATEGORIES[number], { label: string; description: string }> = {
-  Inflation: {
-    label: "Inflation",
-    description: "CPI, PPI, PCE price indices",
-  },
-  Employment: {
-    label: "Employment",
-    description: "NFP, Jobless Claims, Unemployment Rate",
-  },
-  GDP: {
-    label: "GDP",
-    description: "GDP Growth, GDP Deflator",
-  },
-  Rates: {
-    label: "Interest Rates",
-    description: "FOMC, ECB, BoE rate decisions",
-  },
-  Earnings: {
-    label: "Earnings",
-    description: "Crypto company earnings reports",
-  },
-  Other: {
-    label: "Other",
-    description: "PMI, Retail Sales, Regulatory events",
-  },
-};
-
-/**
- * Event importance levels
+ * Event impact levels
  * Used for filter toggles and badge styling
  * 
  * These match the Zod schema enum in shared/schema.ts
  */
-export const ECON_IMPORTANCE_LEVELS = [
+export const ECON_IMPACT_LEVELS = [
   "High",
   "Medium",
   "Low",
+  "Holiday",
 ] as const;
 
 /**
- * Importance level colors for badge styling
+ * Impact level colors for badge styling
  */
-export const ECON_IMPORTANCE_COLORS: Record<typeof ECON_IMPORTANCE_LEVELS[number], string> = {
+export const ECON_IMPACT_COLORS: Record<typeof ECON_IMPACT_LEVELS[number], string> = {
   High: "destructive",      // Red/critical (uses shadcn destructive variant)
   Medium: "default",        // Gold/primary (uses shadcn default variant)
   Low: "secondary",         // Gray/muted (uses shadcn secondary variant)
+  Holiday: "outline",       // Outline variant for holidays
 };
 
-/**
- * Get color class for impact score badge
- * Impact scores range from 0-100
- * 
- * @param score - Impact score (0-100)
- * @returns Tailwind color classes for background and text
- */
-export function getImpactScoreColor(score: number): string {
-  if (score >= 80) {
-    return "bg-red-900/50 text-red-300 border-red-800"; // Critical impact
-  } else if (score >= 60) {
-    return "bg-orange-900/50 text-orange-300 border-orange-800"; // High impact
-  } else if (score >= 40) {
-    return "bg-yellow-900/50 text-yellow-300 border-yellow-800"; // Moderate impact
-  } else if (score >= 20) {
-    return "bg-blue-900/50 text-blue-300 border-blue-800"; // Low impact
-  } else {
-    return "bg-muted text-muted-foreground border-border"; // Minimal impact
-  }
-}
-
-/**
- * Get color class for confidence badge
- * Confidence ranges from 0-100%
- * 
- * @param confidence - Confidence percentage (0-100)
- * @returns Tailwind color classes for background and text
- */
-export function getConfidenceColor(confidence: number): string {
-  if (confidence >= 85) {
-    return "bg-primary/20 text-primary border-primary/40"; // High confidence (gold)
-  } else if (confidence >= 70) {
-    return "bg-primary/10 text-primary/80 border-primary/30"; // Medium-high confidence
-  } else if (confidence >= 50) {
-    return "bg-muted text-muted-foreground border-border"; // Medium confidence
-  } else {
-    return "bg-destructive/10 text-destructive border-destructive/30"; // Low confidence
-  }
-}
 
 /**
  * Get country flag emoji

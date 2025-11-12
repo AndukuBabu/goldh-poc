@@ -65,11 +65,11 @@ export function DayCell({
   // Performance: Memoize sorted events with stable deps
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => {
-      const importanceOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
-      const importanceDiff = importanceOrder[a.importance] - importanceOrder[b.importance];
-      if (importanceDiff !== 0) return importanceDiff;
+      const impactOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2, Holiday: 3 };
+      const impactDiff = impactOrder[a.impact] - impactOrder[b.impact];
+      if (impactDiff !== 0) return impactDiff;
       
-      return new Date(a.datetime_utc).getTime() - new Date(b.datetime_utc).getTime();
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
   }, [events]);
 
@@ -79,7 +79,7 @@ export function DayCell({
 
   // Build accessible label
   const eventSummary = visibleEvents.length > 0
-    ? visibleEvents.map(e => `${e.importance} importance: ${e.title}`).join(', ')
+    ? visibleEvents.map(e => `${e.impact} impact: ${e.title}`).join(', ')
     : 'No events';
   
   const ariaLabel = `${toLocalTooltip(dateISO)}, ${events.length} event${events.length !== 1 ? 's' : ''}. ${eventSummary}. ${remainingCount > 0 ? `${remainingCount} more event${remainingCount !== 1 ? 's' : ''}.` : ''} Press Enter to view details.`;

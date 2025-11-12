@@ -34,14 +34,14 @@ export function EventPopover({
     return <>{children}</>;
   }
 
-  // Sort events by time, then importance
+  // Sort events by time, then impact
   const sortedEvents = [...events].sort((a, b) => {
-    const timeA = new Date(a.datetime_utc).getTime();
-    const timeB = new Date(b.datetime_utc).getTime();
+    const timeA = new Date(a.date).getTime();
+    const timeB = new Date(b.date).getTime();
     if (timeA !== timeB) return timeA - timeB;
     
-    const importanceOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
-    return importanceOrder[a.importance] - importanceOrder[b.importance];
+    const impactOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2, Holiday: 3 };
+    return impactOrder[a.impact] - impactOrder[b.impact];
   });
 
   return (
@@ -92,16 +92,17 @@ export function EventPopover({
 }
 
 function EventPopoverItem({ event }: { event: EconEvent }) {
-  const importanceConfig: Record<string, {
+  const impactConfig: Record<string, {
     icon: React.ComponentType<any>;
     color: string;
   }> = {
     High: { icon: AlertTriangle, color: 'text-red-500' },
     Medium: { icon: Info, color: 'text-orange-500' },
     Low: { icon: Circle, color: 'text-yellow-500' },
+    Holiday: { icon: Circle, color: 'text-blue-500' },
   };
 
-  const config = importanceConfig[event.importance];
+  const config = impactConfig[event.impact] || impactConfig.Low;
   const Icon = config.icon;
 
   return (
@@ -109,7 +110,7 @@ function EventPopoverItem({ event }: { event: EconEvent }) {
       {/* Time & Title */}
       <div className="flex items-start gap-2 mb-2">
         <span className="text-xs font-mono text-muted-foreground mt-0.5">
-          {formatTimeUTC(event.datetime_utc)}
+          {formatTimeUTC(event.date)}
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -124,46 +125,23 @@ function EventPopoverItem({ event }: { event: EconEvent }) {
       {/* Badges */}
       <div className="flex items-center gap-2 mb-2 flex-wrap">
         <Badge variant="outline" className="text-xs">
-          {event.importance}
-        </Badge>
-        <Badge variant="secondary" className="text-xs">
-          Impact: {event.impactScore}
-        </Badge>
-        <Badge variant="secondary" className="text-xs">
-          Conf: {event.confidence}%
+          {event.impact}
         </Badge>
       </div>
 
-      {/* Data (Previous / Forecast / Actual) */}
-      {(event.previous !== null || event.forecast !== null || event.actual !== null) && (
-        <div className="grid grid-cols-3 gap-2 text-xs">
+      {/* Data (Previous / Forecast) */}
+      {(event.previous || event.forecast) && (
+        <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
             <div className="text-muted-foreground">Prev</div>
             <div className="font-mono text-foreground">
-              {event.previous ?? '-'}
+              {event.previous || '-'}
             </div>
           </div>
           <div>
             <div className="text-muted-foreground">Fcst</div>
             <div className="font-mono text-foreground">
-              {event.forecast ?? '-'}
-            </div>
-          </div>
-          <div>
-            <div className="text-muted-foreground">Actual</div>
-            <div className={cn(
-              "font-mono font-semibold",
-              event.actual !== null && event.forecast !== null
-                ? event.actual > event.forecast
-                  ? "text-green-500"
-                  : event.actual < event.forecast
-                  ? "text-red-500"
-                  : "text-foreground"
-                : "text-muted-foreground"
-            )}>
-              {event.status === 'released' 
-                ? (event.actual ?? '-') 
-                : 'Pending'}
+              {event.forecast || '-'}
             </div>
           </div>
         </div>
