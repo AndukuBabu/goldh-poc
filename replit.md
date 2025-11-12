@@ -28,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 - **Color Scheme**: Black and gold for a premium, luxurious feel.
 - **Typography**: Inter for body, JetBrains Mono for monospace.
 - **Component Design**: Interactive elements with hover, gold glows, shadows. No emojis - all icons use lucide-react library.
-- **Feature Pages**: Dedicated full-screen pages for Guru & Insider Digest, Universal Market Financials, Economic Calendar.
+- **Feature Pages**: Dedicated full-screen pages for Guru Talk (formerly Guru & Insider Digest), GOLDH Pulse (formerly Universal Market Financials), Market Events (formerly Economic Calendar).
 - **Dashboard**: Asset-first grid layout showing tracked crypto assets with live prices, 24h changes, and news counts. Filters out assets with unavailable prices while preserving error states for failed queries.
 - **Asset Detail Pages**: Dynamic `/asset/:symbol` routes providing unified views of price data, news articles, and economic events.
 - **Logo**: SVG format for crisp rendering at all sizes. Responsive sizing: 400px (mobile) → 480px (tablet) → 560px (desktop).
@@ -36,7 +36,7 @@ Preferred communication style: Simple, everyday language.
 - **Landing Page Components**:
   - **NewsScroller**: Horizontal scrolling ticker displaying latest crypto news from Guru & Insider Digest. Uses CSS animation for smooth infinite scroll. Fetches from `/api/guru-digest` endpoint with loading states. Shows top 10 articles with gradient fades on edges.
   - **PreviewWidgets**: Three-card preview section showing live data to all users (authentication-free). Cards include: Guru Digest (latest 3 news articles), Market Financials (top 4 assets with prices), and Economic Calendar (3 upcoming events). All cards display "View All" navigation links to full feature pages.
-  - **ComingSoon**: Feature showcase section with 9 upcoming features (Whale Tracker, Smart Token Screener, Risk Score Engine, Token Deep Dives, AI Smart Alerts, Smart Contract Scanner, Airdrop Finder, Pre-Token Detection, Portfolio Center) in responsive grid layout with hover effects.
+  - **ComingSoon**: Feature showcase section with 9 upcoming features (Street Score, Whale Watch, Yield Finder, Arbitrage Scanner, Copy Trade, Robo Trading Hub, Launch Radar, Reward Hunter, Congressional Trading Tracker) in responsive grid layout with hover effects.
   - **FOMABox**: Three promotional cards with consistent gold premium styling promoting GOLDH Token launch, Premium Access, and Early User benefits.
 - **Welcome Experience**:
   - **WelcomeAnimation**: First-visit overlay displaying "Congratulations, You've found Golden Horizon!!" with gold gradient text and blur/fade-out animation. Shows every time user visits landing page ("/"), auto-dismisses after 3.5 seconds. Only displays on landing page, not on other routes.
@@ -57,7 +57,7 @@ Preferred communication style: Simple, everyday language.
 - **Admin System**: 
   - **Access Control**: Managed via `ADMIN_EMAILS` environment variable (comma-separated list of admin email addresses)
   - **Auto-Grant**: On signup/signin, if user's email matches any in ADMIN_EMAILS, the `isAdmin` database field is automatically set to true
-  - **Admin Routes**: `/admin/guru-digest` - Management dashboard for Guru & Insider Digest articles
+  - **Admin Routes**: `/admin/guru-digest` - Management dashboard for Guru Talk articles
   - **Security**: Non-admin users accessing admin routes receive 404 responses (not 403) to completely hide existence of admin features
   - **Middleware**: `requireAdmin` checks both authentication and admin status before allowing access
   - **UI Elements**: Admin navigation link (gold-styled with Shield icon) only visible in header when `user.isAdmin === true`
@@ -85,9 +85,9 @@ Preferred communication style: Simple, everyday language.
 - **Asset Tagging System**: Intelligent article tagging during RSS ingest using deterministic regex extraction. Canonical symbols (BTC, ETH, etc.) validated against whitelist and stored in Firestore for efficient filtering.
 - **Asset API Endpoint**: `/api/asset/:symbol` provides aggregated data with 90-second caching, degraded flags for each data source, and Zod schema validation.
 - **Real-time Market Intelligence**: Displays crypto macroeconomic events and market data.
-- **Guru & Insider Digest**: Real-time crypto news from CoinDesk and Cointelegraph RSS feeds. Automated scheduler updates every 2.5 hours (10x per day) for fresh content. Articles auto-tagged with asset symbols during ingest. Manual CLI script also available. Stores articles in Firestore with 300-character excerpts and asset tags.
-- **Universal Market Financials (UMF)**: Unified dashboard with live market snapshots (Top-20 crypto, indices, DXY), top movers, morning intelligence briefs, and market alerts. Features asset tiles, two-column responsive layout, and severity-based alert cards. Automated scheduler updates every 60 minutes via CoinGecko API. Data cached in Firestore for asset aggregation.
-- **Economic Calendar**: Full-featured calendar with filtering and performance targets. Currently uses mock data.
+- **Guru Talk** (formerly Guru & Insider Digest): Real-time crypto news from CoinDesk and Cointelegraph RSS feeds. Automated scheduler updates every 2.5 hours (10x per day) for fresh content. Articles auto-tagged with asset symbols during ingest. Manual CLI script also available. Stores articles in Firestore with 300-character excerpts and asset tags.
+- **GOLDH Pulse** (formerly Universal Market Financials/UMF): Unified dashboard with live market snapshots (Top-20 crypto, indices, DXY), top movers, morning intelligence briefs, and market alerts. Features asset tiles, two-column responsive layout, and severity-based alert cards. Automated scheduler updates every 60 minutes via CoinGecko API. Data cached in Firestore for asset aggregation.
+- **Market Events** (formerly Economic Calendar): Full-featured calendar with filtering and performance targets. Currently uses mock data.
 - **Educational Resources**: Static Q&A content on cryptocurrency topics.
 - **Premium Access**: Access to premium features via GOLDH tokens or subscription.
 
