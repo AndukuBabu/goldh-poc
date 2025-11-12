@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { TrendingUp, TrendingDown, Clock, BarChart3, X, ArrowUp, ArrowDown, Circle } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, X, ArrowUp, ArrowDown, Circle } from "lucide-react";
 import type { UmfMover } from "@shared/schema";
 
 interface UmfTopMoversProps {
@@ -415,16 +415,6 @@ function MoverDetailSheet({ mover, open, onOpenChange }: MoverDetailSheetProps) 
                 </div>
                 <div>
                   <span className="font-medium">Local:</span> {lastUpdateLocal}
-                </div>
-              </div>
-            </div>
-
-            {/* Sparkline Placeholder */}
-            <div className="pt-4">
-              <div className="h-32 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-40" aria-label="Chart icon" />
-                  <p className="text-xs">Price chart coming soon</p>
                 </div>
               </div>
             </div>
