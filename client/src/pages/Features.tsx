@@ -7,23 +7,23 @@ import { useLocation } from "wouter";
 const features = [
   {
     icon: Calendar,
-    title: "Economic Calendar",
-    shortDescription: "Global crypto-relevant macroeconomic events delivered in real time — with intelligent summaries, live countdowns, and impact signals powered by AI.",
-    fullDescription: "Global crypto-relevant macroeconomic events delivered in real time — with intelligent summaries, live countdowns, and impact signals powered by AI. From Fed decisions to inflation releases, never get blindsided again.",
+    title: "Market Events",
+    shortDescription: "Know what's coming — the events that move markets and your money.",
+    fullDescription: "Tracks key economic, policy and crypto events with AI forecasts on volatility and impact.",
     route: "/features/calendar"
   },
   {
     icon: BookOpen,
-    title: "Guru & Insider Digest",
-    shortDescription: "Whale alerts. Smart wallet movements. Institutional fund flows. This isn't your average crypto news feed — this is the insider edge.",
-    fullDescription: "Whale alerts. Smart wallet movements. Institutional fund flows. This isn't your average crypto news feed — this is the insider edge. Curated with machine learning and driven by real blockchain data.",
+    title: "Guru Talk",
+    shortDescription: "Hear what the experts and insiders are saying.",
+    fullDescription: "AI-curated insights from top investors, funds, and analysts, summarised into a daily brief — the why behind the what.",
     route: "/features/guru"
   },
   {
     icon: TrendingUp,
-    title: "Universal Market Financials",
-    shortDescription: "One page to track everything. Token prices, market caps, daily volumes, and trend summaries across the top 100 assets.",
-    fullDescription: "One page to track everything. Token prices, market caps, daily volumes, and trend summaries across the top 100 assets. Built for context-first investing and supported by beautiful, responsive UX.",
+    title: "GOLDH Pulse",
+    shortDescription: "See the full market picture at a glance. See everything, understand instantly, and act confidently.",
+    fullDescription: "Your single source of truth — a unified dashboard showing real-time updates for crypto, stocks, commodities, and forex.",
     route: "/features/umf"
   }
 ];

@@ -143,17 +143,15 @@ export default function FeaturesCalendar() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-foreground">
-                  Economic Calendar
+                  Market Events
                 </h1>
                 <p className="text-muted-foreground text-lg mt-2">
-                  Never miss a market-moving event.
+                  Know what's coming — the events that move markets and your money.
                 </p>
               </div>
             </div>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-4xl">
-              Track global macroeconomic events that impact crypto markets. From Fed rate decisions to employment reports, 
-              stay informed with upcoming releases, forecasts, and live data updates. Filter by region, category, and importance 
-              to focus on what matters most to your portfolio.
+              Tracks key economic, policy and crypto events with AI forecasts on volatility and impact.
             </p>
           </div>
 

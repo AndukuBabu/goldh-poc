@@ -32,14 +32,14 @@ export default function FeaturesGuru() {
                 <BookOpen className="w-8 h-8 text-primary" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-foreground">Guru & Insider Digest</h1>
+                <h1 className="text-4xl font-bold text-foreground">Guru Talk</h1>
                 <p className="text-muted-foreground text-lg mt-2">
-                  Whale alerts. Smart wallet movements. Institutional fund flows.
+                  Hear what the experts and insiders are saying.
                 </p>
               </div>
             </div>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-4xl">
-              This isn't your average crypto news feed — this is the insider edge. Curated with machine learning and driven by real blockchain data, get instant alerts on whale movements, institutional purchases, and smart money activity across all major chains.
+              AI-curated insights from top investors, funds, and analysts, summarised into a daily brief — the why behind the what.
             </p>
           </div>
 

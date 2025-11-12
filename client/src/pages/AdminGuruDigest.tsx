@@ -127,7 +127,7 @@ export default function AdminGuruDigest() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-[#C7AE6A] mb-2">Admin Dashboard</h1>
-            <p className="text-gray-400">Guru & Insider Digest Management</p>
+            <p className="text-gray-400">Guru Talk Management</p>
           </div>
           <Button
             onClick={handleRefresh}
@@ -153,7 +153,7 @@ export default function AdminGuruDigest() {
                 Add New Article
               </CardTitle>
               <CardDescription className="text-gray-400">
-                Manually add a custom article to Guru & Insider Digest
+                Manually add a custom article to Guru Talk
               </CardDescription>
             </CardHeader>
             <CardContent>

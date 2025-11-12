@@ -60,15 +60,15 @@ export function PreviewWidgets() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
-          {/* Guru & Insider Digest Widget */}
+          {/* Guru Talk Widget */}
           <Card className="p-4 sm:p-6 relative overflow-hidden" data-testid="widget-guru-digest">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <TrendingUp className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Guru Digest</h3>
-                <p className="text-xs text-muted-foreground">Latest crypto news</p>
+                <h3 className="text-lg font-semibold text-foreground">Guru Talk</h3>
+                <p className="text-xs text-muted-foreground">Expert insights</p>
               </div>
             </div>
 
@@ -91,15 +91,15 @@ export function PreviewWidgets() {
             </Link>
           </Card>
 
-          {/* Universal Market Financials Widget */}
+          {/* GOLDH Pulse Widget */}
           <Card className="p-4 sm:p-6 relative overflow-hidden" data-testid="widget-umf">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <DollarSign className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Market Financials</h3>
-                <p className="text-xs text-muted-foreground">Live market data</p>
+                <h3 className="text-lg font-semibold text-foreground">GOLDH Pulse</h3>
+                <p className="text-xs text-muted-foreground">Market snapshot</p>
               </div>
             </div>
 
@@ -133,14 +133,14 @@ export function PreviewWidgets() {
             </Link>
           </Card>
 
-          {/* Economic Calendar Widget */}
+          {/* Market Events Widget */}
           <Card className="p-4 sm:p-6 relative overflow-hidden" data-testid="widget-calendar">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <Calendar className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Economic Calendar</h3>
+                <h3 className="text-lg font-semibold text-foreground">Market Events</h3>
                 <p className="text-xs text-muted-foreground">Upcoming events</p>
               </div>
             </div>

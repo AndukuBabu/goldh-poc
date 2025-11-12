@@ -68,7 +68,7 @@ export default function FeaturesUMF() {
       <Header />
       <SignInPrompt />
       
-      <main className="pt-24 pb-16 px-6" role="main" aria-label="Universal Market Financials page">
+      <main className="pt-24 pb-16 px-6" role="main" aria-label="GOLDH Pulse page">
         <div className="container mx-auto max-w-7xl">
           {/* Back Button */}
           <Button 
@@ -97,7 +97,7 @@ export default function FeaturesUMF() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="text-4xl font-bold text-foreground">
-                    Universal Market Financials
+                    GOLDH Pulse
                   </h1>
                   
                   {/* Data Source Badge */}
@@ -163,7 +163,7 @@ export default function FeaturesUMF() {
                   )}
                 </div>
                 <p className="text-muted-foreground text-lg mt-2">
-                  Your daily control center for crypto, equities, and market intelligence
+                  See the full market picture at a glance. See everything, understand instantly, and act confidently.
                 </p>
               </div>
             </div>
