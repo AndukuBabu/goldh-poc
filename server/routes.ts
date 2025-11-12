@@ -18,6 +18,45 @@ import { collection, getDocs, query, where, writeBatch, doc } from "firebase/fir
 import { getDb } from "./guru/lib/firebase";
 
 /**
+ * Currency Code to Country Code Mapper
+ * 
+ * Converts currency codes (USD, EUR, JPY, etc.) to country codes (US, EU, JP, etc.)
+ * Used during EC upload to normalize country field for filter compatibility
+ * 
+ * @param currencyCode - Currency code from uploaded JSON (e.g., "USD", "JPY")
+ * @returns Country code (e.g., "US", "JP")
+ */
+function currencyToCountryCode(currencyCode: string): string {
+  const mapping: Record<string, string> = {
+    'USD': 'US',
+    'EUR': 'EU',
+    'GBP': 'UK',
+    'JPY': 'JP',
+    'CNY': 'CN',
+    'CNH': 'CN',
+    'AUD': 'AU',
+    'CAD': 'CA',
+    'CHF': 'CH',
+    'SGD': 'SG',
+    'NZD': 'NZ',
+    'HKD': 'HK',
+    'KRW': 'KR',
+    'MXN': 'MX',
+    'BRL': 'BR',
+    'INR': 'IN',
+    'RUB': 'RU',
+    'ZAR': 'ZA',
+    'TRY': 'TR',
+    'SEK': 'SE',
+    'NOK': 'NO',
+    'DKK': 'DK',
+    'PLN': 'PL',
+  };
+  
+  return mapping[currencyCode.toUpperCase()] || currencyCode;
+}
+
+/**
  * Auto-Grant Admin Access
  * 
  * Checks if user email is in ADMIN_EMAILS environment variable.
@@ -922,6 +961,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Remove id field if present in JSON (we'll use Firestore auto-generated IDs)
           const { id, ...eventData } = event as any;
+          
+          // Transform currency code to country code for filter compatibility
+          if (eventData.country) {
+            eventData.country = currencyToCountryCode(eventData.country);
+          }
+          
           return econEventSchema.omit({ id: true }).parse(eventData);
         } catch (error) {
           console.error(`[Admin] Invalid event at index ${index}:`, error);

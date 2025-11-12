@@ -157,7 +157,8 @@ export default function AdminGuruDigest() {
       const text = await file.text();
       const events = JSON.parse(text);
 
-      const result = await apiRequest("POST", "/api/admin/econ-events/upload", { events });
+      const response = await apiRequest("POST", "/api/admin/econ-events/upload", { events });
+      const result = await response.json();
       
       setEcFilePreview(null);
       e.target.value = "";
