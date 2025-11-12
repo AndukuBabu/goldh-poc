@@ -120,15 +120,14 @@ function CompactEventCard({ event }: { event: EconEvent }) {
       role="article"
       aria-label={`${event.title}, ${event.impact} impact event from ${event.country}`}
     >
-      {/* Header: Country Flag + Title */}
+      {/* Header: Country Code + Title */}
       <div className="flex items-start gap-2 mb-2">
         <span 
-          className="text-lg flex-shrink-0"
-          role="img"
+          className="text-xs font-mono font-semibold text-primary px-1.5 py-0.5 bg-primary/10 rounded flex-shrink-0"
           aria-label={`Country: ${event.country}`}
           title={event.country}
         >
-          {getCountryFlag(event.country)}
+          {event.country}
         </span>
         <div className="flex-1 min-w-0">
           <h4 className="font-semibold text-sm text-foreground leading-tight">

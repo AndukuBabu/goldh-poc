@@ -43,14 +43,13 @@ export function EconRow({ event }: EconRowProps) {
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            {/* Country Flag */}
+            {/* Country Code */}
             <span 
-              className="text-xl"
-              role="img"
+              className="text-xs font-mono font-semibold text-primary px-1.5 py-0.5 bg-primary/10 rounded"
               aria-label={`Country: ${event.country}`}
               title={event.country}
             >
-              {getCountryFlag(event.country)}
+              {event.country}
             </span>
             
             {/* Event Title */}
