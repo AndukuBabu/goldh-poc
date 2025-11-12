@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Activity, 
   Brain, 
@@ -13,49 +13,49 @@ import {
 
 const comingSoonFeatures = [
   {
+    icon: BarChart3,
+    title: "Street Score",
+    description: "Aggregates global Buy/Sell/Hold ratings into one unified confidence score."
+  },
+  {
     icon: Activity,
-    title: "Whale Tracker",
-    description: "See exactly what the top wallets and crypto whales are doing in real time. Track movements, large token buys, and high-impact shifts across chains."
+    title: "Whale Watch",
+    description: "Visualises wallet activity, whale movements, and network health to reveal true market momentum."
   },
   {
     icon: Brain,
-    title: "Smart Token Screener",
-    description: "Get intelligent filters and alerts for finding high-potential tokens based on on-chain, fundamental, and sentiment data."
-  },
-  {
-    icon: Shield,
-    title: "Risk Score Engine",
-    description: "Instantly understand how safe or risky a yield farm or token is with our AI-driven score system, designed to prevent rug pulls and scams."
-  },
-  {
-    icon: FileText,
-    title: "Token Deep Dives",
-    description: "Tap into powerful summaries of individual tokens, covering tokenomics, roadmaps, team info, and smart contract audits."
-  },
-  {
-    icon: Bell,
-    title: "AI Smart Alerts",
-    description: "Set advanced alerts based on APY drops, token price swings, whale moves, or changes in risk score — not just price."
-  },
-  {
-    icon: Code,
-    title: "Smart Contract Scanner",
-    description: "Understand what a smart contract is really doing before you interact with it. Our scanner gives an easy-to-read breakdown."
-  },
-  {
-    icon: Gift,
-    title: "Airdrop Finder",
-    description: "Discover upcoming and hidden airdrops you may qualify for — based on wallet activity and social engagement."
+    title: "Yield Finder",
+    description: "Finds and scores the safest, highest-yielding staking or DeFi opportunities by risk and reliability."
   },
   {
     icon: Zap,
-    title: "Pre-Token Detection",
-    description: "Be the first to know about new tokens before they hit major aggregators. Get in early, responsibly."
+    title: "Arbitrage Scanner",
+    description: "Scans global exchanges for price differences on the same asset and alerts in real time."
   },
   {
-    icon: BarChart3,
-    title: "Portfolio Center",
-    description: "Track your on-chain assets across wallets, chains, and tokens in one elegant dashboard — no extra tools needed."
+    icon: FileText,
+    title: "Copy Trade",
+    description: "Lets users mirror top trader portfolios automatically, adjusted for risk."
+  },
+  {
+    icon: Code,
+    title: "Robo Trading Hub",
+    description: "Deploy custom bots for DCA, stop-loss, and trend strategies that run automatically."
+  },
+  {
+    icon: Gift,
+    title: "Launch Radar",
+    description: "Tracks upcoming token launches and listings across exchanges. Captures IPO–ICO–IDO breadth."
+  },
+  {
+    icon: Bell,
+    title: "Reward Hunter",
+    description: "Aggregates verified airdrops and retroactive rewards ranked by credibility and expiry."
+  },
+  {
+    icon: Shield,
+    title: "Congressional Trading Tracker",
+    description: "Monitors government and regulatory actions impacting digital assets and investment flows."
   }
 ];
 
