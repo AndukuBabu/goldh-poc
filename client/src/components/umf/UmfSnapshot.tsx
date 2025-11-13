@@ -1,11 +1,8 @@
 /**
  * UMF Market Snapshot Component
  * 
- * Displays quick stats for key assets:
- * - BTC, ETH, SOL (top crypto)
- * - SPX, NDX (major indices)
- * - DXY (US Dollar)
- * - GOLD, OIL (commodities)
+ * Displays top 100 cryptocurrencies by market cap with expand/collapse functionality.
+ * Shows 25 coins initially, with a button to expand to show all 100.
  * 
  * Each tile shows: symbol, price, 24h %, sparkline placeholder
  * Enhanced with hover elevation and detailed tooltips with timestamps
@@ -16,11 +13,12 @@
  * @see client/src/hooks/useUmf.ts - useUmfSnapshot() hook
  */
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TrendingUp, TrendingDown, Minus, BarChart3, Clock, ArrowUp, ArrowDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, BarChart3, Clock, ArrowUp, ArrowDown, ChevronDown, ChevronUp } from "lucide-react";
 import type { UmfAsset } from "@shared/schema";
 
 interface UmfSnapshotProps {
@@ -29,46 +27,32 @@ interface UmfSnapshotProps {
 }
 
 /**
- * Priority assets to display in snapshot grid
- * Updated to show top cryptocurrencies fetched from CoinGecko
- * Note: Traditional assets (SPX, NDX, DXY, GOLD, WTI) require different data providers
+ * Initial number of assets to display before expanding
  */
-const PRIORITY_SYMBOLS = [
-  'BTC', 'ETH', 'SOL', 'BNB', 'ADA', 'MATIC', 
-  'TRX', 'LINK', 'TON', 'DOGE', 'DOT', 'LTC',
-  'NEAR', 'APT', 'AVAX'
-];
+const INITIAL_DISPLAY_COUNT = 25;
 
 export function UmfSnapshot({ assets, className }: UmfSnapshotProps) {
-  // Filter to priority assets (if specified), otherwise show all
-  const displayAssets = PRIORITY_SYMBOLS.length > 0
-    ? assets.filter(asset => PRIORITY_SYMBOLS.includes(asset.symbol))
-    : assets;
+  // State for expand/collapse
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Sort by priority order (or market cap if not in priority list)
-  const sortedAssets = displayAssets.sort((a, b) => {
-    const aIndex = PRIORITY_SYMBOLS.indexOf(a.symbol);
-    const bIndex = PRIORITY_SYMBOLS.indexOf(b.symbol);
-    
-    // Both in priority list - sort by priority
-    if (aIndex !== -1 && bIndex !== -1) {
-      return aIndex - bIndex;
-    }
-    
-    // Only one in priority list - prioritized one comes first
-    if (aIndex !== -1) return -1;
-    if (bIndex !== -1) return 1;
-    
-    // Neither in priority list - sort by market cap (descending)
-    return (b.marketCap || 0) - (a.marketCap || 0);
-  });
+  // Sort all assets by market cap (descending)
+  const sortedAssets = useMemo(() => {
+    return [...assets].sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0));
+  }, [assets]);
+
+  // Slice assets based on expanded state
+  const displayAssets = useMemo(() => {
+    return isExpanded ? sortedAssets : sortedAssets.slice(0, INITIAL_DISPLAY_COUNT);
+  }, [sortedAssets, isExpanded]);
+
+  const hasMoreAssets = sortedAssets.length > INITIAL_DISPLAY_COUNT;
 
   return (
     <Card 
       className={`bg-[#0f0f0f] border-[#2a2a2a] shadow-lg ${className || ''}`}
       data-testid="umf-snapshot"
       role="region"
-      aria-label="Market snapshot section showing key asset prices"
+      aria-label="Market snapshot section showing top cryptocurrency prices"
     >
       <CardHeader>
         <CardTitle className="text-lg text-foreground">
@@ -80,9 +64,9 @@ export function UmfSnapshot({ assets, className }: UmfSnapshotProps) {
         <div 
           className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3"
           role="list"
-          aria-label="Key asset prices and changes"
+          aria-label="Top cryptocurrency prices and 24h changes"
         >
-          {sortedAssets.map((asset) => (
+          {displayAssets.map((asset) => (
             <AssetTile key={asset.id} asset={asset} />
           ))}
         </div>
@@ -93,6 +77,31 @@ export function UmfSnapshot({ assets, className }: UmfSnapshotProps) {
           </div>
         )}
       </CardContent>
+
+      {hasMoreAssets && (
+        <CardFooter className="flex justify-end pt-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-[#C7AE6A] hover:text-[#d5c28f]"
+            data-testid="button-expand-snapshot"
+            aria-label={isExpanded ? `Show fewer assets (${INITIAL_DISPLAY_COUNT} of ${sortedAssets.length})` : `Show all ${sortedAssets.length} assets`}
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="w-4 h-4 mr-2" aria-hidden="true" />
+                <span>Show fewer</span>
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4 mr-2" aria-hidden="true" />
+                <span>Show all {sortedAssets.length} assets</span>
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }
