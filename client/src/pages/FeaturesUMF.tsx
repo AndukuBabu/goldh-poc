@@ -2,11 +2,11 @@
  * UMF (Universal Market Financials) Feature Page
  * 
  * Full-screen feature page displaying:
- * - Market snapshot (Top-20 crypto + indices + forex + commodities)
+ * - Market snapshot (Top 100 cryptocurrencies by market cap)
  * - Top movers (gainers/losers)
  * 
- * MVP: Uses Firestore mock data
- * Future: Will consume /api/umf/* endpoints
+ * Data source: Live CoinGecko API + Firestore cache
+ * Updates: Every 60 minutes via automated scheduler
  * 
  * @see docs/UMF-UI-MVP.md for full specification
  */
@@ -162,8 +162,7 @@ export default function FeaturesUMF() {
             
             {/* Subcopy */}
             <p className="text-base text-muted-foreground leading-relaxed max-w-4xl">
-              Track top-20 cryptocurrencies, major indices (S&P 500, NASDAQ), forex (DXY), 
-              and commodities (Gold, Oil) in one unified dashboard.
+              Track the top 100 cryptocurrencies by market cap in real-time with live prices, 24-hour changes, and comprehensive market data.
             </p>
           </header>
 
