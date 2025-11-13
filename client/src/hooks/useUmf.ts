@@ -7,8 +7,6 @@
  * Hooks:
  * - useUmfSnapshot() - Market snapshot with all tracked assets
  * - useUmfMovers() - Top gainers and losers
- * - useUmfBrief() - Daily Morning Intelligence brief
- * - useUmfAlerts() - Active market alerts
  * 
  * Derived Selectors:
  * - useCryptoByMarketCap() - Top crypto sorted by market cap
@@ -24,12 +22,8 @@ import { useQuery } from "@tanstack/react-query";
 import { 
   getUmfSnapshotLatest,
   getUmfMovers as getUmfMoversMock,
-  getUmfBriefToday,
-  getUmfAlerts,
   type UmfSnapshot,
   type UmfMover,
-  type UmfBrief,
-  type UmfAlert,
 } from "@/lib/umf";
 import { getUmfSnapshotLive } from "@/lib/umf_firestore";
 import type { UmfAsset, UmfSnapshotLive, UmfAssetLive } from "@shared/schema";
@@ -346,94 +340,6 @@ export function useUmfMovers() {
         sourceUi,
       };
     },
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 60 * 1000, // Refetch every minute
-    retry: 2,
-  });
-}
-
-/**
- * Hook: Fetch Today's Morning Intelligence Brief
- * 
- * Fetches the AI-generated daily market brief with headline and key insights.
- * This data changes once per day, so longer cache times are appropriate.
- * 
- * Cache Strategy:
- * - staleTime: 5 minutes (briefs update once daily)
- * - refetchInterval: 15 minutes
- * - cacheTime: 30 minutes
- * 
- * @returns TanStack Query result with UmfBrief data
- * 
- * @example
- * ```tsx
- * function MorningIntelligence() {
- *   const { data: brief, isLoading } = useUmfBrief();
- *   
- *   if (isLoading) return <Skeleton />;
- *   
- *   return (
- *     <Card>
- *       <h3>{brief.headline}</h3>
- *       <ul>
- *         {brief.bullets.map((bullet, i) => (
- *           <li key={i}>{bullet}</li>
- *         ))}
- *       </ul>
- *     </Card>
- *   );
- * }
- * ```
- */
-export function useUmfBrief() {
-  return useQuery<UmfBrief, Error>({
-    queryKey: ['/features/umf/brief'],
-    queryFn: getUmfBriefToday,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-    refetchInterval: 15 * 60 * 1000, // Refetch every 15 minutes
-    retry: 2,
-  });
-}
-
-/**
- * Hook: Fetch Active Market Alerts
- * 
- * Fetches up to 3 active market alerts for significant price movements,
- * volatility spikes, or sentiment shifts.
- * 
- * Cache Strategy:
- * - staleTime: 30 seconds
- * - refetchInterval: 60 seconds
- * - cacheTime: 5 minutes
- * 
- * @returns TanStack Query result with UmfAlert[] data
- * 
- * @example
- * ```tsx
- * function AlertsWidget() {
- *   const { data: alerts = [] } = useUmfAlerts();
- *   
- *   if (alerts.length === 0) return null;
- *   
- *   return (
- *     <div>
- *       {alerts.map(alert => (
- *         <Alert key={alert.id} severity={alert.severity}>
- *           <h4>{alert.title}</h4>
- *           <p>{alert.body}</p>
- *         </Alert>
- *       ))}
- *     </div>
- *   );
- * }
- * ```
- */
-export function useUmfAlerts() {
-  return useQuery<UmfAlert[], Error>({
-    queryKey: ['/features/umf/alerts'],
-    queryFn: () => getUmfAlerts(3),
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 60 * 1000, // Refetch every minute
