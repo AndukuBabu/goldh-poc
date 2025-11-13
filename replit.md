@@ -75,7 +75,7 @@ Preferred communication style: Simple, everyday language.
 - **Validation**: Zod schemas for client-side and server-side validation.
 - **Error Handling**: Graceful error handling with user-friendly messages for authentication and data operations.
 - **Automated Data Refresh**:
-  - **UMF Scheduler**: Updates every 60 minutes (±15s jitter) via CoinGecko API. Enabled by `UMF_SCHEDULER=1` env var.
+  - **UMF Scheduler**: Fetches top 50 coins by market cap every 60 minutes (±15s jitter) via CoinGecko `/coins/markets` endpoint. Enabled by `UMF_SCHEDULER=1` env var. Uses dynamic market cap ranking (no hardcoded coins). Rate limit guard prevents calls within 55 minutes.
   - **Guru Digest Scheduler**: Updates every 2.5 hours (±30s jitter) via RSS feeds from CoinDesk & Cointelegraph. Enabled by `GURU_SCHEDULER=1` env var. Clears old entries and fetches fresh articles automatically.
   - Both schedulers have rate limit guards and performance logging.
 
@@ -86,7 +86,7 @@ Preferred communication style: Simple, everyday language.
 - **Asset API Endpoint**: `/api/asset/:symbol` provides aggregated data with 90-second caching, degraded flags for each data source, and Zod schema validation.
 - **Real-time Market Intelligence**: Displays crypto macroeconomic events and market data.
 - **Guru Talk** (formerly Guru & Insider Digest): Real-time crypto news from CoinDesk and Cointelegraph RSS feeds. Automated scheduler updates every 2.5 hours (10x per day) for fresh content. Articles auto-tagged with asset symbols during ingest. Manual CLI script also available. Stores articles in Firestore with 300-character excerpts and asset tags.
-- **GOLDH Pulse** (formerly Universal Market Financials/UMF): Unified dashboard with live market snapshots (Top-20 crypto, indices, DXY), top movers, morning intelligence briefs, and market alerts. Features asset tiles, two-column responsive layout, and severity-based alert cards. Automated scheduler updates every 60 minutes via CoinGecko API. Data cached in Firestore for asset aggregation.
+- **GOLDH Pulse** (formerly Universal Market Financials/UMF): Live market data dashboard displaying top 50 cryptocurrencies by market cap. Shows market snapshot and top movers in two-column responsive layout. Automated scheduler fetches top 50 coins dynamically every 60 minutes via CoinGecko API (order=market_cap_desc). Data cached in Firestore with 1-hour TTL. Rankings update automatically as market cap changes - no manual coin list maintenance required.
 - **Market Events** (formerly Economic Calendar): Full-featured economic calendar with event filtering, impact levels (High/Medium/Low/Holiday), and admin-managed data upload. Simplified 6-field schema: title, country, date, impact, forecast, previous. Admin dashboard supports JSON file uploads with automatic 2-month cleanup (preserves recent events while removing old data). Events stored in Firestore `econEvents` collection.
 - **Educational Resources**: Static Q&A content on cryptocurrency topics.
 - **Premium Access**: Access to premium features via GOLDH tokens or subscription.
