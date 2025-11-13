@@ -18,18 +18,33 @@
  * @see docs/UMF-Live-Firestore.md for scheduler architecture
  */
 
-import { fetchMarkets } from './providers/coingecko';
+import { fetchTopCoinsByMarketCap } from './providers/coingecko';
 import { setFresh } from './lib/cache';
 import { writeLiveSnapshot, appendHistorySnapshot, trimHistory } from './lib/firestoreUmf';
 import type { UmfSnapshotLive } from '@shared/schema';
 import {
-  CRYPTO_IDS,
   SCHEDULER_INTERVAL_MS,
   SCHEDULER_JITTER_MS,
   CACHE_TTL_S,
   HISTORY_MAX,
   LOG_PREFIX_SCHEDULER,
 } from './config';
+
+/**
+ * Number of Top Coins to Track
+ * 
+ * Fetches the top N cryptocurrencies by market cap from CoinGecko.
+ * 
+ * Value: 50 coins
+ * 
+ * Rationale:
+ * - Covers all major cryptocurrencies (BTC, ETH, etc.)
+ * - Includes most mid-cap and some small-cap coins
+ * - Automatically updates as market cap rankings change
+ * - Single API call (no pagination needed)
+ * - Fast and performant
+ */
+const TOP_COINS_COUNT = 50;
 
 /**
  * Rate Limit Guard
@@ -86,9 +101,9 @@ async function tick(): Promise<void> {
     
     console.log(`${LOG_PREFIX_SCHEDULER} Starting tick...`);
     
-    // Step 1: Fetch markets from CoinGecko
+    // Step 1: Fetch top coins by market cap from CoinGecko
     const apiKey = process.env.COINGECKO_API_KEY;
-    const result = await fetchMarkets(CRYPTO_IDS, apiKey);
+    const result = await fetchTopCoinsByMarketCap(TOP_COINS_COUNT, apiKey);
     
     // Step 2: Build UmfSnapshotLive
     const snapshot: UmfSnapshotLive = {

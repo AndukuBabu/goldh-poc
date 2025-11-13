@@ -72,10 +72,98 @@ export interface FetchMarketsResult {
 }
 
 /**
- * Fetch Market Data from CoinGecko
+ * Fetch Top Coins by Market Cap from CoinGecko
+ * 
+ * Fetches the top N cryptocurrencies by market cap and transforms
+ * them into the canonical UmfAssetLive schema with Zod validation.
+ * 
+ * This function uses pagination parameters to automatically get the
+ * highest market cap coins without needing to hardcode specific coin IDs.
+ * 
+ * @param topN - Number of top coins to fetch (1-250, default: 50)
+ * @param key - Optional CoinGecko API key for demo tier (better rate limits)
+ * @returns Promise resolving to validated assets array with timestamp
+ * @throws Error if API call fails after retries or validation fails
+ * 
+ * @example
+ * ```typescript
+ * // Fetch top 50 coins by market cap
+ * const result = await fetchTopCoinsByMarketCap(50, 'CG-xxx');
+ * console.log(result.assets.length); // 50
+ * console.log(result.assets[0].symbol); // 'BTC' (highest market cap)
+ * console.log(result.timestamp_utc); // '2025-11-13T10:00:00.000Z'
+ * ```
+ */
+export async function fetchTopCoinsByMarketCap(
+  topN: number = 50,
+  key?: string
+): Promise<FetchMarketsResult> {
+  // Validate inputs
+  if (topN < 1 || topN > 250) {
+    throw new Error('fetchTopCoinsByMarketCap: topN must be between 1 and 250');
+  }
+
+  // Build URL with query parameters for top coins by market cap
+  const url = new URL(COINGECKO_BASE_URL + COINGECKO_ENDPOINT);
+  url.searchParams.set('vs_currency', 'usd');
+  url.searchParams.set('order', 'market_cap_desc'); // Sort by market cap descending
+  url.searchParams.set('per_page', topN.toString()); // Get top N coins
+  url.searchParams.set('page', '1'); // First page only
+  url.searchParams.set('sparkline', 'false');
+  url.searchParams.set('price_change_percentage', '24h');
+
+  // Build request headers
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+  };
+
+  // Add API key header if provided
+  if (key) {
+    headers['x-cg-demo-api-key'] = key;
+  }
+
+  // Fetch with retries
+  const response = await fetchWithRetry(url.toString(), {
+    method: 'GET',
+    headers,
+    timeout: REQUEST_TIMEOUT_MS,
+  });
+
+  // Parse JSON
+  const json = await response.json();
+
+  // Validate response schema
+  const coinsData = coinGeckoMarketsResponseSchema.parse(json);
+
+  // Transform to UmfAssetLive schema
+  const assets: UmfAssetLive[] = coinsData.map(transformCoinGeckoToUmfAsset);
+
+  // Validate each transformed asset
+  assets.forEach((asset, index) => {
+    try {
+      umfAssetLiveSchema.parse(asset);
+    } catch (error) {
+      throw new Error(
+        `Asset validation failed for ${asset.symbol} (index ${index}): ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  });
+
+  // Return validated result
+  return {
+    assets,
+    timestamp_utc: new Date().toISOString(), // Always ends with 'Z'
+  };
+}
+
+/**
+ * Fetch Market Data from CoinGecko (Legacy - Specific IDs)
  * 
  * Fetches cryptocurrency market data for specified coin IDs and transforms
  * it into the canonical UmfAssetLive schema with Zod validation.
+ * 
+ * Note: This function is kept for backward compatibility. New code should
+ * use fetchTopCoinsByMarketCap() to automatically get top coins.
  * 
  * @param ids - Array of CoinGecko coin IDs (e.g., ['bitcoin', 'ethereum'])
  * @param key - Optional CoinGecko API key for demo tier (better rate limits)

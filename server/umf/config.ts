@@ -11,43 +11,28 @@
  */
 
 /**
- * CoinGecko Cryptocurrency IDs
+ * Top Coins Strategy
  * 
- * List of crypto assets to fetch from CoinGecko /coins/markets endpoint.
- * These IDs match CoinGecko's internal asset identifiers (lowercase, hyphenated).
+ * GOLDH Pulse now fetches the top N cryptocurrencies by market cap dynamically
+ * from CoinGecko using pagination parameters instead of hardcoded coin IDs.
  * 
- * Current list: Top 15 cryptocurrencies by market cap (as of MVP)
+ * This provides several benefits:
+ * - Automatically tracks the most important coins (BTC, ETH, etc.)
+ * - Rankings update dynamically as market cap changes
+ * - No need to manually update coin list
+ * - More comprehensive market coverage (50 vs 15 coins)
  * 
- * Note: For traditional assets (SPX, NDX, DXY, GOLD, WTI), we would need
- * additional data providers. For MVP, we're focusing on crypto-only.
+ * The number of coins to fetch is configured in scheduler.ts (TOP_COINS_COUNT = 50)
  * 
- * @see https://www.coingecko.com/en/api/documentation
+ * API Parameters:
+ * - vs_currency: usd
+ * - order: market_cap_desc (sorts by market cap, highest first)
+ * - per_page: 50 (gets top 50 coins)
+ * - page: 1 (first page only)
+ * 
+ * @see server/umf/scheduler.ts for TOP_COINS_COUNT configuration
+ * @see https://docs.coingecko.com/reference/coins-markets
  */
-export const CRYPTO_IDS = [
-  'bitcoin',        // BTC - #1 by market cap
-  'ethereum',       // ETH - #2
-  'solana',         // SOL - High performance L1
-  'binancecoin',    // BNB - Binance native token
-  'cardano',        // ADA - Proof-of-stake L1
-  'polygon',        // MATIC - Ethereum L2
-  'tron',           // TRX - High throughput blockchain
-  'chainlink',      // LINK - Oracle network
-  'toncoin',        // TON - Telegram blockchain
-  'dogecoin',       // DOGE - Meme coin
-  'polkadot',       // DOT - Multi-chain protocol
-  'litecoin',       // LTC - Bitcoin fork
-  'near',           // NEAR - Sharded L1
-  'aptos',          // APT - Move-based L1
-  'avalanche-2',    // AVAX - Note: CoinGecko uses 'avalanche-2' not 'avalanche'
-];
-
-/**
- * Asset Count
- * 
- * Total number of assets being tracked.
- * Used for logging and validation.
- */
-export const ASSET_COUNT = CRYPTO_IDS.length; // 15 assets
 
 /**
  * Cache Time-To-Live (seconds)
@@ -155,17 +140,21 @@ export const COINGECKO_ENDPOINT = '/coins/markets';
 export const COINGECKO_URL = `${COINGECKO_BASE_URL}${COINGECKO_ENDPOINT}`;
 
 /**
- * CoinGecko Query Parameters
+ * CoinGecko Query Parameters (Legacy)
  * 
- * These parameters are appended to the URL when fetching data.
+ * Note: These params are no longer used by the scheduler.
+ * The scheduler now uses fetchTopCoinsByMarketCap() which builds
+ * its own parameters dynamically.
+ * 
+ * Kept for reference only.
  */
-export const COINGECKO_PARAMS = {
+export const COINGECKO_PARAMS_LEGACY = {
   vs_currency: 'usd',
-  ids: CRYPTO_IDS.join(','), // Comma-separated, no spaces
   sparkline: 'false',
   price_change_percentage: '24h',
   order: 'market_cap_desc',
-  per_page: '100', // More than enough for 15 assets
+  per_page: '50',
+  page: '1',
 };
 
 /**
