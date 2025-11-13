@@ -4,7 +4,6 @@
  * Full-screen feature page displaying:
  * - Market snapshot (Top-20 crypto + indices + forex + commodities)
  * - Top movers (gainers/losers)
- * - Morning Intelligence brief
  * - Market alerts (optional)
  * 
  * MVP: Uses Firestore mock data
@@ -24,11 +23,9 @@ import { useLocation } from "wouter";
 import {
   useUmfSnapshot,
   useUmfMovers,
-  useUmfBrief,
   useUmfAlerts,
 } from "@/hooks/useUmf";
 import {
-  UmfMorningBrief,
   UmfSnapshot,
   UmfTopMovers,
   UmfAlertList,
@@ -46,7 +43,6 @@ export default function FeaturesUMF() {
   // Fetch UMF data with loading states
   const { data: snapshotExtended, isLoading: snapshotLoading, error: snapshotError } = useUmfSnapshot();
   const { data: moversExtended, isLoading: moversLoading, error: moversError } = useUmfMovers();
-  const { data: brief, isLoading: briefLoading, error: briefError } = useUmfBrief();
   const { data: alerts = [], isLoading: alertsLoading, error: alertsError } = useUmfAlerts();
   
   // Transform extended data to UI-friendly format using adapters
@@ -58,10 +54,10 @@ export default function FeaturesUMF() {
   const moversMeta = getMoversMetadata(moversExtended);
   
   // Combined loading state
-  const isLoading = snapshotLoading || moversLoading || briefLoading || alertsLoading;
+  const isLoading = snapshotLoading || moversLoading || alertsLoading;
   
   // Check if any critical data failed to load
-  const hasError = snapshotError || moversError || briefError || alertsError;
+  const hasError = snapshotError || moversError || alertsError;
 
   return (
     <div className="min-h-screen bg-background" data-testid="umf-page">
@@ -171,8 +167,7 @@ export default function FeaturesUMF() {
             {/* Subcopy */}
             <p className="text-base text-muted-foreground leading-relaxed max-w-4xl">
               Track top-20 cryptocurrencies, major indices (S&P 500, NASDAQ), forex (DXY), 
-              and commodities (Gold, Oil) in one unified dashboard. Get instant insights with 
-              AI-generated market briefs and real-time alerts.
+              and commodities (Gold, Oil) in one unified dashboard with real-time market alerts.
             </p>
           </header>
 
@@ -203,9 +198,6 @@ export default function FeaturesUMF() {
           {/* Loading State - Skeleton Screens */}
           {isLoading && (
             <div className="space-y-6" data-testid="umf-loading">
-              {/* Morning Brief Skeleton */}
-              <div className="h-40 bg-[#111] border border-[#C7AE6A]/20 rounded-lg animate-pulse" />
-              
               {/* Two-Column Grid Skeleton */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="h-96 bg-[#111] border border-[#2a2a2a] rounded-lg animate-pulse" />
@@ -217,21 +209,7 @@ export default function FeaturesUMF() {
           {/* Main Content - Show when data is loaded */}
           {!isLoading && (
             <div className="space-y-6" data-testid="umf-content">
-              {/* Section 1: Morning Intelligence Brief (Full Width) */}
-              {brief ? (
-                <UmfMorningBrief brief={brief} />
-              ) : (
-                <Card className="bg-[#111] border-[#C7AE6A]/20 shadow-lg">
-                  <CardContent className="p-12">
-                    <div className="text-center text-muted-foreground">
-                      <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                      <p className="text-sm">No morning intelligence available</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Sections 2 & 3: Two-Column Layout (Market Snapshot + Top Movers) */}
+              {/* Two-Column Layout (Market Snapshot + Top Movers) */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Section 2: Market Snapshot */}
                 {assets && assets.length > 0 ? (
