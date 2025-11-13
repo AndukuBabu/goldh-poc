@@ -4,7 +4,6 @@
  * Full-screen feature page displaying:
  * - Market snapshot (Top-20 crypto + indices + forex + commodities)
  * - Top movers (gainers/losers)
- * - Market alerts (optional)
  * 
  * MVP: Uses Firestore mock data
  * Future: Will consume /api/umf/* endpoints
@@ -23,12 +22,10 @@ import { useLocation } from "wouter";
 import {
   useUmfSnapshot,
   useUmfMovers,
-  useUmfAlerts,
 } from "@/hooks/useUmf";
 import {
   UmfSnapshot,
   UmfTopMovers,
-  UmfAlertList,
 } from "@/components/umf";
 import {
   mapSnapshotExtendedToAssets,
@@ -43,7 +40,6 @@ export default function FeaturesUMF() {
   // Fetch UMF data with loading states
   const { data: snapshotExtended, isLoading: snapshotLoading, error: snapshotError } = useUmfSnapshot();
   const { data: moversExtended, isLoading: moversLoading, error: moversError } = useUmfMovers();
-  const { data: alerts = [], isLoading: alertsLoading, error: alertsError } = useUmfAlerts();
   
   // Transform extended data to UI-friendly format using adapters
   const assets = mapSnapshotExtendedToAssets(snapshotExtended);
@@ -54,10 +50,10 @@ export default function FeaturesUMF() {
   const moversMeta = getMoversMetadata(moversExtended);
   
   // Combined loading state
-  const isLoading = snapshotLoading || moversLoading || alertsLoading;
+  const isLoading = snapshotLoading || moversLoading;
   
   // Check if any critical data failed to load
-  const hasError = snapshotError || moversError || alertsError;
+  const hasError = snapshotError || moversError;
 
   return (
     <div className="min-h-screen bg-background" data-testid="umf-page">
@@ -167,7 +163,7 @@ export default function FeaturesUMF() {
             {/* Subcopy */}
             <p className="text-base text-muted-foreground leading-relaxed max-w-4xl">
               Track top-20 cryptocurrencies, major indices (S&P 500, NASDAQ), forex (DXY), 
-              and commodities (Gold, Oil) in one unified dashboard with real-time market alerts.
+              and commodities (Gold, Oil) in one unified dashboard.
             </p>
           </header>
 
@@ -241,13 +237,6 @@ export default function FeaturesUMF() {
                   </Card>
                 )}
               </div>
-
-              {/* Section 4: Market Alerts (Conditional) */}
-              {alerts.length > 0 && (
-                <section data-testid="section-alerts">
-                  <UmfAlertList alerts={alerts} />
-                </section>
-              )}
               
               {/* CoinGecko Attribution */}
               <footer 
