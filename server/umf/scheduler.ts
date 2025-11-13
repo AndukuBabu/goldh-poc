@@ -35,16 +35,15 @@ import {
  * 
  * Fetches the top N cryptocurrencies by market cap from CoinGecko.
  * 
- * Value: 50 coins
+ * Value: 100 coins
  * 
  * Rationale:
- * - Covers all major cryptocurrencies (BTC, ETH, etc.)
- * - Includes most mid-cap and some small-cap coins
+ * - Comprehensive coverage of major, mid-cap, and small-cap cryptocurrencies
  * - Automatically updates as market cap rankings change
  * - Single API call (no pagination needed)
- * - Fast and performant
+ * - Provides extensive market overview
  */
-const TOP_COINS_COUNT = 50;
+const TOP_COINS_COUNT = 100;
 
 /**
  * Rate Limit Guard
