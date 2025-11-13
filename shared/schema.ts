@@ -569,9 +569,9 @@ export const umfAssetLiveSchema = z.object({
     .describe("24-hour percentage change (null if unavailable)"),
   
   volume24h: z.number()
-    .positive("Volume must be positive")
+    .nonnegative("Volume cannot be negative")
     .nullable()
-    .describe("24-hour trading volume in USD (null if unavailable)"),
+    .describe("24-hour trading volume in USD (null if unavailable, 0 for low-activity assets)"),
   
   marketCap: z.number()
     .positive("Market cap must be positive")
