@@ -17,7 +17,7 @@ Preferred communication style: Simple, everyday language.
 ### Backend
 - **Server Framework**: Express.js on Node.js with TypeScript and ESM modules.
 - **API Design**: RESTful API under `/api`, session-based authentication with bearer tokens.
-- **Authentication System**: Bcrypt for password hashing, database-backed session management, email/password, wallet-based, and magic link authentication.
+- **Authentication System**: Bcrypt for password hashing, database-backed session management, email/password authentication.
 
 ### Data Storage
 - **Primary Database**: PostgreSQL using Drizzle ORM and Neon serverless driver.
@@ -54,6 +54,7 @@ Preferred communication style: Simple, everyday language.
   - Auth-aware UI: Header shows Profile/Sign Out when logged in, Sign In when not
   - Landing page CTAs adapt based on auth state (Sign In → Dashboard when logged in)
   - **Soft Authentication**: Feature pages viewable without login. Dismissable sign-in prompts encourage registration without blocking content access.
+  - **No Wallet Integration**: MetaMask/wallet connection removed. Premium access is subscription-based only.
 - **Route Protection**: `ProtectedRoute` wrapper now only guards Profile page. All feature pages (Dashboard, Guru Digest, UMF, Economic Calendar, Asset pages) are accessible without authentication. Security validation prevents open redirect attacks (only internal paths allowed).
 - **Admin System**: 
   - **Access Control**: Managed via `ADMIN_EMAILS` environment variable (comma-separated list of admin email addresses)
@@ -90,7 +91,7 @@ Preferred communication style: Simple, everyday language.
 - **GOLDH Pulse** (formerly Universal Market Financials/UMF): Live market data dashboard displaying top 100 cryptocurrencies by market cap. Shows market snapshot (25 assets initially with expand/collapse to 100) and top movers in two-column responsive layout. Automated scheduler fetches top 100 coins dynamically every 60 minutes via CoinGecko API (order=market_cap_desc&per_page=100). Data cached in Firestore with 1-hour TTL. Rankings update automatically as market cap changes - no manual coin list maintenance required.
 - **Market Events** (formerly Economic Calendar): Full-featured economic calendar with event filtering, impact levels (High/Medium/Low/Holiday), and admin-managed data upload. Simplified 6-field schema: title, country, date, impact, forecast, previous. Admin dashboard supports JSON file uploads with automatic 2-month cleanup (preserves recent events while removing old data). Events stored in Firestore `econEvents` collection.
 - **Learning Hub**: Modern "Coming Soon" page featuring improved typography with title case formatting ("Learning Hub" / "Knowledge Centre"), premium badge styling for "Coming Soon" label, and responsive text hierarchy. Displays 5 planned sections: Quick Guides (Coming Soon), GOLDH Academy (Coming Soon), Deep Dives, Market Myths & Truths, and Glossary & Terminology. Original dynamic FAQ implementation preserved in comments for future restoration.
-- **Premium Access**: Access to premium features via GOLDH tokens or subscription.
+- **Premium Access**: Subscription-based access to premium features (wallet integration removed).
 
 ## External Dependencies
 
