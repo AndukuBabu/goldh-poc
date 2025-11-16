@@ -7,7 +7,8 @@ import { NewsScroller } from "@/components/NewsScroller";
 import { PreviewWidgets } from "@/components/PreviewWidgets";
 import { ComingSoon } from "@/components/ComingSoon";
 import { useAuth } from "@/lib/auth";
-import { TrendingUp, Shield, Zap, Bell, Globe, Users } from "lucide-react";
+import { TrendingUp, Shield, Zap, Bell, Globe, Users, Mail } from "lucide-react";
+import { SiLinkedin, SiX, SiInstagram } from "react-icons/si";
 import logoImage from "@assets/goldh-logo_1762272901250.png";
 
 const features = [
@@ -327,16 +328,46 @@ export default function Landing() {
             
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-foreground">Contact</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="mailto:hello@goldh.ai" className="hover:text-primary transition-colors flex items-center gap-2">
-                    Email: hello@goldh.ai
-                  </a>
-                </li>
-                <li className="text-muted-foreground/60">
-                  Instagram: Coming Soon
-                </li>
-              </ul>
+              <div className="flex items-center gap-4">
+                <a 
+                  href="mailto:hello@goldh.ai" 
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="Email"
+                  data-testid="link-email"
+                >
+                  <Mail className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://www.linkedin.com/company/goldh/" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="LinkedIn"
+                  data-testid="link-linkedin"
+                >
+                  <SiLinkedin className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://x.com/goldh_ai" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="X (Twitter)"
+                  data-testid="link-x"
+                >
+                  <SiX className="w-5 h-5" />
+                </a>
+                <a 
+                  href="https://www.instagram.com/goldh_ai?brid=BFu4soBqVEyoow8zU2JRlQ" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                  aria-label="Instagram"
+                  data-testid="link-instagram"
+                >
+                  <SiInstagram className="w-5 h-5" />
+                </a>
+              </div>
             </div>
           </div>
           
