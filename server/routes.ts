@@ -128,7 +128,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
           isPremium: user.isPremium,
           isAdmin: user.isAdmin,
-          walletAddress: user.walletAddress,
         },
         sessionId: session.id,
       });
@@ -175,7 +174,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: updatedUser.email,
           isPremium: updatedUser.isPremium,
           isAdmin: updatedUser.isAdmin,
-          walletAddress: updatedUser.walletAddress,
         },
         sessionId: session.id,
       });
@@ -235,7 +233,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         isPremium: user.isPremium,
         isAdmin: user.isAdmin,
-        walletAddress: user.walletAddress,
       });
     } catch (error) {
       console.error("Get user error:", error);
@@ -315,51 +312,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Change password error:", error);
       res.status(500).json({ error: "Failed to change password" });
-    }
-  });
-
-  // Wallet routes
-  app.post("/api/wallet/connect", requireAuth, async (req: Request, res: Response) => {
-    try {
-      const userId = (req as any).userId;
-      const { walletAddress, tokenBalance } = req.body;
-      
-      if (!walletAddress) {
-        return res.status(400).json({ error: "Wallet address required" });
-      }
-
-      const isPremium = tokenBalance >= 5000;
-      
-      const user = await storage.updateUserWallet(userId, walletAddress, isPremium);
-      
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      res.json({
-        walletAddress: user.walletAddress,
-        isPremium: user.isPremium,
-      });
-    } catch (error) {
-      console.error("Wallet connect error:", error);
-      res.status(500).json({ error: "Failed to connect wallet" });
-    }
-  });
-
-  app.get("/api/wallet/balance/:address", async (req: Request, res: Response) => {
-    try {
-      const { address } = req.params;
-      
-      const mockBalance = Math.floor(Math.random() * 10000);
-      
-      res.json({
-        address,
-        balance: mockBalance,
-        isPremium: mockBalance >= 5000,
-      });
-    } catch (error) {
-      console.error("Get balance error:", error);
-      res.status(500).json({ error: "Failed to get balance" });
     }
   });
 

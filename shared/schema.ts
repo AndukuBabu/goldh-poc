@@ -11,7 +11,6 @@ export const users = pgTable("users", {
   phone: text("phone"),
   experienceLevel: text("experience_level"),
   agreeToUpdates: boolean("agree_to_updates").default(false),
-  walletAddress: text("wallet_address"),
   isPremium: boolean("is_premium").default(false),
   isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),

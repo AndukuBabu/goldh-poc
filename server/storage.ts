@@ -6,7 +6,6 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUserWallet(id: string, walletAddress: string, isPremium: boolean): Promise<User | undefined>;
   updateUserPassword(id: string, hashedPassword: string): Promise<void>;
   updateUserAdminStatus(id: string, isAdmin: boolean): Promise<User | undefined>;
   getNewsArticles(): Promise<NewsArticle[]>;
@@ -30,15 +29,6 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
-  }
-
-  async updateUserWallet(id: string, walletAddress: string, isPremium: boolean): Promise<User | undefined> {
-    const [user] = await db
-      .update(users)
-      .set({ walletAddress, isPremium })
-      .where(eq(users.id, id))
-      .returning();
-    return user || undefined;
   }
 
   async updateUserPassword(id: string, hashedPassword: string): Promise<void> {

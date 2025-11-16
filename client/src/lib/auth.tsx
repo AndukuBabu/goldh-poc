@@ -6,7 +6,6 @@ interface User {
   email: string;
   isPremium: boolean;
   isAdmin: boolean;
-  walletAddress: string | null;
 }
 
 interface AuthContextType {
@@ -16,7 +15,6 @@ interface AuthContextType {
   signin: (email: string, password: string) => Promise<void>;
   setSession: (user: User, sessionId: string) => void;
   signout: () => Promise<void>;
-  connectWallet: (walletAddress: string, tokenBalance: number) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -96,30 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("sessionId");
   };
 
-  const connectWallet = async (walletAddress: string, tokenBalance: number) => {
-    if (!sessionId) throw new Error("Not authenticated");
-    
-    const data = await fetch("/api/wallet/connect", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionId}`,
-      },
-      body: JSON.stringify({ walletAddress, tokenBalance }),
-    }).then(res => res.json());
-
-    if (user) {
-      setUser({
-        ...user,
-        walletAddress: data.walletAddress,
-        isPremium: data.isPremium,
-        isAdmin: user.isAdmin,
-      });
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, sessionId, isLoading, signin, setSession, signout, connectWallet }}>
+    <AuthContext.Provider value={{ user, sessionId, isLoading, signin, setSession, signout }}>
       {children}
     </AuthContext.Provider>
   );
