@@ -43,14 +43,22 @@ export default function Learn() {
       <div className="pt-24 pb-16 px-6">
         <div className="container mx-auto max-w-5xl">
           {/* Header */}
-          <div className="mb-12 text-center space-y-6">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
-              LEARNING HUB / KNOWLEDGE CENTRE (Coming Soon)
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <div className="mb-16 text-center space-y-6">
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
+                Learning Hub
+              </h1>
+              <div className="flex items-center justify-center gap-2 text-xl sm:text-2xl md:text-3xl text-muted-foreground">
+                <span>Knowledge Centre</span>
+                <span className="inline-block px-4 py-1.5 bg-primary/10 border border-primary/30 rounded-full text-sm font-semibold text-primary">
+                  Coming Soon
+                </span>
+              </div>
+            </div>
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mt-6">
               Your gateway to smarter investing — without the overwhelm.
             </p>
-            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
               The GOLDH Learning Hub is designed to help you grow your financial intelligence one step at a time. Short, clear, practical resources — created for real people, not hedge fund quants.
             </p>
           </div>
