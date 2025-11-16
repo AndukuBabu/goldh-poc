@@ -6,9 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { apiRequest } from "@/lib/queryClient";
 import { Header } from "@/components/Header";
-import { Mail } from "lucide-react";
 
 export default function SignIn() {
   const [, setLocation] = useLocation();
@@ -17,7 +15,6 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showMagicLink, setShowMagicLink] = useState(false);
 
   // Get redirect path from query params with security validation
   const getRedirectPath = () => {
@@ -84,46 +81,6 @@ export default function SignIn() {
     }
   };
 
-
-  const handleMagicLink = async () => {
-    if (!email) {
-      toast({
-        title: "Email Required",
-        description: "Please enter your email address.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const res = await apiRequest("POST", "/api/auth/magic-link", { email });
-      const data = await res.json();
-      
-      if (data.isExistingUser) {
-        toast({
-          title: "Magic Link Sent!",
-          description: data.message,
-        });
-      } else {
-        toast({
-          title: "Account Not Found",
-          description: data.message,
-          variant: "destructive",
-        });
-        setShowMagicLink(false);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to process request.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -175,40 +132,6 @@ export default function SignIn() {
                   {isLoading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                </div>
-              </div>
-
-              {/* Magic Link */}
-              {!showMagicLink ? (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowMagicLink(true)}
-                  data-testid="button-show-magic-link"
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Use Magic Link Instead
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleMagicLink}
-                  disabled={isLoading}
-                  data-testid="button-magic-link"
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Magic Link
-                </Button>
-              )}
 
               {/* Sign Up Link */}
               <div className="text-center text-sm text-muted-foreground">
