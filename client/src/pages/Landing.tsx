@@ -249,27 +249,51 @@ export default function Landing() {
             {[
               {
                 question: "What is GOLDH?",
-                answer: "GOLDH (Golden Horizon) is a comprehensive crypto intelligence platform designed for everyone - from beginners to experienced traders. We provide real-time market insights, educational resources, portfolio tracking, and community features all in one place."
+                answer: "GOLDH is an intelligent finance platform that brings together real-time market data, AI-powered insights, and human-level clarity in one unified view."
               },
               {
-                question: "Is GOLDH free to use?",
-                answer: "Yes! GOLDH offers a free forever plan with access to essential features. Premium members get exclusive features, early access to new tools, and enhanced analytics through token holdings or subscription."
+                question: "Is GOLDH a trading platform?",
+                answer: "No — GOLDH is not an exchange or brokerage. We're an intelligence platform that helps you understand markets before you take action wherever you prefer to trade."
               },
               {
-                question: "How do I become a premium member?",
-                answer: "We offer flexible Premium access! Hold 5000+ GOLDH tokens in your connected wallet for automatic Premium status, OR subscribe when subscriptions launch. Choose the pathway that works best for you!"
+                question: "What markets does GOLDH cover?",
+                answer: "Crypto, global equities, commodities, indices, FX, and major macroeconomic events all in one clean dashboard."
               },
               {
-                question: "Is my wallet safe with GOLDH?",
-                answer: "Absolutely. We use industry-leading security protocols and never store your private keys. Your wallet connection is secure, and you maintain full control of your assets at all times."
+                question: "What makes GOLDH different?",
+                answer: "No noise. No hype. No nonsense. Just clarity, signal, and perspective. GOLDH combines multi-asset data, AI explanation, expert insight, and event prediction in a single, intuitive platform."
               },
               {
-                question: "What kind of insights does GOLDH provide?",
-                answer: "GOLDH offers real-time market data, AI-powered trend predictions, price alerts, portfolio analytics, and educational content. Our Learning Hub covers everything from blockchain basics to advanced trading strategies."
+                question: "Who is GOLDH for?",
+                answer: "Anyone who wants a smarter way to understand the digital asset markets: Beginners, Investors, Traders, Founders, Wealth builders, Crypto-curious users, and Traditional finance professionals exploring digital assets."
               },
               {
-                question: "Can I use GOLDH on mobile?",
-                answer: "Yes! GOLDH is fully responsive and works seamlessly on all devices - desktop, tablet, and mobile. Access your crypto intelligence anywhere, anytime."
+                question: "Is the platform free?",
+                answer: "Yes — our Free Tier gives access to core modules. Advanced features and deeper insights sit inside Essential & Premium tiers which will roll out progressively."
+              },
+              {
+                question: "Does GOLDH give financial advice?",
+                answer: "No. We provide intelligence, not instructions. Our tools help you understand markets — the decisions are yours."
+              },
+              {
+                question: "How does the AI work?",
+                answer: "Our AI aggregates multi-source data, identifies key market drivers, summarises expert commentary, and explains events in plain English so you can see why markets move, not just that they moved."
+              },
+              {
+                question: "Is my data private and secure?",
+                answer: "Absolutely. We follow best-practice security controls, industry-grade encryption, and strict privacy protocols. Your data is yours and it stays that way."
+              },
+              {
+                question: "What's coming next?",
+                answer: "Modules such as Arbitrage scanner, Copy Trade, Robo Trading Hub, Reward Hunter, and Congressional trading tracker will roll out progressively."
+              },
+              {
+                question: "Why launch at AusCryptoCon?",
+                answer: "Because one of GOLDH's co-founders is based in Australia and we believe in launching where our leadership is deeply connected to the community. Australia's crypto space is bold, curious, and ahead of the curve."
+              },
+              {
+                question: "What is the Learning Hub and Academy?",
+                answer: "We're building the GOLDH Learning Hub and Academy — guides, explainers, deep dives, structured paths. Rolling out progressively."
               }
             ].map((faq, index) => (
               <div 

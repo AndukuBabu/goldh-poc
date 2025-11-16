@@ -1,0 +1,37 @@
+HIGH-LEVEL FAQs
+1.	What  is GOLDH?
+GOLDH is an intelligent finance platform that brings together real-time market data, AI-powered insights, and human-level clarity in one unified view.
+2.	Is GOLDH a trading platform?
+No — GOLDH is not an exchange or brokerage.
+We’re an intelligence platform that helps you understand markets before you take action wherever you prefer to trade.
+3.	What markets does GOLDH cover?
+Crypto, global equities, commodities, indices, FX, and major macroeconomic events all in one clean dashboard.
+4.	What makes GOLDH different?
+No noise. No hype. No nonsense.
+Just clarity, signal, and perspective.
+GOLDH combines multi-asset data, AI explanation, expert insight, and event prediction in a single, intuitive platform.
+5.	Who is GOLDH for?
+Anyone who wants a smarter way to understand the digital asset markets:
+• Beginners
+• Investors
+• Traders
+• Founders
+• Wealth builders
+• Crypto-curious users
+• Traditional finance professionals exploring digital assets
+6.	 the platform free?
+Yes — our Free Tier gives access to core modules.
+Advanced features and deeper insights sit inside Essential & Premium tiers which will roll out progressively.
+7.	Does GOLDH give financial advice?
+No. We provide intelligence, not instructions.
+Our tools help you understand markets the decisions are yours.
+8.	How does the AI work?
+Our AI aggregates multi-source data, identifies key market drivers, summarises expert commentary, and explains events in plain English so you can see why markets move, not just that they moved.
+9.	Is my data private and secure?
+Absolutely. We follow best-practice security controls, industry-grade encryption, and strict privacy protocols. Your data is yours and it stays that way.
+10.	What’s coming next?
+Modules such as Arbitrage scanner, Copy Trade, Robo Trading Hub, Reward Hunter, Congressional trading tracker will roll out progressively.
+11.	Why launch at AusCryptoCon?
+Because one of GOLDH’s co-founders is based in Australia  and we believe in launching where our leadership is deeply connected to the community. Australia’s crypto space is bold, curious, and ahead of the curve. 
+12.	What is the Learning Hub and Academy? 
+We’re building the GOLDH Learning Hub and Academy — guides, explainers, deep dives, structured paths. Rolling out progressively.

@@ -1,12 +1,21 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { User, LogOut, Shield } from "lucide-react";
+import { User, LogOut, Shield, Menu } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import logoImage from "@assets/goldh-logo.svg";
 
 export function Header() {
   const [location, setLocation] = useLocation();
   const { user, signout, isLoading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const isActive = (path: string) => {
     if (path === "/features") {
@@ -18,6 +27,11 @@ export function Header() {
   const handleSignOut = async () => {
     await signout();
     setLocation("/");
+  };
+
+  const handleNavClick = (path: string) => {
+    setMobileMenuOpen(false);
+    setLocation(path);
   };
 
   return (
@@ -105,6 +119,100 @@ export function Header() {
             </Link>
           )}
         </nav>
+
+        {/* Mobile Navigation */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="md:hidden"
+              aria-label="Open navigation menu"
+              data-testid="button-mobile-menu"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <SheetHeader>
+              <SheetTitle className="text-left text-primary">Navigation</SheetTitle>
+            </SheetHeader>
+            <nav className="flex flex-col gap-4 mt-8">
+              <Button
+                variant={isActive("/features") ? "default" : "ghost"}
+                onClick={() => handleNavClick("/features")}
+                className={`justify-start ${isActive("/features") ? "" : "text-foreground"}`}
+                data-testid="button-mobile-nav-features"
+              >
+                Features
+              </Button>
+              <Button
+                variant={isActive("/learn") ? "default" : "ghost"}
+                onClick={() => handleNavClick("/learn")}
+                className={`justify-start ${isActive("/learn") ? "" : "text-foreground"}`}
+                data-testid="button-mobile-nav-learn"
+              >
+                Learn
+              </Button>
+              <Button
+                variant={isActive("/dashboard") ? "default" : "ghost"}
+                onClick={() => handleNavClick("/dashboard")}
+                className={`justify-start ${isActive("/dashboard") ? "" : "text-foreground"}`}
+                data-testid="button-mobile-nav-dashboard"
+              >
+                Dashboard
+              </Button>
+              
+              {isLoading ? (
+                <div className="w-full h-9 bg-muted/50 rounded-md animate-pulse" />
+              ) : user ? (
+                <>
+                  <Button
+                    variant={isActive("/profile") ? "default" : "ghost"}
+                    onClick={() => handleNavClick("/profile")}
+                    className={`justify-start ${isActive("/profile") ? "" : "text-foreground"}`}
+                    data-testid="button-mobile-nav-profile"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Profile
+                  </Button>
+                  {user.isAdmin && (
+                    <Button
+                      variant={isActive("/admin/guru-digest") ? "default" : "ghost"}
+                      onClick={() => handleNavClick("/admin/guru-digest")}
+                      className={`justify-start ${isActive("/admin/guru-digest") ? "border-[#C7AE6A]" : "text-[#C7AE6A] border-[#C7AE6A]/30 border"}`}
+                      data-testid="button-mobile-nav-admin"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    onClick={async () => {
+                      setMobileMenuOpen(false);
+                      await handleSignOut();
+                    }}
+                    className="justify-start text-foreground"
+                    data-testid="button-mobile-nav-signout"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="default"
+                  onClick={() => handleNavClick("/signin")}
+                  className="justify-start"
+                  data-testid="button-mobile-nav-signin"
+                >
+                  Sign In
+                </Button>
+              )}
+            </nav>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );
