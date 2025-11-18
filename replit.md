@@ -1,7 +1,7 @@
 # GOLDH Crypto Intelligence Platform
 
 ## Overview
-GOLDH is a crypto intelligence platform designed to provide real-time market intelligence, secure wallet integration, and educational resources. It aims to simplify cryptocurrency navigation for both experienced traders and beginners. The platform features a premium fintech aesthetic with a black-gold color scheme and user-friendly language. Its core purpose is to build wealth and bridge worlds within the crypto space.
+GOLDH is a crypto intelligence platform providing real-time market intelligence, secure wallet integration, and educational resources. It aims to simplify cryptocurrency navigation for both experienced traders and beginners with a premium fintech aesthetic, black-gold color scheme, and user-friendly language. The platform's core purpose is to build wealth and bridge worlds within the crypto space.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,89 +9,35 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend
-- **Framework & Routing**: React with TypeScript, Wouter for routing, Vite for bundling.
-- **UI Component System**: shadcn/ui (New York style), Radix UI primitives, Tailwind CSS with custom design tokens.
+- **Frameworks**: React with TypeScript, Wouter for routing, Vite for bundling.
+- **UI/UX**: shadcn/ui (New York style), Radix UI primitives, Tailwind CSS with custom design tokens. Premium black-gold aesthetic (`#0f0f0f`, `#C7AE6A`), Inter and JetBrains Mono typography, responsive design, interactive elements with hover effects, gold border glows, and shadows. All icons use lucide-react.
 - **State Management**: TanStack Query for server state, React Context API for authentication.
-- **Design System**: Premium black-gold aesthetic (`#0f0f0f`, `#1a1a1a`, `#2a2a2a` backgrounds; `#C7AE6A` accents), Inter and JetBrains Mono typography, responsive design, interactive elements with hover effects, gold border glows, and shadows.
+- **Key Features**:
+    - **Dashboard**: Asset-first grid layout for tracking crypto assets with live prices and news.
+    - **Asset Detail Pages**: Dynamic routes (`/asset/:symbol`) unifying price data, news, and events.
+    - **Landing Page**: Features `NewsScroller`, `PreviewWidgets` (Guru Digest, Market Financials, Economic Calendar), `ComingSoon` features, and `FOMABox`.
+    - **Welcome Experience**: Includes `WelcomeAnimation` (first-visit overlay), `SignInPrompt` (modal for unauthenticated users), and `ExitIntentModal` (mouse-leave detection).
+    - **Mobile Responsiveness**: Comprehensive design with mobile-first approach, including a hamburger menu with shadcn Sheet component.
+    - **Authentication-Free Access**: Most feature pages are viewable without login, with dismissible sign-in prompts.
 
 ### Backend
-- **Server Framework**: Express.js on Node.js with TypeScript and ESM modules.
-- **API Design**: RESTful API under `/api`, session-based authentication with bearer tokens.
-- **Authentication System**: Bcrypt for password hashing, database-backed session management, email/password authentication.
+- **Server**: Express.js on Node.js with TypeScript and ESM modules.
+- **API**: RESTful API under `/api`, session-based authentication with bearer tokens.
+- **Authentication**: Bcrypt for password hashing, database-backed session management, email/password authentication.
+- **Admin System**: Role-based access managed via `ADMIN_EMAILS` environment variable, with dedicated admin routes (`/admin/guru-digest`) for content management (e.g., article entry, deletion, RSS refresh). Non-admin access to admin routes results in a 404.
+- **Automated Data Refresh**: Schedulers for UMF (CoinGecko data every 60 mins) and Guru Digest (RSS feeds every 2.5 hours).
 
 ### Data Storage
 - **Primary Database**: PostgreSQL using Drizzle ORM and Neon serverless driver.
-- **Schema Design**: `Users` and `Sessions` tables, Zod schemas for validation.
+- **Schema**: `Users` and `Sessions` tables, Zod schemas for validation.
 - **Database Management**: Schema migrations via Drizzle.
 
-### UI/UX Decisions
-- **Color Scheme**: Black and gold for a premium, luxurious feel.
-- **Typography**: Inter for body, JetBrains Mono for monospace.
-- **Component Design**: Interactive elements with hover, gold glows, shadows. No emojis - all icons use lucide-react library.
-- **Feature Pages**: Dedicated full-screen pages for Guru Talk (formerly Guru & Insider Digest), GOLDH Pulse (formerly Universal Market Financials), Market Events (formerly Economic Calendar).
-- **Dashboard**: Asset-first grid layout showing tracked crypto assets with live prices, 24h changes, and news counts. Filters out assets with unavailable prices while preserving error states for failed queries.
-- **Asset Detail Pages**: Dynamic `/asset/:symbol` routes providing unified views of price data, news articles, and economic events.
-- **Logo**: SVG format for crisp rendering at all sizes. Responsive sizing: 400px (mobile) → 480px (tablet) → 560px (desktop).
-- **Mobile Responsiveness**: Comprehensive responsive design with mobile-first approach. Landing page features controlled line breaks for tagline, responsive font scaling (text-3xl → text-6xl), adaptive spacing/padding, full-width buttons on mobile, and optimized layouts across all breakpoints (sm/md/lg). Header includes hamburger menu (shadcn Sheet component) for mobile navigation with slide-out drawer containing all navigation links, authentication state, and admin options.
-- **Landing Page Components**:
-  - **NewsScroller**: Horizontal scrolling ticker displaying latest crypto news from Guru & Insider Digest. Uses CSS animation for smooth infinite scroll. Fetches from `/api/guru-digest` endpoint with loading states. Shows top 10 articles with gradient fades on edges.
-  - **PreviewWidgets**: Three-card preview section showing live data to all users (authentication-free). Cards include: Guru Digest (latest 3 news articles), Market Financials (top 4 assets with prices), and Economic Calendar (3 upcoming events). All cards display "View All" navigation links to full feature pages.
-  - **ComingSoon**: Feature showcase section with 9 upcoming features (Street Score, Whale Watch, Yield Finder, Arbitrage Scanner, Copy Trade, Robo Trading Hub, Launch Radar, Reward Hunter, Congressional Trading Tracker) in responsive grid layout with hover effects.
-  - **FOMABox**: Three promotional cards with consistent gold premium styling promoting GOLDH Token launch, Premium Access, and Early User benefits.
-  - **Footer Contact**: Social media links displayed as icons (using react-icons/si for LinkedIn, X, Instagram; lucide-react for email). Icons arranged horizontally with hover effects transitioning to primary gold color. All external links open in new tabs with security attributes.
-- **Welcome Experience**:
-  - **WelcomeAnimation**: First-visit overlay displaying "Congratulations, You've found Golden Horizon!!" with gold gradient text and blur/fade-out animation. Shows every time user visits landing page ("/"), auto-dismisses after 3.5 seconds. Only displays on landing page, not on other routes.
-  - **SignInPrompt**: Auto-appearing modal (1-second delay) on feature pages and dashboard for unauthenticated users only. Encourages sign-up with benefits list and dual CTAs. Shows every time user visits these pages (dismissible per page visit). Does not show for authenticated users.
-  - **ExitIntentModal**: Mouse-leave detection at viewport top triggers persuasive modal with benefits list and sign-up CTA. Session storage prevents repeated displays. Uses lucide-react icons only (no emojis).
-- **Authentication-Free Access**: All feature pages (Dashboard, Guru Digest, UMF, Economic Calendar, Asset pages) viewable without authentication. Only Profile page requires login. Sign-in prompts are dismissable overlays, not hard blocks.
-
-### Technical Implementations
-- **Authentication Flow**: 
-  - Distinct sign-in/sign-up with comprehensive waitlist registration
-  - Auto-login after signup with 100ms state propagation delay
-  - Signin redirect flow: captures intended destination, validates security, redirects after auth
-  - Profile page with account management and password change capability
-  - Auth-aware UI: Header shows Profile/Sign Out when logged in, Sign In when not
-  - Landing page CTAs adapt based on auth state (Sign In → Dashboard when logged in)
-  - **Soft Authentication**: Feature pages viewable without login. Dismissable sign-in prompts encourage registration without blocking content access.
-  - **No Wallet Integration**: MetaMask/wallet connection removed. Premium access is subscription-based only.
-- **Route Protection**: `ProtectedRoute` wrapper now only guards Profile page. All feature pages (Dashboard, Guru Digest, UMF, Economic Calendar, Asset pages) are accessible without authentication. Security validation prevents open redirect attacks (only internal paths allowed).
-- **Admin System**: 
-  - **Access Control**: Managed via `ADMIN_EMAILS` environment variable (comma-separated list of admin email addresses)
-  - **Auto-Grant**: On signup/signin, if user's email matches any in ADMIN_EMAILS, the `isAdmin` database field is automatically set to true
-  - **Admin Routes**: `/admin/guru-digest` - Management dashboard for Guru Talk articles
-  - **Security**: Non-admin users accessing admin routes receive 404 responses (not 403) to completely hide existence of admin features
-  - **Middleware**: `requireAdmin` checks both authentication and admin status before allowing access
-  - **UI Elements**: Admin navigation link (gold-styled with Shield icon) only visible in header when `user.isAdmin === true`
-  - **Admin Features**:
-    - Manual article entry form (title, URL, source, date, summary, asset tags)
-    - View/delete all Firestore articles with document IDs
-    - Manual RSS refresh button to trigger immediate feed updates
-    - Toast notifications for all operations
-  - **API Endpoints** (require auth + admin):
-    - `GET /api/admin/guru-digest` - List all articles with IDs
-    - `POST /api/admin/guru-digest` - Add new article
-    - `DELETE /api/admin/guru-digest/:id` - Delete article by Firestore doc ID
-    - `POST /api/admin/guru-digest/refresh` - Trigger manual RSS feed refresh
-- **Session Management**: Database-backed session persistence with cleanup, bearer token authentication.
-- **Validation**: Zod schemas for client-side and server-side validation.
-- **Error Handling**: Graceful error handling with user-friendly messages for authentication and data operations.
-- **Automated Data Refresh**:
-  - **UMF Scheduler**: Fetches top 50 coins by market cap every 60 minutes (±15s jitter) via CoinGecko `/coins/markets` endpoint. Enabled by `UMF_SCHEDULER=1` env var. Uses dynamic market cap ranking (no hardcoded coins). Rate limit guard prevents calls within 55 minutes.
-  - **Guru Digest Scheduler**: Updates every 2.5 hours (±30s jitter) via RSS feeds from CoinDesk & Cointelegraph. Enabled by `GURU_SCHEDULER=1` env var. Clears old entries and fetches fresh articles automatically.
-  - Both schedulers have rate limit guards and performance logging.
-
 ### Feature Specifications
-- **Asset-First Dashboard**: Home page displays grid of 30 tracked crypto assets (BTC, ETH, SOL, BNB, XRP, ADA, DOGE, MATIC, TRX, LINK, TON, DOT, SHIB, LTC, UNI, AVAX, ATOM, NEAR, APT, ARB, OP, SUI, INJ, SEI, FTM, PEPE, WIF, RUNE, IMX, STX) with live prices from UMF, 24h change indicators, and news count badges. Shows 12 assets initially with "Show More" expansion. Asset cards are clickable and navigate to dedicated asset detail pages.
-- **Asset Detail Pages**: Dynamic `/asset/:symbol` routes aggregate data from multiple sources (UMF prices, Guru Digest news, Economic Calendar events) into a unified view. Features tabbed interface for Price summary, News articles, and Events. Implements graceful degradation when data sources are unavailable.
-- **Asset Tagging System**: Intelligent article tagging during RSS ingest using deterministic regex extraction. Canonical symbols (BTC, ETH, etc.) validated against whitelist and stored in Firestore for efficient filtering.
-- **Asset API Endpoint**: `/api/asset/:symbol` provides aggregated data with 90-second caching, degraded flags for each data source, and Zod schema validation.
 - **Real-time Market Intelligence**: Displays crypto macroeconomic events and market data.
-- **Guru Talk** (formerly Guru & Insider Digest): Real-time crypto news from CoinDesk and Cointelegraph RSS feeds. Automated scheduler updates every 2.5 hours (10x per day) for fresh content. Articles auto-tagged with asset symbols during ingest. Manual CLI script also available. Stores articles in Firestore with 300-character excerpts and asset tags.
-- **GOLDH Pulse** (formerly Universal Market Financials/UMF): Live market data dashboard displaying top 100 cryptocurrencies by market cap. Shows market snapshot (25 assets initially with expand/collapse to 100) and top movers in two-column responsive layout. Automated scheduler fetches top 100 coins dynamically every 60 minutes via CoinGecko API (order=market_cap_desc&per_page=100). Data cached in Firestore with 1-hour TTL. Rankings update automatically as market cap changes - no manual coin list maintenance required.
-- **Market Events** (formerly Economic Calendar): Full-featured economic calendar with event filtering, impact levels (High/Medium/Low/Holiday), and admin-managed data upload. Simplified 6-field schema: title, country, date, impact, forecast, previous. Admin dashboard supports JSON file uploads with automatic 2-month cleanup (preserves recent events while removing old data). Events stored in Firestore `econEvents` collection.
-- **Learning Hub**: Modern "Coming Soon" page featuring improved typography with title case formatting ("Learning Hub" / "Knowledge Centre"), premium badge styling for "Coming Soon" label, and responsive text hierarchy. Displays 5 planned sections: Quick Guides (Coming Soon), GOLDH Academy (Coming Soon), Deep Dives, Market Myths & Truths, and Glossary & Terminology. Original dynamic FAQ implementation preserved in comments for future restoration.
-- **Premium Access**: Subscription-based access to premium features (wallet integration removed).
+- **Guru Talk**: Real-time crypto news from CoinDesk and Cointelegraph RSS feeds, with automated updates and asset tagging.
+- **GOLDH Pulse**: Live market data dashboard displaying top 100 cryptocurrencies by market cap, dynamically fetched and updated via CoinGecko API.
+- **Market Events**: Full-featured economic calendar with event filtering, impact levels, and admin-managed data upload via JSON files.
+- **Learning Hub**: "Coming Soon" page showcasing planned educational content.
 
 ## External Dependencies
 
@@ -125,19 +71,11 @@ Preferred communication style: Simple, everyday language.
 - PostCSS
 
 ### Cloud Services
-- **Firebase/Firestore**: Stores Guru & Insider Digest articles, UMF live/historical snapshots, and Economic Calendar events. All credentials managed via environment variables for security.
-  - Collections: `guruDigest` (news articles), `umfSnapshots` (market data), `econEvents` (economic calendar events)
-  - EC Events Schema: title (string), country (string), date (ISO string), impact (High/Medium/Low/Holiday), forecast (string), previous (string)
-- **RSS Feeds**: CoinDesk (`https://www.coindesk.com/arc/outboundfeeds/rss/`) and Cointelegraph (`https://cointelegraph.com/rss`) for Guru Digest news articles.
-- **CoinGecko API**: Free tier for live cryptocurrency market data (UMF feature). Rate-limited scheduler prevents over-calling.
-- **Zoho CRM**: Automatically creates Leads in CRM when users sign up. Uses Self Client OAuth 2.0 with refresh token authentication. Integration is non-blocking - sign-ups succeed even if CRM API fails. Credentials managed via environment variables (`ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`, `ZOHO_API_DOMAIN`).
-
-### CLI Scripts
-- **Guru Digest Manual Update**: `tsx server/updateGuruDigest.ts` (adds new articles) or `tsx server/updateGuruDigest.ts --clear` (clears old entries first).
+- **Firebase/Firestore**: Stores Guru Digest articles, UMF snapshots, and Economic Calendar events.
+    - Collections: `guruDigest`, `umfSnapshots`, `econEvents`.
+- **RSS Feeds**: CoinDesk (`https://www.coindesk.com/arc/outboundfeeds/rss/`) and Cointelegraph (`https://cointelegraph.com/rss`).
+- **CoinGecko API**: Free tier for live cryptocurrency market data (UMF feature).
+- **Zoho CRM**: Integrates to automatically create Leads from user sign-ups using Self Client OAuth 2.0.
 
 ### Font Resources
 - Google Fonts (Inter, JetBrains Mono)
-
-### Assets
-- GOLDH logo
-- Favicon
