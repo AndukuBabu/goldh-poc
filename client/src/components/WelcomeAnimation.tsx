@@ -1,28 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 
 export function WelcomeAnimation() {
-  const [show, setShow] = useState(false);
   const [location] = useLocation();
+  const [show, setShow] = useState(false);
+  const hasShownRef = useRef(false);
 
+  // Effect to control show state based on location and sessionStorage
   useEffect(() => {
-    // Only show the welcome animation once per session on the landing page
-    if (location === "/") {
-      const hasSeenWelcome = sessionStorage.getItem("hasSeenWelcome");
-      
-      if (!hasSeenWelcome) {
-        setShow(true);
-        sessionStorage.setItem("hasSeenWelcome", "true");
-        
-        const timer = setTimeout(() => {
-          setShow(false);
-        }, 3500);
-        
-        return () => clearTimeout(timer);
-      }
+    // Only show if we're on landing page, haven't shown yet this session, and haven't shown yet in this component lifetime
+    if (location === "/" && !sessionStorage.getItem("hasSeenWelcome") && !hasShownRef.current) {
+      hasShownRef.current = true;
+      sessionStorage.setItem("hasSeenWelcome", "true");
+      setShow(true);
+    } else if (location !== "/") {
+      setShow(false);
     }
   }, [location]);
+
+  // Separate effect to handle auto-dismiss timer when show becomes true
+  useEffect(() => {
+    if (show) {
+      const timer = setTimeout(() => {
+        setShow(false);
+      }, 3500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [show]);
 
   return (
     <AnimatePresence>

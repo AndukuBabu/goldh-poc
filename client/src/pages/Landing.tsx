@@ -131,13 +131,13 @@ export default function Landing() {
         <div className="container mx-auto">
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <FOMABox
-              title="GOLDH Token Launching Soon"
-              description="Be among the first to access the GOLDH token. Early supporters get exclusive benefits and premium platform features. Don't miss this opportunity!"
+              title="Premium Access Coming Soon"
+              description="Subscribe to unlock exclusive features. Advanced analytics, premium insights, and priority support. Be ready when we launch!"
               variant="premium"
             />
             <FOMABox
-              title="Premium Access Coming Soon"
-              description="Hold tokens or subscribe. Flexible for everyone. Multiple pathways to unlock premium features and exclusive benefits!"
+              title="Intelligent Finance Platform"
+              description="All-in-one crypto intelligence. Market data, news, events, and insights in a single platform. Your command center for digital assets."
               variant="premium"
             />
             <FOMABox

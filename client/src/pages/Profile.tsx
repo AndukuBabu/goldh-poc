@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Loader2, User as UserIcon, Key, Wallet, Sparkles } from "lucide-react";
+import { Loader2, User as UserIcon, Key, Sparkles } from "lucide-react";
 import { useEffect } from "react";
 
 export default function Profile() {
@@ -160,7 +160,7 @@ export default function Profile() {
                 <CardDescription>
                   {user.isPremium 
                     ? "You have Premium access" 
-                    : "Unlock Premium features by holding 5000+ GOLDH tokens"}
+                    : "Premium access coming soon via subscription"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -170,33 +170,6 @@ export default function Profile() {
                     {user.isPremium ? "Premium Member" : "Free Account"}
                   </span>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Wallet */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wallet className="w-5 h-5 text-primary" />
-                  Connected Wallet
-                </CardTitle>
-                <CardDescription>
-                  Your connected cryptocurrency wallet
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {user.walletAddress ? (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Address:</span>
-                    <span className="font-mono text-sm font-semibold text-foreground">
-                      {user.walletAddress.substring(0, 6)}...{user.walletAddress.substring(user.walletAddress.length - 4)}
-                    </span>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No wallet connected. Connect your wallet from the Dashboard to unlock Premium features.
-                  </p>
-                )}
               </CardContent>
             </Card>
 

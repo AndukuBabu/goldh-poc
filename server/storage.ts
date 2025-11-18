@@ -89,7 +89,7 @@ export class DatabaseStorage implements IStorage {
         id: "staking",
         title: "Staking",
         question: "What is Staking?",
-        answer: "Staking is like putting your crypto in a savings account to earn interest. You 'lock up' your tokens to help secure the blockchain network, and in return, you earn rewards (more tokens!). It's a way to make passive income from crypto you're holding anyway. Different platforms offer different staking rewards (APY), and some require you to lock your tokens for a specific period.",
+        answer: "Staking is like putting your crypto in a savings account to earn interest. You 'lock up' your crypto to help secure the blockchain network, and in return, you earn rewards. It's a way to make passive income from crypto you're holding anyway. Different platforms offer different staking rewards (APY), and some require you to lock your crypto for a specific period.",
         relatedTopics: ["apy", "token"]
       },
       {
@@ -124,7 +124,7 @@ export class DatabaseStorage implements IStorage {
         id: "goldh",
         title: "GOLDH Platform",
         question: "What is the GOLDH platform?",
-        answer: "GOLDH (Golden Horizon) is your comprehensive crypto intelligence platform designed for everyone - from beginners to experienced traders. We provide real-time market insights, educational resources, portfolio tracking, and community features all in one place. Our mission is to make crypto accessible and understandable while helping you build wealth and bridge into the digital asset world. Premium members with 5000+ GOLDH tokens get exclusive features and early access to new tools!",
+        answer: "GOLDH (Golden Horizon) is your comprehensive crypto intelligence platform designed for everyone - from beginners to experienced traders. We provide real-time market insights, educational resources, portfolio tracking, and community features all in one place. Our mission is to make crypto accessible and understandable while helping you build wealth and bridge into the digital asset world. Premium subscription members get exclusive features and early access to new tools!",
         relatedTopics: ["blockchain", "wallet", "token"]
       }
     ];
