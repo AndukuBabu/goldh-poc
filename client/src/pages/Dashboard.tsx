@@ -83,72 +83,6 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* Premium Access Teaser */}
-          <Card className="mb-8 border-2 border-primary bg-primary/5">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-2">
-                  <CardTitle className="text-2xl flex items-center gap-2">
-                    <Rocket className="w-6 h-6 text-primary" />
-                    Premium Access Coming Soon
-                  </CardTitle>
-                  <CardDescription className="text-base">
-                    Multiple ways to unlock premium features
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                    Advanced Analytics
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    Real-time market analysis powered by AI to help you make informed decisions
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    Token Rewards
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    Earn GOLDH tokens for active participation and early adoption
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                    Portfolio Tracking
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    Track all your crypto assets in one place with real-time valuations
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-foreground flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    Premium Insights
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    Exclusive market reports and trading signals for premium members
-                  </p>
-                </div>
-              </div>
-
-              {!isPremium && (
-                <div className="mt-6 p-4 rounded-md bg-background/50 border border-border">
-                  <p className="text-sm text-muted-foreground">
-                    <Rocket className="w-4 h-4 inline mr-2 text-primary" />
-                    Unlock Premium access when subscriptions launch! Get exclusive features, advanced analytics, and premium insights. Stay tuned for launch details.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Real-Time Feeds Coming Soon Banner */}
           <Card className="mb-8 border-2 border-[#C7AE6A]/30 bg-gradient-to-r from-[#C7AE6A]/10 to-[#C7AE6A]/5">
             <CardContent className="py-6">
@@ -231,6 +165,72 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+
+          {/* Premium Access Teaser */}
+          <Card className="mb-8 border-2 border-primary bg-primary/5">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <Rocket className="w-6 h-6 text-primary" />
+                    Premium Access Coming Soon
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    Unlock exclusive features with subscription access
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-foreground flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    Advanced Analytics
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Real-time market analysis powered by AI to help you make informed decisions
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-foreground flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    Early Access Benefits
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Be among the first to access new features and premium tools
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-foreground flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    Portfolio Tracking
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Track all your crypto assets in one place with real-time valuations
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-foreground flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    Premium Insights
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Exclusive market reports and trading signals for premium members
+                  </p>
+                </div>
+              </div>
+
+              {!isPremium && (
+                <div className="mt-6 p-4 rounded-md bg-background/50 border border-border">
+                  <p className="text-sm text-muted-foreground">
+                    <Rocket className="w-4 h-4 inline mr-2 text-primary" />
+                    Unlock Premium access when subscriptions launch! Get exclusive features, advanced analytics, and premium insights. Stay tuned for launch details.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
