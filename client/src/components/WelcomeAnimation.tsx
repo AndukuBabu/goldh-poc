@@ -7,15 +7,20 @@ export function WelcomeAnimation() {
   const [location] = useLocation();
 
   useEffect(() => {
-    // Only show the welcome animation on the landing page
+    // Only show the welcome animation once per session on the landing page
     if (location === "/") {
-      setShow(true);
+      const hasSeenWelcome = sessionStorage.getItem("hasSeenWelcome");
       
-      const timer = setTimeout(() => {
-        setShow(false);
-      }, 3500);
-      
-      return () => clearTimeout(timer);
+      if (!hasSeenWelcome) {
+        setShow(true);
+        sessionStorage.setItem("hasSeenWelcome", "true");
+        
+        const timer = setTimeout(() => {
+          setShow(false);
+        }, 3500);
+        
+        return () => clearTimeout(timer);
+      }
     }
   }, [location]);
 
