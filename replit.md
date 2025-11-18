@@ -13,12 +13,13 @@ Preferred communication style: Simple, everyday language.
 - **UI/UX**: shadcn/ui (New York style), Radix UI primitives, Tailwind CSS with custom design tokens. Premium black-gold aesthetic (`#0f0f0f`, `#C7AE6A`), Inter and JetBrains Mono typography, responsive design, interactive elements with hover effects, gold border glows, and shadows. All icons use lucide-react.
 - **State Management**: TanStack Query for server state, React Context API for authentication.
 - **Key Features**:
-    - **Dashboard**: Asset-first grid layout for tracking crypto assets with live prices and news.
+    - **Dashboard**: Asset-first grid layout for tracking crypto assets with live prices and news. Uses UMF snapshot (1-hour cache) for pricing consistency with GOLDH Pulse. Fallback queries for assets outside top 100.
     - **Asset Detail Pages**: Dynamic routes (`/asset/:symbol`) unifying price data, news, and events.
-    - **Landing Page**: Features `NewsScroller`, `PreviewWidgets` (Guru Digest, Market Financials, Economic Calendar), `ComingSoon` features, and `FOMABox`.
+    - **Landing Page**: Features `NewsScroller`, `PreviewWidgets` (Guru Digest, Market Financials, Economic Calendar), `ComingSoon` features, and `FOMABox` with cards ordered: Early User Status, Intelligent Finance Platform, Premium Access.
     - **Welcome Experience**: Includes `WelcomeAnimation` (first-visit overlay), `SignInPrompt` (modal for unauthenticated users), and `ExitIntentModal` (mouse-leave detection).
     - **Mobile Responsiveness**: Comprehensive design with mobile-first approach, including a hamburger menu with shadcn Sheet component.
     - **Authentication-Free Access**: Most feature pages are viewable without login, with dismissible sign-in prompts.
+    - **Navigation**: Consistent order across desktop and mobile: About, Features, Dashboard, Learn, Sign In.
 
 ### Backend
 - **Server**: Express.js on Node.js with TypeScript and ESM modules.
