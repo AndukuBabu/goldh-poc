@@ -66,6 +66,15 @@ export function Header() {
               Learn
             </Button>
           </Link>
+          <Link href="/about">
+            <Button 
+              variant={isActive("/about") ? "default" : "ghost"} 
+              data-testid="button-nav-about" 
+              className={isActive("/about") ? "" : "text-foreground"}
+            >
+              About
+            </Button>
+          </Link>
           <Link href="/dashboard">
             <Button 
               variant={isActive("/dashboard") ? "default" : "ghost"} 
@@ -153,6 +162,14 @@ export function Header() {
                 data-testid="button-mobile-nav-learn"
               >
                 Learn
+              </Button>
+              <Button
+                variant={isActive("/about") ? "default" : "ghost"}
+                onClick={() => handleNavClick("/about")}
+                className={`justify-start ${isActive("/about") ? "" : "text-foreground"}`}
+                data-testid="button-mobile-nav-about"
+              >
+                About
               </Button>
               <Button
                 variant={isActive("/dashboard") ? "default" : "ghost"}

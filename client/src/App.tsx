@@ -19,6 +19,7 @@ import SignUp from "@/pages/SignUp";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
 import Learn from "@/pages/Learn";
+import AboutUs from "@/pages/AboutUs";
 import AdminGuruDigest from "@/pages/AdminGuruDigest";
 import NotFound from "@/pages/not-found";
 
@@ -40,6 +41,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/learn" component={Learn} />
+      <Route path="/about" component={AboutUs} />
       <Route path="/admin/guru-digest">
         <ProtectedAdminRoute>
           <AdminGuruDigest />
