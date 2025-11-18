@@ -121,11 +121,22 @@ export function Header() {
               </Button>
             </>
           ) : (
-            <Link href="/signin">
-              <Button variant="default" data-testid="button-nav-signin">
-                Sign In
-              </Button>
-            </Link>
+            <>
+              <Link href="/signup">
+                <Button 
+                  variant="default"
+                  className="bg-gradient-to-r from-[#C7AE6A] to-[#b99a45] hover:from-[#b99a45] hover:to-[#C7AE6A] text-black font-semibold border-[#C7AE6A]/20"
+                  data-testid="button-nav-signup"
+                >
+                  Sign Up
+                </Button>
+              </Link>
+              <Link href="/signin">
+                <Button variant="outline" data-testid="button-nav-signin" className="border-[#C7AE6A]/30 text-foreground">
+                  Sign In
+                </Button>
+              </Link>
+            </>
           )}
         </nav>
 
@@ -218,14 +229,24 @@ export function Header() {
                   </Button>
                 </>
               ) : (
-                <Button
-                  variant="default"
-                  onClick={() => handleNavClick("/signin")}
-                  className="justify-start"
-                  data-testid="button-mobile-nav-signin"
-                >
-                  Sign In
-                </Button>
+                <>
+                  <Button
+                    variant="default"
+                    onClick={() => handleNavClick("/signup")}
+                    className="justify-start bg-gradient-to-r from-[#C7AE6A] to-[#b99a45] hover:from-[#b99a45] hover:to-[#C7AE6A] text-black font-semibold"
+                    data-testid="button-mobile-nav-signup"
+                  >
+                    Sign Up
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleNavClick("/signin")}
+                    className="justify-start border-[#C7AE6A]/30 text-foreground"
+                    data-testid="button-mobile-nav-signin"
+                  >
+                    Sign In
+                  </Button>
+                </>
               )}
             </nav>
           </SheetContent>

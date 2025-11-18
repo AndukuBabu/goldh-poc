@@ -6,6 +6,7 @@ import { FOMABox } from "@/components/FOMABox";
 import { NewsScroller } from "@/components/NewsScroller";
 import { PreviewWidgets } from "@/components/PreviewWidgets";
 import { ComingSoon } from "@/components/ComingSoon";
+import { SignInPrompt } from "@/components/SignInPrompt";
 import { useAuth } from "@/lib/auth";
 import { TrendingUp, Shield, Zap, Bell, Globe, Users, Mail } from "lucide-react";
 import { SiLinkedin, SiX, SiInstagram } from "react-icons/si";
@@ -59,16 +60,17 @@ export default function Landing() {
     if (user) {
       setLocation("/dashboard");
     } else {
-      setLocation("/signin");
+      setLocation("/signup");
     }
   };
   
-  const buttonText = isLoading ? "Loading..." : (user ? "Go to Dashboard" : "Start Free");
+  const buttonText = isLoading ? "Loading..." : (user ? "Go to Dashboard" : "Sign Up Free");
   const ctaButtonText = isLoading ? "Loading..." : (user ? "Go to Dashboard" : "Get Started Now");
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      <SignInPrompt />
       
       {/* News Ticker */}
       <NewsScroller />
