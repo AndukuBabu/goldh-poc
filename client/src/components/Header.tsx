@@ -48,24 +48,6 @@ export function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-2">
-          <Link href="/features">
-            <Button 
-              variant={isActive("/features") ? "default" : "ghost"} 
-              data-testid="button-nav-features" 
-              className={isActive("/features") ? "" : "text-foreground"}
-            >
-              Features
-            </Button>
-          </Link>
-          <Link href="/learn">
-            <Button 
-              variant={isActive("/learn") ? "default" : "ghost"} 
-              data-testid="button-nav-learn" 
-              className={isActive("/learn") ? "" : "text-foreground"}
-            >
-              Learn
-            </Button>
-          </Link>
           <Link href="/about">
             <Button 
               variant={isActive("/about") ? "default" : "ghost"} 
@@ -75,6 +57,15 @@ export function Header() {
               About
             </Button>
           </Link>
+          <Link href="/features">
+            <Button 
+              variant={isActive("/features") ? "default" : "ghost"} 
+              data-testid="button-nav-features" 
+              className={isActive("/features") ? "" : "text-foreground"}
+            >
+              Features
+            </Button>
+          </Link>
           <Link href="/dashboard">
             <Button 
               variant={isActive("/dashboard") ? "default" : "ghost"} 
@@ -82,6 +73,15 @@ export function Header() {
               className={isActive("/dashboard") ? "" : "text-foreground"}
             >
               Dashboard
+            </Button>
+          </Link>
+          <Link href="/learn">
+            <Button 
+              variant={isActive("/learn") ? "default" : "ghost"} 
+              data-testid="button-nav-learn" 
+              className={isActive("/learn") ? "" : "text-foreground"}
+            >
+              Learn
             </Button>
           </Link>
           {isLoading ? (
@@ -159,22 +159,6 @@ export function Header() {
             </SheetHeader>
             <nav className="flex flex-col gap-4 mt-8">
               <Button
-                variant={isActive("/features") ? "default" : "ghost"}
-                onClick={() => handleNavClick("/features")}
-                className={`justify-start ${isActive("/features") ? "" : "text-foreground"}`}
-                data-testid="button-mobile-nav-features"
-              >
-                Features
-              </Button>
-              <Button
-                variant={isActive("/learn") ? "default" : "ghost"}
-                onClick={() => handleNavClick("/learn")}
-                className={`justify-start ${isActive("/learn") ? "" : "text-foreground"}`}
-                data-testid="button-mobile-nav-learn"
-              >
-                Learn
-              </Button>
-              <Button
                 variant={isActive("/about") ? "default" : "ghost"}
                 onClick={() => handleNavClick("/about")}
                 className={`justify-start ${isActive("/about") ? "" : "text-foreground"}`}
@@ -183,12 +167,28 @@ export function Header() {
                 About
               </Button>
               <Button
+                variant={isActive("/features") ? "default" : "ghost"}
+                onClick={() => handleNavClick("/features")}
+                className={`justify-start ${isActive("/features") ? "" : "text-foreground"}`}
+                data-testid="button-mobile-nav-features"
+              >
+                Features
+              </Button>
+              <Button
                 variant={isActive("/dashboard") ? "default" : "ghost"}
                 onClick={() => handleNavClick("/dashboard")}
                 className={`justify-start ${isActive("/dashboard") ? "" : "text-foreground"}`}
                 data-testid="button-mobile-nav-dashboard"
               >
                 Dashboard
+              </Button>
+              <Button
+                variant={isActive("/learn") ? "default" : "ghost"}
+                onClick={() => handleNavClick("/learn")}
+                className={`justify-start ${isActive("/learn") ? "" : "text-foreground"}`}
+                data-testid="button-mobile-nav-learn"
+              >
+                Learn
               </Button>
               
               {isLoading ? (

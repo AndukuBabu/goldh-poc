@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AssetCard } from "@/components/AssetCard";
 import { useToast } from "@/hooks/use-toast";
+import { useUmfSnapshot } from "@/hooks/useUmf";
 import { Sparkles, TrendingUp, Loader2, Rocket, ChevronDown, ChevronUp } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import type { AssetOverview } from "@shared/schema";
-import { CANONICAL_SYMBOLS, ASSET_CLASSES } from "@shared/constants";
+import { CANONICAL_SYMBOLS, ASSET_CLASSES, ASSET_DISPLAY_NAMES } from "@shared/constants";
 
 // Tracked crypto assets for the dashboard (filter out non-crypto assets)
 const TRACKED_ASSETS = CANONICAL_SYMBOLS.filter(symbol => ASSET_CLASSES[symbol] === 'crypto');
@@ -26,25 +27,91 @@ export default function Dashboard() {
 
   const isPremium = user?.isPremium || false;
   
-  // Fetch asset data for tracked assets
+  // Fetch UMF snapshot directly (same 1-hour cache as GOLDH Pulse)
+  const { data: umfData, isLoading: isLoadingUmf, error: umfError } = useUmfSnapshot();
+  
+  // Determine which assets to display
   const displayedAssets = showAll ? TRACKED_ASSETS : TRACKED_ASSETS.slice(0, INITIAL_DISPLAY_COUNT);
   
-  const assetQueries = useQueries({
-    queries: displayedAssets.map(symbol => ({
+  // Find assets missing from UMF snapshot
+  const missingAssets = useMemo(() => {
+    if (!umfData?.data) return [];
+    return displayedAssets.filter(symbol => 
+      !umfData.data.assets.find(a => a.symbol === symbol)
+    );
+  }, [displayedAssets, umfData]);
+  
+  // Fallback: fetch individual asset data for assets not in UMF snapshot
+  const fallbackQueries = useQueries({
+    queries: missingAssets.map(symbol => ({
       queryKey: [`/api/asset/${symbol}`],
+      enabled: !!umfData?.data,
     })),
   });
   
-  const isLoadingAssets = assetQueries.some(q => q.isLoading);
-  
-  // Create asset display data, including error states
-  const assetDisplayData = displayedAssets.map((symbol, index) => {
-    const query = assetQueries[index];
+  // Map UMF snapshot data + fallback data to AssetOverview format
+  const assetDisplayData = displayedAssets.map(symbol => {
+    if (isLoadingUmf || !umfData?.data) {
+      return {
+        symbol,
+        data: undefined,
+        isLoading: true,
+        isError: false,
+      };
+    }
+    
+    // Try to find asset in UMF snapshot first
+    const asset = umfData.data.assets.find(a => a.symbol === symbol);
+    
+    if (asset) {
+      // Found in UMF snapshot - use it
+      const assetOverview: AssetOverview = {
+        symbol,
+        name: ASSET_DISPLAY_NAMES[symbol] || symbol,
+        class: ASSET_CLASSES[symbol] || 'crypto',
+        image: null,
+        priceSummary: {
+          price: asset.price,
+          changePct24h: asset.changePct24h ?? 0,
+          volume24h: asset.volume24h ?? null,
+          marketCap: asset.marketCap ?? null,
+          updatedAt_utc: umfData.data.timestamp_utc,
+        },
+        news: [],
+        events: [],
+        degraded: {
+          price: umfData.degraded,
+          news: false,
+          events: true,
+        },
+      };
+      
+      return {
+        symbol,
+        data: assetOverview,
+        isLoading: false,
+        isError: false,
+      };
+    }
+    
+    // Not in UMF snapshot - check fallback query
+    const fallbackIndex = missingAssets.indexOf(symbol);
+    if (fallbackIndex >= 0) {
+      const fallbackQuery = fallbackQueries[fallbackIndex];
+      return {
+        symbol,
+        data: fallbackQuery.data as AssetOverview | undefined,
+        isLoading: fallbackQuery.isLoading,
+        isError: fallbackQuery.isError,
+      };
+    }
+    
+    // Should never reach here, but return error state as fallback
     return {
       symbol,
-      data: query.data as AssetOverview | undefined,
-      isLoading: query.isLoading,
-      isError: query.isError,
+      data: undefined,
+      isLoading: false,
+      isError: true,
     };
   });
 

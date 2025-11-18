@@ -133,8 +133,8 @@ export default function Landing() {
         <div className="container mx-auto">
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <FOMABox
-              title="Premium Access Coming Soon"
-              description="Subscribe to unlock exclusive features. Advanced analytics, premium insights, and priority support. Be ready when we launch!"
+              title="Early User Status"
+              description="Sign up early and get exclusive benefits. More rewards, more features, more opportunities. Your journey to crypto mastery starts here."
               variant="premium"
             />
             <FOMABox
@@ -143,8 +143,8 @@ export default function Landing() {
               variant="premium"
             />
             <FOMABox
-              title="Early User Status"
-              description="Sign up early and get exclusive benefits. More rewards, more features, more opportunities. Your journey to crypto mastery starts here."
+              title="Premium Access Coming Soon"
+              description="Subscribe to unlock exclusive features. Advanced analytics, premium insights, and priority support. Be ready when we launch!"
               variant="premium"
             />
           </div>
