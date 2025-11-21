@@ -9,6 +9,9 @@ interface SignInPromptProps {
   onClose?: () => void;
 }
 
+const DISMISS_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+const DISMISS_KEY = 'goldh-signin-prompt-dismissed';
+
 export function SignInPrompt({ onClose }: SignInPromptProps) {
   const { user } = useAuth();
   const [dismissed, setDismissed] = useState(false);
@@ -18,6 +21,16 @@ export function SignInPrompt({ onClose }: SignInPromptProps) {
     // Don't show if user is authenticated
     if (user) {
       return;
+    }
+
+    // Check if prompt was recently dismissed (within cooldown period)
+    const dismissedAt = localStorage.getItem(DISMISS_KEY);
+    if (dismissedAt) {
+      const timeSinceDismissal = Date.now() - parseInt(dismissedAt, 10);
+      if (timeSinceDismissal < DISMISS_COOLDOWN_MS) {
+        // Still within cooldown period - don't show
+        return;
+      }
     }
 
     // Show the modal automatically after a short delay on page load
@@ -31,6 +44,8 @@ export function SignInPrompt({ onClose }: SignInPromptProps) {
   const handleDismiss = () => {
     setShow(false);
     setDismissed(true);
+    // Store dismissal timestamp in localStorage
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
     onClose?.();
   };
 
