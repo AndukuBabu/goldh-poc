@@ -1,20 +1,6 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, setDoc, doc } from "firebase/firestore";
+import { db } from "../server/firebase";
+import admin from "firebase-admin";
 import type { UmfAsset, UmfSnapshot, UmfMover, UmfBrief, UmfAlert } from "../shared/schema";
-
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyCjEmAnHmKLZ8msjNeovJBF3ssg-OHzz0M",
-  authDomain: "goldh-c78ca.firebaseapp.com",
-  projectId: "goldh-c78ca",
-  storageBucket: "goldh-c78ca.firebasestorage.app",
-  messagingSenderId: "1050639201481",
-  appId: "1:1050639201481:web:71c433ebb31ccb2e6b4918",
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 // Get current UTC timestamp
 const now = new Date().toISOString();
@@ -246,7 +232,7 @@ const mockAssets: UmfAsset[] = [
     marketCap: 3700000000,
     updatedAt_utc: now,
   },
-  
+
   // Major Stock Indices
   {
     id: "spx",
@@ -270,7 +256,7 @@ const mockAssets: UmfAsset[] = [
     marketCap: null,
     updatedAt_utc: now,
   },
-  
+
   // Forex
   {
     id: "dxy",
@@ -283,7 +269,7 @@ const mockAssets: UmfAsset[] = [
     marketCap: null,
     updatedAt_utc: now,
   },
-  
+
   // Commodities
   {
     id: "gold",
@@ -365,7 +351,7 @@ const mockMovers: UmfMover[] = [
     price: 3.45,
     updatedAt_utc: now,
   },
-  
+
   // Top 5 Losers
   {
     symbol: "ICP",
@@ -470,7 +456,7 @@ const DRY_RUN = process.argv.includes('--dry-run');
 async function uploadUmfMockData() {
   console.log("🚀 Starting UMF Mock Data Upload to Firestore...\n");
   console.log(`📌 Mode: ${DRY_RUN ? '🔍 DRY RUN (no writes)' : '✍️  LIVE (writing to Firestore)'}\n`);
-  
+
   const summary = {
     snapshot: 0,
     movers: 0,
@@ -486,7 +472,7 @@ async function uploadUmfMockData() {
       console.log(`   → Assets: ${mockSnapshot.assets.length}`);
       console.log(`   → Timestamp: ${mockSnapshot.timestamp_utc}`);
     } else {
-      await setDoc(doc(db, "umf_snapshot_mock", "current"), mockSnapshot);
+      await db.collection("umf_snapshot_mock").doc("current").set(mockSnapshot);
       summary.snapshot = 1;
       console.log(`   ✅ Snapshot uploaded successfully`);
       console.log(`   → Document ID: current`);
@@ -505,7 +491,7 @@ async function uploadUmfMockData() {
       for (let i = 0; i < mockMovers.length; i++) {
         const mover = mockMovers[i];
         const docId = `${mover.direction}-${mover.symbol.toLowerCase()}`;
-        await setDoc(doc(db, "umf_movers_mock", docId), mover);
+        await db.collection("umf_movers_mock").doc(docId).set(mover);
         summary.movers++;
         console.log(`   ✅ ${i + 1}/${mockMovers.length}: ${mover.symbol} (${mover.direction}) ${mover.changePct24h > 0 ? '+' : ''}${mover.changePct24h.toFixed(2)}%`);
       }
@@ -519,7 +505,7 @@ async function uploadUmfMockData() {
       console.log(`   → Headline: "${mockBrief.headline}"`);
       console.log(`   → Bullets: ${mockBrief.bullets.length}`);
     } else {
-      await setDoc(doc(db, "umf_brief_mock", "today"), mockBrief);
+      await db.collection("umf_brief_mock").doc("today").set(mockBrief);
       summary.brief = 1;
       console.log(`   ✅ Brief uploaded successfully`);
       console.log(`   → Document ID: today`);
@@ -537,7 +523,7 @@ async function uploadUmfMockData() {
     } else {
       for (let i = 0; i < mockAlerts.length; i++) {
         const alert = mockAlerts[i];
-        await setDoc(doc(db, "umf_alerts_mock", alert.id), alert);
+        await db.collection("umf_alerts_mock").doc(alert.id).set(alert);
         summary.alerts++;
         console.log(`   ✅ ${i + 1}/${mockAlerts.length}: [${alert.severity.toUpperCase()}] ${alert.title}`);
       }
@@ -577,7 +563,7 @@ async function uploadUmfMockData() {
       });
     }
     console.log("═══════════════════════════════════════════════════════════════");
-    
+
   } catch (error) {
     console.error("❌ Error uploading UMF mock data:", error);
     process.exit(1);

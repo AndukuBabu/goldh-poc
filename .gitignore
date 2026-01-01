@@ -4,3 +4,27 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Secrets and Local Config
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.local
+
+# Service Accounts / Keys
+*-key.json
+*-credential.json
+service-account.json
+firebase-key.json
+secrets.json
+
+# Replit
+.replit
+replit.nix
+.config
+.apt
+.cache
+.npm
+.replit_db

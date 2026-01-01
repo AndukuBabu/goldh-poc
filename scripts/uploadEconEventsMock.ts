@@ -2,14 +2,14 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
 import type { EconEvent } from "../shared/schema";
 
-// Firebase configuration (matching client config)
+// Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyCjEmAnHmKLZ8msjNeovJBF3ssg-OHzz0M",
-  authDomain: "goldh-c78ca.firebaseapp.com",
-  projectId: "goldh-c78ca",
-  storageBucket: "goldh-c78ca.firebasestorage.app",
-  messagingSenderId: "1050639201481",
-  appId: "1:1050639201481:web:71c433ebb31ccb2e6b4918",
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
@@ -1024,7 +1024,6 @@ async function uploadEconEvents(): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 2000));
 
   try {
-    const econEventsCollection = collection(db, "econEvents_mock");
     let uploadedCount = 0;
 
     console.log("📤 Uploading to Firestore...\n");
@@ -1032,7 +1031,7 @@ async function uploadEconEvents(): Promise<void> {
     for (let i = 0; i < events.length; i++) {
       const event = events[i];
 
-      const docRef = await addDoc(econEventsCollection, event);
+      const docRef = await db.collection("econEvents_mock").add(event);
 
       uploadedCount++;
       if (uploadedCount % 10 === 0 || uploadedCount === events.length) {

@@ -17,55 +17,9 @@
  * @see docs/UMF-Live-Firestore.md for integration architecture
  */
 
-import { initializeApp, getApps } from 'firebase/app';
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  collection,
-  query,
-  orderBy,
-  limit,
-  getDocs,
-  deleteDoc,
-  serverTimestamp,
-  Timestamp,
-  type Firestore,
-} from 'firebase/firestore';
+import { db } from '../../firebase';
+import admin from 'firebase-admin';
 import { umfSnapshotLiveSchema, type UmfSnapshotLive } from '@shared/schema';
-
-/**
- * Firebase Configuration from Environment Variables
- * 
- * All credentials stored securely in Replit secrets.
- */
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-};
-
-/**
- * Validate Required Environment Variables
- */
-const requiredEnvVars = [
-  'FIREBASE_API_KEY',
-  'FIREBASE_AUTH_DOMAIN',
-  'FIREBASE_PROJECT_ID',
-  'FIREBASE_STORAGE_BUCKET',
-  'FIREBASE_MESSAGING_SENDER_ID',
-  'FIREBASE_APP_ID'
-];
-
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-}
 
 /**
  * Firestore Collection Names
@@ -73,31 +27,6 @@ for (const envVar of requiredEnvVars) {
 const COLLECTION_LIVE = 'umf_snapshot_live';
 const DOC_LATEST = 'latest';
 const COLLECTION_HISTORY = 'umf_snapshot_history';
-
-/**
- * Initialize Firebase for server-side use
- * 
- * Only initializes if no app exists (singleton pattern).
- */
-let db: Firestore;
-
-function initializeFirestore(): Firestore {
-  if (!db) {
-    // Check if Firebase app already initialized
-    const existingApps = getApps();
-    
-    if (existingApps.length === 0) {
-      // Initialize new app
-      const app = initializeApp(firebaseConfig, 'umf-server');
-      db = getFirestore(app);
-    } else {
-      // Reuse existing app
-      db = getFirestore(existingApps[0]);
-    }
-  }
-  
-  return db;
-}
 
 /**
  * Write Live Snapshot to Firestore
@@ -127,13 +56,9 @@ function initializeFirestore(): Firestore {
 export async function writeLiveSnapshot(snapshot: UmfSnapshotLive): Promise<void> {
   // Validate with Zod before writing
   const validated = umfSnapshotLiveSchema.parse(snapshot);
-  
-  // Initialize Firestore
-  const firestore = initializeFirestore();
-  
+
   // Write to umf_snapshot_live/latest
-  const docRef = doc(firestore, COLLECTION_LIVE, DOC_LATEST);
-  await setDoc(docRef, validated);
+  await db.collection(COLLECTION_LIVE).doc(DOC_LATEST).set(validated);
 }
 
 /**
@@ -168,22 +93,18 @@ export async function writeLiveSnapshot(snapshot: UmfSnapshotLive): Promise<void
 export async function appendHistorySnapshot(snapshot: UmfSnapshotLive): Promise<void> {
   // Validate with Zod before writing
   const validated = umfSnapshotLiveSchema.parse(snapshot);
-  
-  // Initialize Firestore
-  const firestore = initializeFirestore();
-  
+
   // Use snapshot timestamp as document ID
   const docId = validated.timestamp_utc;
-  
+
   // Add server timestamp for consistent ordering
   const historyDoc = {
     ...validated,
-    written_at_utc: serverTimestamp(),
+    written_at_utc: admin.firestore.FieldValue.serverTimestamp(),
   };
-  
+
   // Write to umf_snapshot_history/{timestamp}
-  const docRef = doc(firestore, COLLECTION_HISTORY, docId);
-  await setDoc(docRef, historyDoc);
+  await db.collection(COLLECTION_HISTORY).doc(docId).set(historyDoc);
 }
 
 /**
@@ -210,24 +131,20 @@ export async function appendHistorySnapshot(snapshot: UmfSnapshotLive): Promise<
  * ```
  */
 export async function readLiveSnapshot(): Promise<UmfSnapshotLive | null> {
-  // Initialize Firestore
-  const firestore = initializeFirestore();
-  
   // Read from umf_snapshot_live/latest
-  const docRef = doc(firestore, COLLECTION_LIVE, DOC_LATEST);
-  const docSnap = await getDoc(docRef);
-  
-  if (!docSnap.exists()) {
+  const docSnap = await db.collection(COLLECTION_LIVE).doc(DOC_LATEST).get();
+
+  if (!docSnap.exists) {
     // Document doesn't exist
     return null;
   }
-  
+
   // Get data and validate
   const data = docSnap.data();
-  
+
   // Validate with Zod
   const validated = umfSnapshotLiveSchema.parse(data);
-  
+
   return validated;
 }
 
@@ -254,37 +171,32 @@ export async function readLiveSnapshot(): Promise<UmfSnapshotLive | null> {
  * ```
  */
 export async function trimHistory(maxDocs: number): Promise<number> {
-  // Initialize Firestore
-  const firestore = initializeFirestore();
-  
   // Get all history documents ordered by written_at_utc ascending (oldest first)
-  const historyRef = collection(firestore, COLLECTION_HISTORY);
-  const allDocsQuery = query(historyRef, orderBy('written_at_utc', 'asc'));
-  const allDocsSnap = await getDocs(allDocsQuery);
-  
+  const historyRef = db.collection(COLLECTION_HISTORY);
+  const allDocsSnap = await historyRef.orderBy('written_at_utc', 'asc').get();
+
   const totalDocs = allDocsSnap.size;
-  
+
   // Calculate how many to delete
   const toDelete = totalDocs - maxDocs;
-  
+
   if (toDelete <= 0) {
     // Nothing to delete
     return 0;
   }
-  
-  // Delete oldest documents
+
+  // Delete oldest documents using a batch
   let deletedCount = 0;
-  const deletePromises: Promise<void>[] = [];
-  
+  const batch = db.batch();
+
   allDocsSnap.docs.slice(0, toDelete).forEach((docSnap) => {
-    const docRef = doc(firestore, COLLECTION_HISTORY, docSnap.id);
-    deletePromises.push(deleteDoc(docRef));
+    batch.delete(docSnap.ref);
     deletedCount++;
   });
-  
+
   // Execute all deletes in parallel
-  await Promise.all(deletePromises);
-  
+  await batch.commit();
+
   return deletedCount;
 }
 
@@ -303,12 +215,9 @@ export async function trimHistory(maxDocs: number): Promise<number> {
  * ```
  */
 export async function getHistoryCount(): Promise<number> {
-  // Initialize Firestore
-  const firestore = initializeFirestore();
-  
   // Get all history documents
-  const historyRef = collection(firestore, COLLECTION_HISTORY);
-  const allDocsSnap = await getDocs(historyRef);
-  
+  const historyRef = db.collection(COLLECTION_HISTORY);
+  const allDocsSnap = await historyRef.get();
+
   return allDocsSnap.size;
 }

@@ -21,6 +21,7 @@
 import { fetchTopCoinsByMarketCap } from './providers/coingecko';
 import { setFresh } from './lib/cache';
 import { writeLiveSnapshot, appendHistorySnapshot, trimHistory } from './lib/firestoreUmf';
+import { integrationConfig } from '../config';
 import type { UmfSnapshotLive } from '@shared/schema';
 import {
   SCHEDULER_INTERVAL_MS,
@@ -79,12 +80,12 @@ let lastCallAt: number | null = null;
  */
 async function tick(): Promise<void> {
   const startTime = Date.now();
-  
+
   try {
     // Rate limit guard: prevent calls within 55 minutes
     if (lastCallAt !== null) {
       const timeSinceLastCall = Date.now() - lastCallAt;
-      
+
       if (timeSinceLastCall < MIN_CALL_INTERVAL_MS) {
         const minutesSince = Math.floor(timeSinceLastCall / 60000);
         console.warn(
@@ -93,39 +94,39 @@ async function tick(): Promise<void> {
         return;
       }
     }
-    
+
     // Update last call timestamp BEFORE calling API
     // This prevents race conditions if tick() is called concurrently
     lastCallAt = Date.now();
-    
+
     console.log(`${LOG_PREFIX_SCHEDULER} Starting tick...`);
-    
+
     // Step 1: Fetch top coins by market cap from CoinGecko
-    const apiKey = process.env.COINGECKO_API_KEY;
+    const apiKey = integrationConfig.coingecko.apiKey;
     const result = await fetchTopCoinsByMarketCap(TOP_COINS_COUNT, apiKey);
-    
+
     // Step 2: Build UmfSnapshotLive
     const snapshot: UmfSnapshotLive = {
       timestamp_utc: result.timestamp_utc,
       assets: result.assets,
       degraded: false, // Live CoinGecko data = not degraded
     };
-    
+
     // Step 3: Update in-memory cache
     setFresh('umf:snapshot', snapshot, CACHE_TTL_S);
-    
+
     // Step 4: Write to Firestore live collection
     await writeLiveSnapshot(snapshot);
-    
+
     // Step 5: Append to Firestore history collection
     await appendHistorySnapshot(snapshot);
-    
+
     // Step 6: Cleanup old history (keep only HISTORY_MAX most recent)
     const deletedCount = await trimHistory(HISTORY_MAX);
-    
+
     // Calculate duration
     const duration_ms = Date.now() - startTime;
-    
+
     // Step 7: Log success metrics
     console.log(
       `${LOG_PREFIX_SCHEDULER} Tick completed:`,
@@ -145,7 +146,7 @@ async function tick(): Promise<void> {
       `${LOG_PREFIX_SCHEDULER} Tick failed:`,
       error instanceof Error ? error.message : String(error)
     );
-    
+
     // Reset lastCallAt on error so we can retry on next tick
     lastCallAt = null;
   }
@@ -193,16 +194,16 @@ export function startScheduler(): void {
   console.log(`${LOG_PREFIX_SCHEDULER} Base interval: ${SCHEDULER_INTERVAL_MS}ms (${SCHEDULER_INTERVAL_MS / 60000} minutes)`);
   console.log(`${LOG_PREFIX_SCHEDULER} Jitter: ±${SCHEDULER_JITTER_MS}ms (±${SCHEDULER_JITTER_MS / 1000} seconds)`);
   console.log(`${LOG_PREFIX_SCHEDULER} Rate limit guard: ${MIN_CALL_INTERVAL_MS / 60000} minutes`);
-  
+
   // Calculate initial jitter (random 0 to SCHEDULER_JITTER_MS)
   const initialJitter = Math.floor(Math.random() * SCHEDULER_JITTER_MS);
   console.log(`${LOG_PREFIX_SCHEDULER} Initial delay: ${initialJitter}ms (${(initialJitter / 1000).toFixed(1)}s)`);
-  
+
   // Wait initial jitter, then run first tick
   setTimeout(async () => {
     console.log(`${LOG_PREFIX_SCHEDULER} Running first tick after initial jitter...`);
     await tick();
-    
+
     // Schedule periodic ticks with jitter
     scheduleNextTick();
   }, initialJitter);
@@ -223,13 +224,13 @@ function scheduleNextTick(): void {
   // Calculate jittered interval for this tick
   const jitter = getRandomJitter(SCHEDULER_JITTER_MS);
   const interval = SCHEDULER_INTERVAL_MS + jitter;
-  
+
   const intervalMinutes = (interval / 60000).toFixed(2);
   console.log(`${LOG_PREFIX_SCHEDULER} Next tick in ${interval}ms (${intervalMinutes} minutes)`);
-  
+
   setTimeout(async () => {
     await tick();
-    
+
     // Schedule next tick (recursive)
     scheduleNextTick();
   }, interval);

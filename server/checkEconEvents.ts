@@ -1,9 +1,7 @@
-import { collection, getDocs } from 'firebase/firestore';
-import { getDb } from './guru/lib/firebase';
+import { db } from './firebase';
 
 async function checkEvents() {
-  const db = getDb();
-  const snapshot = await getDocs(collection(db, 'econEvents'));
+  const snapshot = await db.collection('econEvents').get();
   console.log('Total events in Firestore:', snapshot.size);
 
   // Group by date to see distribution
@@ -18,7 +16,7 @@ async function checkEvents() {
   Array.from(dateMap.entries()).sort().forEach(([date, count]) => {
     console.log(`  ${date}: ${count} events`);
   });
-  
+
   // Check the actual date range
   const dates = snapshot.docs
     .map(doc => doc.data().date)

@@ -2,11 +2,12 @@
  * Firestore Operations for Guru Digest
  * 
  * Handles all Firestore CRUD operations for the guruDigest collection.
+ * Uses Firebase Admin SDK for better performance and security on the server.
  */
 
-import { collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, limit } from 'firebase/firestore';
-import { getDb } from './firebase';
+import { db } from '../../firebase';
 import type { GuruDigestEntry } from './rss';
+import admin from 'firebase-admin';
 
 /**
  * Guru Digest Entry with Firestore ID
@@ -29,14 +30,14 @@ const COLLECTION_NAME = 'guruDigest';
  * @returns Number of entries deleted
  */
 export async function clearGuruDigest(): Promise<number> {
-  const db = getDb();
-  
   try {
-    const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
-    const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
-    await Promise.all(deletePromises);
-    
-    return querySnapshot.docs.length;
+    const snapshot = await db.collection(COLLECTION_NAME).get();
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+    return snapshot.size;
   } catch (error) {
     console.error('[Guru] Error clearing collection:', error);
     throw error;
@@ -52,10 +53,8 @@ export async function clearGuruDigest(): Promise<number> {
  * @returns Document ID of the created entry
  */
 export async function addGuruDigestEntry(entry: GuruDigestEntry): Promise<string> {
-  const db = getDb();
-  
   try {
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), entry);
+    const docRef = await db.collection(COLLECTION_NAME).add(entry);
     return docRef.id;
   } catch (error) {
     console.error('[Guru] Error adding entry:', error);
@@ -74,7 +73,7 @@ export async function addGuruDigestEntry(entry: GuruDigestEntry): Promise<string
  */
 export async function addGuruDigestEntries(entries: GuruDigestEntry[]): Promise<number> {
   let successCount = 0;
-  
+
   const promises = entries.map(async (entry) => {
     try {
       await addGuruDigestEntry(entry);
@@ -83,9 +82,8 @@ export async function addGuruDigestEntries(entries: GuruDigestEntry[]): Promise<
       console.error('[Guru] Failed to add entry:', entry.title.substring(0, 60), error);
     }
   });
-  
+
   await Promise.all(promises);
-  
   return successCount;
 }
 
@@ -100,16 +98,11 @@ export async function addGuruDigestEntries(entries: GuruDigestEntry[]): Promise<
  * @throws Error if Firestore query fails
  */
 export async function getGuruDigestByAsset(symbol: string): Promise<GuruDigestEntry[]> {
-  const db = getDb();
-  
-  const q = query(
-    collection(db, COLLECTION_NAME),
-    where('assets', 'array-contains', symbol)
-  );
-  
-  const querySnapshot = await getDocs(q);
-  
-  const entries: GuruDigestEntry[] = querySnapshot.docs.map(doc => {
+  const snapshot = await db.collection(COLLECTION_NAME)
+    .where('assets', 'array-contains', symbol)
+    .get();
+
+  return snapshot.docs.map(doc => {
     const data = doc.data();
     return {
       title: data.title || '',
@@ -119,8 +112,6 @@ export async function getGuruDigestByAsset(symbol: string): Promise<GuruDigestEn
       assets: data.assets || [],
     };
   });
-  
-  return entries;
 }
 
 /**
@@ -134,17 +125,12 @@ export async function getGuruDigestByAsset(symbol: string): Promise<GuruDigestEn
  * @throws Error if Firestore query fails
  */
 export async function getAllGuruDigest(maxEntries: number = 50): Promise<GuruDigestEntry[]> {
-  const db = getDb();
-  
-  const q = query(
-    collection(db, COLLECTION_NAME),
-    orderBy('date', 'desc'),
-    limit(maxEntries)
-  );
-  
-  const querySnapshot = await getDocs(q);
-  
-  const entries: GuruDigestEntry[] = querySnapshot.docs.map(doc => {
+  const snapshot = await db.collection(COLLECTION_NAME)
+    .orderBy('date', 'desc')
+    .limit(maxEntries)
+    .get();
+
+  return snapshot.docs.map(doc => {
     const data = doc.data();
     return {
       title: data.title || '',
@@ -154,8 +140,6 @@ export async function getAllGuruDigest(maxEntries: number = 50): Promise<GuruDig
       assets: data.assets || [],
     };
   });
-  
-  return entries;
 }
 
 /**
@@ -169,17 +153,12 @@ export async function getAllGuruDigest(maxEntries: number = 50): Promise<GuruDig
  * @throws Error if Firestore query fails
  */
 export async function getAllGuruDigestWithIds(maxEntries: number = 100): Promise<GuruDigestEntryWithId[]> {
-  const db = getDb();
-  
-  const q = query(
-    collection(db, COLLECTION_NAME),
-    orderBy('date', 'desc'),
-    limit(maxEntries)
-  );
-  
-  const querySnapshot = await getDocs(q);
-  
-  const entries: GuruDigestEntryWithId[] = querySnapshot.docs.map(docSnapshot => {
+  const snapshot = await db.collection(COLLECTION_NAME)
+    .orderBy('date', 'desc')
+    .limit(maxEntries)
+    .get();
+
+  return snapshot.docs.map(docSnapshot => {
     const data = docSnapshot.data();
     return {
       id: docSnapshot.id,
@@ -190,8 +169,6 @@ export async function getAllGuruDigestWithIds(maxEntries: number = 100): Promise
       assets: data.assets || [],
     };
   });
-  
-  return entries;
 }
 
 /**
@@ -204,10 +181,8 @@ export async function getAllGuruDigestWithIds(maxEntries: number = 100): Promise
  * @throws Error if deletion fails
  */
 export async function deleteGuruDigestEntry(entryId: string): Promise<void> {
-  const db = getDb();
-  
   try {
-    await deleteDoc(doc(db, COLLECTION_NAME, entryId));
+    await db.collection(COLLECTION_NAME).doc(entryId).delete();
     console.log(`[Guru] Deleted entry: ${entryId}`);
   } catch (error) {
     console.error('[Guru] Error deleting entry:', entryId, error);

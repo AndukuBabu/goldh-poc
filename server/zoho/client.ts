@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { integrationConfig } from '../config';
 
 interface ZohoTokenResponse {
   access_token: string;
@@ -17,10 +18,10 @@ export class ZohoClient {
   private apiDomain: string;
 
   constructor() {
-    this.clientId = process.env.ZOHO_CLIENT_ID || '';
-    this.clientSecret = process.env.ZOHO_CLIENT_SECRET || '';
-    this.refreshToken = process.env.ZOHO_REFRESH_TOKEN || '';
-    this.apiDomain = process.env.ZOHO_API_DOMAIN || 'https://www.zohoapis.com';
+    this.clientId = integrationConfig.zoho.clientId || '';
+    this.clientSecret = integrationConfig.zoho.clientSecret || '';
+    this.refreshToken = integrationConfig.zoho.refreshToken || '';
+    this.apiDomain = integrationConfig.zoho.apiDomain;
 
     if (!this.clientId || !this.clientSecret || !this.refreshToken) {
       console.warn('[Zoho] Missing credentials - CRM integration disabled');
@@ -33,7 +34,7 @@ export class ZohoClient {
 
   async getAccessToken(): Promise<string> {
     const now = Date.now();
-    
+
     if (cachedAccessToken && tokenExpiresAt > now) {
       return cachedAccessToken;
     }

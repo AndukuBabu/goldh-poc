@@ -2,13 +2,14 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
 
 // Firebase configuration
+// Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyCjEmAnHmKLZ8msjNeovJBF3ssg-OHzz0M",
-  authDomain: "goldh-c78ca.firebaseapp.com",
-  projectId: "goldh-c78ca",
-  storageBucket: "goldh-c78ca.firebasestorage.app",
-  messagingSenderId: "1050639201481",
-  appId: "1:1050639201481:web:71c433ebb31ccb2e6b4918",
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
@@ -113,13 +114,11 @@ async function uploadDigestEntries() {
   console.log("🚀 Starting Guru Digest upload to Firestore...\n");
 
   try {
-    const guruDigestCollection = collection(db, "guruDigest");
-
     for (let i = 0; i < mockDigestEntries.length; i++) {
       const entry = mockDigestEntries[i];
-      
-      const docRef = await addDoc(guruDigestCollection, entry);
-      
+
+      const docRef = await db.collection("guruDigest").add(entry);
+
       console.log(`✅ Entry ${i + 1}/${mockDigestEntries.length} uploaded successfully`);
       console.log(`   Title: ${entry.title}`);
       console.log(`   Document ID: ${docRef.id}\n`);
@@ -127,7 +126,7 @@ async function uploadDigestEntries() {
 
     console.log("🎉 All entries uploaded successfully!");
     console.log(`📊 Total entries: ${mockDigestEntries.length}`);
-    
+
   } catch (error) {
     console.error("❌ Error uploading entries:", error);
     process.exit(1);

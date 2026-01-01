@@ -4,15 +4,12 @@ import { setupVite, serveStatic, log } from "./vite";
 import { startScheduler } from "./umf/scheduler";
 import { startGuruScheduler } from "./guru/scheduler";
 
+import { config, schedulerConfig } from "./config";
+
 const app = express();
 
-declare module 'http' {
-  interface IncomingMessage {
-    rawBody: unknown
-  }
-}
 app.use(express.json({
-  verify: (req, _res, buf) => {
+  verify: (req: any, _res: Response, buf: Buffer) => {
     req.rawBody = buf;
   }
 }));
@@ -59,37 +56,29 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (config.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
+  const port = config.PORT;
   server.listen({
     port,
     host: "0.0.0.0",
-    reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
-    
+
     // Start UMF scheduler if enabled
-    if (process.env.UMF_SCHEDULER === '1') {
+    if (schedulerConfig.umfEnabled) {
       log('UMF Scheduler enabled - starting background data refresh');
       startScheduler();
     } else {
       log('UMF Scheduler disabled (set UMF_SCHEDULER=1 to enable)');
     }
-    
+
     // Start Guru Digest scheduler if enabled
-    if (process.env.GURU_SCHEDULER === '1') {
+    if (schedulerConfig.guruEnabled) {
       log('Guru Digest Scheduler enabled - automatic RSS updates every 2.5 hours');
       startGuruScheduler();
     } else {
