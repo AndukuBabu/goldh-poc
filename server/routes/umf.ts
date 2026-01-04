@@ -17,10 +17,13 @@ router.get("/snapshot", async (req: Request, res: Response) => {
         const firestore = await readLiveSnapshot();
 
         if (firestore) {
+            const dataAgeMs = Date.now() - new Date(firestore.timestamp_utc).getTime();
+            const isStale = dataAgeMs > (90 * 60 * 1000); // 90 minutes buffer
+
             res.setHeader('x-umf-source', 'firestore');
             return res.json({
                 ...firestore,
-                degraded: true,
+                degraded: isStale,
             });
         }
 

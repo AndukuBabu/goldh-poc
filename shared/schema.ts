@@ -99,33 +99,56 @@ export interface LearningTopic {
  * - forecast: Consensus forecast value as string (empty if N/A)
  * - previous: Prior period value as string (empty if N/A)
  */
-export const econEventSchema = z.object({
+export const econEventSchema = z.preprocess((val: any) => {
+  if (!val || typeof val !== 'object') return val;
+
+  // 1. Map datetime_utc to date if date is missing
+  const date = val.date || val.datetime_utc;
+
+  // 2. Normalize and default impact
+  let impact = val.impact || "Medium";
+  if (typeof impact === 'string' && !["Low", "Medium", "High", "Holiday"].includes(impact)) {
+    const lowerImpact = impact.toLowerCase();
+    if (lowerImpact.includes("high")) impact = "High";
+    else if (lowerImpact.includes("low")) impact = "Low";
+    else if (lowerImpact.includes("holiday") || lowerImpact.includes("bank")) impact = "Holiday";
+    else impact = "Medium";
+  }
+
+  // 3. Normalize and default country
+  const country = val.country || "Global";
+
+  return {
+    ...val,
+    date,
+    impact,
+    country,
+    // Ensure numeric/null fields are strings
+    forecast: (val.forecast !== undefined && val.forecast !== null) ? String(val.forecast) : "",
+    previous: (val.previous !== undefined && val.previous !== null) ? String(val.previous) : "",
+  };
+}, z.object({
   // Core identification
-  id: z.string().min(1, "Event ID is required"),
-  
+  id: z.string().optional().default("unknown"),
+
   // Event metadata
   title: z.string().min(1, "Event title is required"),
-  
+
   // Geographic/currency classification
-  country: z.string().min(1, "Country/currency code is required"),
-  
+  country: z.string().default("Global"),
+
   // Temporal data
   date: z.string()
     .min(1, "Date is required")
     .describe("Event scheduled time in ISO 8601 format"),
-  
-  // Impact level (includes Holiday for bank holidays)
-  impact: z.enum(["Low", "Medium", "High", "Holiday"], {
-    errorMap: () => ({ message: "Impact must be Low, Medium, High, or Holiday" }),
-  }),
-  
-  // Economic data points (strings, may be empty)
-  forecast: z.string()
-    .describe("Consensus forecast value (empty string if N/A)"),
-  
-  previous: z.string()
-    .describe("Previous period value (empty string if N/A)"),
-});
+
+  // Impact level
+  impact: z.enum(["Low", "Medium", "High", "Holiday"]).default("Medium"),
+
+  // Economic data points (now guaranteed to be strings by preprocessor)
+  forecast: z.string().default(""),
+  previous: z.string().default(""),
+}));
 
 /**
  * TypeScript type inferred from econEventSchema
@@ -197,37 +220,37 @@ export const umfAssetSchema = z.object({
     .describe("Ticker symbol (e.g., BTC, SPY, GC=F)"),
   name: z.string().min(1, "Asset name is required")
     .describe("Full asset name (e.g., Bitcoin, S&P 500)"),
-  
+
   // Asset classification
   class: z.enum(["crypto", "index", "forex", "commodity", "etf"], {
-    errorMap: () => ({ 
-      message: "Asset class must be: crypto, index, forex, commodity, or etf" 
+    errorMap: () => ({
+      message: "Asset class must be: crypto, index, forex, commodity, or etf"
     }),
   }).describe("Asset classification for filtering and categorization"),
-  
+
   // Logo image (optional - may not be available for all assets)
   image: z.string().url().nullable().optional()
     .describe("Logo image URL (null if unavailable)"),
-  
+
   // Price data
   price: z.number()
     .positive("Price must be positive")
     .describe("Current spot price in USD"),
-  
+
   changePct24h: z.number()
     .describe("24-hour percentage change (e.g., 3.45 for +3.45%)"),
-  
+
   // Volume and market cap (nullable for indices/forex)
   volume24h: z.number()
     .positive("Volume must be positive")
     .nullable()
     .describe("24-hour trading volume in USD (null for indices/forex)"),
-  
+
   marketCap: z.number()
     .positive("Market cap must be positive")
     .nullable()
     .describe("Total market capitalization in USD (null for forex/commodities)"),
-  
+
   // Temporal data
   updatedAt_utc: z.string()
     .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
@@ -263,7 +286,7 @@ export const umfSnapshotSchema = z.object({
   timestamp_utc: z.string()
     .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
     .describe("Snapshot creation timestamp in UTC (ISO 8601 format)"),
-  
+
   assets: z.array(umfAssetSchema)
     .min(1, "Snapshot must contain at least one asset")
     .describe("Array of all tracked assets"),
@@ -307,36 +330,36 @@ export type UmfSnapshot = z.infer<typeof umfSnapshotSchema>;
 export const umfMoverSchema = z.object({
   symbol: z.string().min(1, "Symbol is required")
     .describe("Ticker symbol (e.g., BTC, SPY)"),
-  
+
   name: z.string().min(1, "Asset name is required")
     .describe("Full asset name (e.g., Bitcoin, S&P 500)"),
-  
+
   class: z.enum(["crypto", "index", "forex", "commodity", "etf"], {
-    errorMap: () => ({ 
-      message: "Asset class must be: crypto, index, forex, commodity, or etf" 
+    errorMap: () => ({
+      message: "Asset class must be: crypto, index, forex, commodity, or etf"
     }),
   }).describe("Asset classification"),
-  
+
   image: z.string().url().nullable().optional()
     .describe("Logo image URL (null if unavailable)"),
-  
+
   direction: z.enum(["gainer", "loser"], {
     errorMap: () => ({ message: "Direction must be 'gainer' or 'loser'" }),
   }).describe("Whether this is a top gainer or loser"),
-  
+
   changePct24h: z.number()
     .describe("24-hour percentage change (positive for gainers, negative for losers)"),
-  
+
   price: z.number()
     .positive("Price must be positive")
     .describe("Current spot price in USD"),
-  
+
   marketCap: z.number().nullable().optional()
     .describe("Market capitalization in USD (optional, null if unavailable)"),
-  
+
   volume24h: z.number().nullable().optional()
     .describe("24-hour trading volume in USD (optional, null if unavailable)"),
-  
+
   updatedAt_utc: z.string()
     .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
     .describe("Last update timestamp in UTC (ISO 8601 format)"),
@@ -373,12 +396,12 @@ export const umfBriefSchema = z.object({
   date_utc: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
     .describe("Brief publication date in UTC (ISO 8601 date format)"),
-  
+
   headline: z.string()
     .min(10, "Headline must be at least 10 characters")
     .max(200, "Headline must not exceed 200 characters")
     .describe("Single-sentence market summary"),
-  
+
   bullets: z.array(z.string().min(10, "Bullet point must be at least 10 characters"))
     .min(1, "Brief must contain at least one bullet point")
     .max(5, "Brief should not exceed 5 bullet points")
@@ -420,21 +443,21 @@ export type UmfBrief = z.infer<typeof umfBriefSchema>;
 export const umfAlertSchema = z.object({
   id: z.string().min(1, "Alert ID is required")
     .describe("Unique alert identifier"),
-  
+
   title: z.string()
     .min(5, "Title must be at least 5 characters")
     .max(100, "Title must not exceed 100 characters")
     .describe("Alert heading"),
-  
+
   body: z.string()
     .min(10, "Body must be at least 10 characters")
     .max(500, "Body must not exceed 500 characters")
     .describe("Alert message with context and details"),
-  
+
   severity: z.enum(["info", "warn", "high"], {
     errorMap: () => ({ message: "Severity must be: info, warn, or high" }),
   }).describe("Alert importance level (info=neutral, warn=caution, high=critical)"),
-  
+
   createdAt_utc: z.string()
     .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
     .describe("Alert creation timestamp in UTC (ISO 8601 format)"),
@@ -546,74 +569,74 @@ export type UmfAssetClass = z.infer<typeof umfAssetClassEnum>;
  */
 export const umfAssetLiveSchema = z.object({
   id: z.string().min(1, "Asset ID is required"),
-  
+
   symbol: z.string().min(1, "Symbol is required")
     .describe("Ticker symbol, uppercase (e.g., BTC, ETH)"),
-  
+
   name: z.string().min(1, "Asset name is required")
     .describe("Full asset name (e.g., Bitcoin, Ethereum)"),
-  
+
   class: umfAssetClassEnum
     .describe("Asset classification"),
-  
+
   image: z.string().url().nullable().optional()
     .describe("Logo image URL from CoinGecko (null if unavailable)"),
-  
+
   price: z.number()
     .positive("Price must be positive")
     .describe("Current spot price in USD"),
-  
+
   changePct24h: z.number()
     .nullable()
     .describe("24-hour percentage change (null if unavailable)"),
-  
+
   volume24h: z.number()
     .nonnegative("Volume cannot be negative")
     .nullable()
     .describe("24-hour trading volume in USD (null if unavailable, 0 for low-activity assets)"),
-  
+
   marketCap: z.number()
     .positive("Market cap must be positive")
     .nullable()
     .describe("Total market capitalization in USD (null if unavailable)"),
-  
+
   marketCapRank: z.number()
     .int("Market cap rank must be an integer")
     .positive("Rank must be positive")
     .nullable()
     .optional()
     .describe("Market cap rank (1 = largest, null if unavailable)"),
-  
+
   high24h: z.number()
     .positive("High price must be positive")
     .nullable()
     .optional()
     .describe("24-hour high price in USD (null if unavailable)"),
-  
+
   low24h: z.number()
     .positive("Low price must be positive")
     .nullable()
     .optional()
     .describe("24-hour low price in USD (null if unavailable)"),
-  
+
   circulatingSupply: z.number()
     .nonnegative("Circulating supply cannot be negative")
     .nullable()
     .optional()
     .describe("Circulating supply (null if unavailable)"),
-  
+
   totalSupply: z.number()
     .nonnegative("Total supply cannot be negative")
     .nullable()
     .optional()
     .describe("Total supply (null if unavailable)"),
-  
+
   maxSupply: z.number()
     .nonnegative("Max supply cannot be negative")
     .nullable()
     .optional()
     .describe("Maximum supply cap (null if unlimited or unavailable)"),
-  
+
   updatedAt_utc: z.string()
     .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
     .describe("Last price update timestamp (ISO 8601, UTC)"),
@@ -666,11 +689,11 @@ export const umfSnapshotLiveSchema = z.object({
   timestamp_utc: z.string()
     .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
     .describe("Snapshot creation timestamp (ISO 8601, UTC)"),
-  
+
   assets: z.array(umfAssetLiveSchema)
     .min(1, "Snapshot must contain at least one asset")
     .describe("Array of all tracked assets from CoinGecko"),
-  
+
   degraded: z.boolean()
     .optional()
     .describe("True if data is stale/from fallback, false/omitted if fresh"),
@@ -727,15 +750,15 @@ export const umfMoversLiveSchema = z.object({
   timestamp_utc: z.string()
     .datetime({ message: "Must be valid ISO 8601 datetime in UTC" })
     .describe("When movers were calculated (ISO 8601, UTC)"),
-  
+
   gainers: z.array(umfAssetLiveSchema)
     .max(5, "Should return at most 5 gainers")
     .describe("Top 5 assets with largest positive 24h % change"),
-  
+
   losers: z.array(umfAssetLiveSchema)
     .max(5, "Should return at most 5 losers")
     .describe("Top 5 assets with largest negative 24h % change"),
-  
+
   degraded: z.boolean()
     .optional()
     .describe("True if data is stale/from fallback, false/omitted if fresh"),
@@ -760,37 +783,37 @@ export const assetOverviewSchema = z.object({
   // Core asset identification
   symbol: z.string().min(1, "Symbol is required")
     .describe("Canonical asset symbol (e.g., BTC, ETH, SPX)"),
-  
+
   name: z.string().min(1, "Asset name is required")
     .describe("Full asset name (e.g., Bitcoin, Ethereum, S&P 500)"),
-  
+
   class: z.enum(["crypto", "index", "forex", "commodity", "etf"], {
-    errorMap: () => ({ 
-      message: "Asset class must be: crypto, index, forex, commodity, or etf" 
+    errorMap: () => ({
+      message: "Asset class must be: crypto, index, forex, commodity, or etf"
     }),
   }).describe("Asset classification"),
-  
+
   image: z.string().url().nullable().optional()
     .describe("Logo image URL (null if unavailable)"),
-  
+
   // Price summary (from UMF)
   priceSummary: z.object({
     price: z.number().positive("Price must be positive")
       .describe("Current spot price in USD"),
-    
+
     changePct24h: z.number()
       .describe("24-hour percentage change"),
-    
+
     volume24h: z.number().positive().nullable()
       .describe("24-hour trading volume in USD (null for indices/forex)"),
-    
+
     marketCap: z.number().positive().nullable()
       .describe("Market capitalization in USD (null for forex/commodities)"),
-    
+
     updatedAt_utc: z.string().datetime()
       .describe("Last price update timestamp in UTC (ISO 8601)"),
   }).nullable().describe("Current price data from UMF (null if unavailable)"),
-  
+
   // Related news articles (from Guru Digest)
   news: z.array(z.object({
     title: z.string(),
@@ -798,7 +821,7 @@ export const assetOverviewSchema = z.object({
     link: z.string().url(),
     date: z.string().datetime(),
   })).describe("Recent Guru Digest articles mentioning this asset"),
-  
+
   // Related economic events (from Economic Calendar)
   events: z.array(z.object({
     id: z.string(),
@@ -807,7 +830,7 @@ export const assetOverviewSchema = z.object({
     importance: z.enum(["High", "Medium", "Low"]),
     category: z.string(),
   })).describe("Upcoming economic events affecting this asset"),
-  
+
   // Degraded status flags
   degraded: z.object({
     price: z.boolean().describe("True if price data is stale or unavailable"),

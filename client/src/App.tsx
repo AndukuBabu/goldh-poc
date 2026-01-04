@@ -21,6 +21,7 @@ import Profile from "@/pages/Profile";
 import Learn from "@/pages/Learn";
 import AboutUs from "@/pages/AboutUs";
 import AdminGuruDigest from "@/pages/AdminGuruDigest";
+import AdminHealth from "@/pages/AdminHealth";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -45,6 +46,11 @@ function Router() {
       <Route path="/admin/guru-digest">
         <ProtectedAdminRoute>
           <AdminGuruDigest />
+        </ProtectedAdminRoute>
+      </Route>
+      <Route path="/admin/health">
+        <ProtectedAdminRoute>
+          <AdminHealth />
         </ProtectedAdminRoute>
       </Route>
       <Route component={NotFound} />

@@ -26,21 +26,21 @@ export default function Dashboard() {
   const [showAll, setShowAll] = useState(false);
 
   const isPremium = user?.isPremium || false;
-  
+
   // Fetch UMF snapshot directly (same 1-hour cache as GOLDH Pulse)
   const { data: umfData, isLoading: isLoadingUmf, error: umfError } = useUmfSnapshot();
-  
+
   // Determine which assets to display
   const displayedAssets = showAll ? TRACKED_ASSETS : TRACKED_ASSETS.slice(0, INITIAL_DISPLAY_COUNT);
-  
+
   // Find assets missing from UMF snapshot
   const missingAssets = useMemo(() => {
     if (!umfData?.data) return [];
-    return displayedAssets.filter(symbol => 
+    return displayedAssets.filter(symbol =>
       !umfData.data.assets.find(a => a.symbol === symbol)
     );
   }, [displayedAssets, umfData]);
-  
+
   // Fallback: fetch individual asset data for assets not in UMF snapshot
   const fallbackQueries = useQueries({
     queries: missingAssets.map(symbol => ({
@@ -48,7 +48,7 @@ export default function Dashboard() {
       enabled: !!umfData?.data,
     })),
   });
-  
+
   // Map UMF snapshot data + fallback data to AssetOverview format
   const assetDisplayData = displayedAssets.map(symbol => {
     if (isLoadingUmf || !umfData?.data) {
@@ -59,10 +59,10 @@ export default function Dashboard() {
         isError: false,
       };
     }
-    
+
     // Try to find asset in UMF snapshot first
     const asset = umfData.data.assets.find(a => a.symbol === symbol);
-    
+
     if (asset) {
       // Found in UMF snapshot - use it
       const assetOverview: AssetOverview = {
@@ -85,7 +85,7 @@ export default function Dashboard() {
           events: true,
         },
       };
-      
+
       return {
         symbol,
         data: assetOverview,
@@ -93,7 +93,7 @@ export default function Dashboard() {
         isError: false,
       };
     }
-    
+
     // Not in UMF snapshot - check fallback query
     const fallbackIndex = missingAssets.indexOf(symbol);
     if (fallbackIndex >= 0) {
@@ -105,7 +105,7 @@ export default function Dashboard() {
         isError: fallbackQuery.isError,
       };
     }
-    
+
     // Should never reach here, but return error state as fallback
     return {
       symbol,
@@ -131,7 +131,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <Header />
       <SignInPrompt />
-      
+
       <div className="pt-24 pb-16 px-6">
         <div className="container mx-auto max-w-6xl">
           {/* Welcome Section */}
@@ -171,8 +171,8 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold text-foreground mb-4" data-testid="text-assets-heading">
               Market Overview
             </h2>
-            
-            <div 
+
+            <div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6"
               data-testid="grid-assets"
             >
@@ -186,7 +186,7 @@ export default function Dashboard() {
                     </Card>
                   );
                 }
-                
+
                 if (isError || !data) {
                   return (
                     <Card key={symbol} className="h-full border-destructive/50" data-testid={`card-asset-error-${symbol}`}>
@@ -201,15 +201,15 @@ export default function Dashboard() {
                     </Card>
                   );
                 }
-                
-                if (data.degraded?.price || !data.priceSummary) {
+
+                if (!data || !data.priceSummary) {
                   return null;
                 }
-                
+
                 return <AssetCard key={symbol} asset={data} />;
               })}
             </div>
-            
+
             {TRACKED_ASSETS.length > INITIAL_DISPLAY_COUNT && (
               <div className="flex justify-center">
                 <Button

@@ -7,7 +7,7 @@ import { dbConfig } from './config';
  * Initializes the Firebase Admin SDK for server-side Firestore operations.
  * Supports three authentication modes for maximum platform independence:
  * 
- * 1. Environment Variables (Standard): Uses FIREBASE_PROJECT_ID, etc.
+ * 1. Environment Variables (Standard): Uses FB_PROJECT_ID, etc.
  * 2. Service Account JSON (Local): Uses GOOGLE_APPLICATION_CREDENTIALS path.
  * 3. Application Default Credentials (Replit/GCP): Used if no other config provided.
  * 

@@ -30,6 +30,7 @@ import {
   HISTORY_MAX,
   LOG_PREFIX_SCHEDULER,
 } from './config';
+import { schedulerConfig } from '../config';
 
 /**
  * Number of Top Coins to Track
@@ -245,7 +246,7 @@ function scheduleNextTick(): void {
  */
 export function getSchedulerStatus() {
   return {
-    enabled: true,
+    enabled: schedulerConfig.umfEnabled,
     lastCallAt: lastCallAt ? new Date(lastCallAt).toISOString() : null,
     timeSinceLastCall: lastCallAt ? Date.now() - lastCallAt : null,
     minCallInterval: MIN_CALL_INTERVAL_MS,

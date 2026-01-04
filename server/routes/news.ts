@@ -12,11 +12,13 @@ router.get("/guru-digest", async (req: Request, res: Response) => {
             id: `guru-${index}`,
             title: entry.title,
             publishedAt: entry.date,
-            source: entry.assets.length > 0 ? entry.assets.join(', ') : 'Crypto News',
+            source: (entry.assets && entry.assets.length > 0) ? entry.assets.join(', ') : 'Crypto News',
             url: entry.link,
+            link: entry.link,
             summary: entry.summary,
         }));
 
+        console.log(`[News API] Returning ${articles.length} articles`);
         res.status(200).json(articles);
     } catch (error) {
         console.error("Guru Digest fetch error:", error);

@@ -10,7 +10,7 @@ interface NewsArticle {
 
 export function NewsScroller() {
   const { data: articles = [], isLoading } = useQuery<NewsArticle[]>({
-    queryKey: ['/api/guru-digest'],
+    queryKey: ['/api/news/guru-digest'],
   });
 
   if (isLoading) {
@@ -37,13 +37,13 @@ export function NewsScroller() {
       <div className="relative">
         <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#1a1a1a] to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#1a1a1a] to-transparent z-10 pointer-events-none" />
-        
+
         <div className="flex items-center gap-8 animate-scroll whitespace-nowrap px-4 sm:px-6">
           <div className="flex items-center gap-3 flex-shrink-0">
             <TrendingUp className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold text-primary">Latest Crypto News:</span>
           </div>
-          
+
           {topArticles.map((article, index) => (
             <div key={`${article.id}-${index}`} className="flex items-center gap-3 flex-shrink-0">
               <span className="text-sm text-muted-foreground">{article.source}</span>
@@ -51,7 +51,7 @@ export function NewsScroller() {
               <span className="text-primary">•</span>
             </div>
           ))}
-          
+
           {topArticles.map((article, index) => (
             <div key={`${article.id}-repeat-${index}`} className="flex items-center gap-3 flex-shrink-0">
               <span className="text-sm text-muted-foreground">{article.source}</span>

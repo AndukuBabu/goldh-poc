@@ -22,8 +22,6 @@
  * @see docs/EC-UI-MVP.md for full specification
  */
 
-import { db } from "./firebase";
-import { collection, query, where, orderBy, getDocs, Timestamp } from "firebase/firestore";
 import { econEventSchema, type EconEvent } from "@shared/schema";
 
 // Re-export EconEvent type for external consumers
@@ -81,69 +79,50 @@ export interface EconEventFilters {
  */
 export async function getEconEventsMock(filters: EconEventFilters = {}): Promise<EconEvent[]> {
   try {
-    // Default date range: 7 days ago to 14 days from now (21-day window)
-    const defaultFrom = new Date();
-    defaultFrom.setDate(defaultFrom.getDate() - 7);
-    
-    const defaultTo = new Date();
-    defaultTo.setDate(defaultTo.getDate() + 14);
+    // Build URL with query parameters
+    const url = new URL(window.location.origin + '/api/econ/events');
 
-    const fromDate = filters.from 
-      ? (typeof filters.from === 'string' ? new Date(filters.from) : filters.from)
-      : defaultFrom;
-    
-    const toDate = filters.to
-      ? (typeof filters.to === 'string' ? new Date(filters.to) : filters.to)
-      : defaultTo;
+    if (filters.from) {
+      const fromDate = typeof filters.from === 'string' ? new Date(filters.from) : filters.from;
+      url.searchParams.set('from', fromDate.toISOString());
+    }
 
-    // Build Firestore query
-    const eventsRef = collection(db, "econEvents");
-    
-    // Start with date range query (Firestore requires orderBy field to match where clause)
-    let q = query(
-      eventsRef,
-      where("date", ">=", fromDate.toISOString()),
-      where("date", "<=", toDate.toISOString()),
-      orderBy("date", "asc")
-    );
+    if (filters.to) {
+      const toDate = typeof filters.to === 'string' ? new Date(filters.to) : filters.to;
+      url.searchParams.set('to', toDate.toISOString());
+    }
 
-    // Execute query
-    const snapshot = await getDocs(q);
-    
-    // Map documents to EconEvent objects
-    let events: EconEvent[] = snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-      } as EconEvent;
-    });
-
-    // Client-side filtering (Firestore doesn't support multiple array contains)
-    // Note: In Phase 2, these filters will be handled by backend API
     if (filters.country && filters.country.length > 0) {
-      events = events.filter(e => filters.country!.includes(e.country));
+      filters.country.forEach(c => url.searchParams.append('country', c));
     }
 
     if (filters.impact && filters.impact.length > 0) {
-      events = events.filter(e => filters.impact!.includes(e.impact));
+      filters.impact.forEach(i => url.searchParams.append('impact', i));
     }
 
-    // Validate each event against Zod schema
-    // This ensures type safety even if Firestore data is malformed
-    const validatedEvents = events.map((event, index) => {
+    const response = await fetch(url.toString());
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API Error ${response.status}: ${errorText}`);
+    }
+
+    const events = await response.json();
+
+    // Validate each event against Zod schema, but skip invalid ones instead of crashing
+    const validatedEvents: EconEvent[] = [];
+    events.forEach((event: any, index: number) => {
       try {
-        return econEventSchema.parse(event);
+        validatedEvents.push(econEventSchema.parse(event));
       } catch (error) {
-        console.error(`Invalid event at index ${index}:`, error);
-        throw new Error(`Event validation failed for: ${event.title}`);
+        console.warn(`[Econ API] Invalid event at index ${index} skipped:`, event.title, error);
       }
     });
 
     return validatedEvents;
 
   } catch (error) {
-    console.error("Error fetching economic events from Firestore:", error);
+    console.error("Error fetching economic events from API:", error);
     throw error;
   }
 }
@@ -232,20 +211,20 @@ export function getCountryFlag(countryCode: string): string {
 export function formatEventDate(dateString: string): string {
   try {
     const date = new Date(dateString);
-    
+
     // Format: "Jan 15, 2025 • 1:30 PM EST"
     const dateFormatter = new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     });
-    
+
     const timeFormatter = new Intl.DateTimeFormat('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       timeZoneName: 'short',
     });
-    
+
     return `${dateFormatter.format(date)} • ${timeFormatter.format(date)}`;
   } catch (error) {
     console.error("Error formatting date:", error);

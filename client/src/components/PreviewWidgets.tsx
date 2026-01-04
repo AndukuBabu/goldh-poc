@@ -27,7 +27,7 @@ interface MarketAsset {
 
 export function PreviewWidgets() {
   const { data: newsArticles = [] } = useQuery<NewsArticle[]>({
-    queryKey: ['/api/guru-digest'],
+    queryKey: ['/api/news/guru-digest'],
   });
 
   const { data: marketSnapshot } = useQuery<{ assets: MarketAsset[] }>({
@@ -45,13 +45,13 @@ export function PreviewWidgets() {
   const dateRange = useMemo(() => {
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
-    
+
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    
+
     return { from: startOfToday, to: thirtyDaysFromNow };
   }, []);
-  
+
   const { data: econEvents = [] } = useEconEvents({
     impact: ['High'],
     from: dateRange.from,
@@ -59,7 +59,7 @@ export function PreviewWidgets() {
   });
 
   // Sort by date (ascending) to get upcoming events first, then take top 3
-  const sortedEvents = [...econEvents].sort((a, b) => 
+  const sortedEvents = [...econEvents].sort((a, b) =>
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
   const calendarPreview = sortedEvents.slice(0, 3);
@@ -131,7 +131,7 @@ export function PreviewWidgets() {
                     <p className="text-sm font-semibold text-foreground">
                       ${asset.price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'N/A'}
                     </p>
-                    <Badge 
+                    <Badge
                       variant={asset.changePct24h >= 0 ? "default" : "destructive"}
                       className="text-xs"
                     >
@@ -165,15 +165,14 @@ export function PreviewWidgets() {
             <div className="space-y-3">
               {calendarPreview.length > 0 ? (
                 calendarPreview.map((event) => (
-                  <div 
-                    key={event.id} 
+                  <div
+                    key={event.id}
                     className="pb-3 border-b border-border last:border-0"
                   >
                     <div className="flex items-start gap-2 mb-1">
-                      <Badge 
-                        variant={event.impact === 'High' ? 'destructive' : event.impact === 'Medium' ? 'default' : 'secondary'}
+                      <Badge
+                        variant={(ECON_IMPACT_COLORS[event.impact as keyof typeof ECON_IMPACT_COLORS] || "secondary") as any}
                         className="text-xs"
-                        style={{ backgroundColor: ECON_IMPACT_COLORS[event.impact] }}
                       >
                         {event.impact.toUpperCase()}
                       </Badge>

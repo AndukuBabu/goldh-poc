@@ -4,6 +4,7 @@ import authRouter from "./routes/auth";
 import userRouter from "./routes/user";
 import umfRouter from "./routes/umf";
 import newsRouter from "./routes/news";
+import econRouter from "./routes/econ";
 import assetRouter from "./routes/asset";
 import adminRouter from "./routes/admin";
 import testRouter from "./routes/test";
@@ -24,6 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/user", userRouter);
   app.use("/api/umf", umfRouter);
   app.use("/api/news", newsRouter);
+  app.use("/api/econ", econRouter);
   app.use("/api/asset", assetRouter);
   app.use("/api/admin", adminRouter);
 

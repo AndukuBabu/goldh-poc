@@ -12,37 +12,51 @@ dotenv.config();
  */
 const configSchema = z.object({
     // Server Configuration
-    NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-    PORT: z.string().transform(Number).default("5000"),
+    NODE_ENV: z.preprocess(
+        (val) => process.env.NODE_ENV || (process.env.FUNCTIONS_EMULATOR === 'true' ? "development" : (process.env.FUNCTION_REGION || process.env.GCP_PROJECT ? "production" : val)),
+        z.enum(["development", "production", "test"]).default("development")
+    ),
+    GH_PORT: z.preprocess((val) => process.env.PORT || val, z.string().transform(Number).default("5000")),
     SESSION_SECRET: z.string().default("goldh-development-secret-change-me"),
 
-    // Database Secrets (PostgreSQL)
-    DATABASE_URL: z.string({
-        required_error: "DATABASE_URL is required for Postgres connection",
-    }),
+    // Database / Infrastructure (GH_CORE_)
+    DATABASE_URL: z.preprocess(
+        (val) => process.env.GH_CORE_DATABASE_URL || val,
+        z.string({ required_error: "DATABASE_URL is required" })
+    ),
 
-    // Firebase Secrets
-    FIREBASE_PROJECT_ID: z.string().optional(),
-    FIREBASE_CLIENT_EMAIL: z.string().optional(),
-    FIREBASE_PRIVATE_KEY: z.string().optional().transform((val) => {
-        if (!val) return val;
-        // Handle literal \n and also strip potential double quotes if they were accidentally double-quoted
-        const clean = val.replace(/\\n/g, '\n').replace(/^"(.*)"$/, '$1');
-        return clean;
-    }),
+    // Firebase Secrets (GH_FB_)
+    FB_PROJECT_ID: z.preprocess(
+        (val) => process.env.GH_FB_PROJECT_ID || process.env.FB_PROJECT_ID || val,
+        z.string().optional()
+    ),
+    FB_CLIENT_EMAIL: z.preprocess(
+        (val) => process.env.GH_FB_CLIENT_EMAIL || process.env.FB_CLIENT_EMAIL || val,
+        z.string().optional()
+    ),
+    FB_PRIVATE_KEY: z.preprocess(
+        (val) => process.env.GH_FB_PRIVATE_KEY || process.env.FB_PRIVATE_KEY || val,
+        z.string().optional().transform((val) => {
+            if (!val) return val;
+            const clean = val.replace(/\\n/g, '\n').replace(/^"(.*)"$/, '$1');
+            return clean;
+        })
+    ),
 
-    // Zoho CRM Secrets
-    ZOHO_CLIENT_ID: z.string().optional(),
-    ZOHO_CLIENT_SECRET: z.string().optional(),
-    ZOHO_REFRESH_TOKEN: z.string().optional(),
+    // Integrations / External (GH_EXT_)
+    ZOHO_CLIENT_ID: z.preprocess((val) => process.env.GH_EXT_ZOHO_CLIENT_ID || val, z.string().optional()),
+    ZOHO_CLIENT_SECRET: z.preprocess((val) => process.env.GH_EXT_ZOHO_CLIENT_SECRET || val, z.string().optional()),
+    ZOHO_REFRESH_TOKEN: z.preprocess((val) => process.env.GH_EXT_ZOHO_REFRESH_TOKEN || val, z.string().optional()),
     ZOHO_API_DOMAIN: z.string().default("https://www.zohoapis.com"),
 
-    // API Keys
-    COINGECKO_API_KEY: z.string().optional(),
+    // API Keys (GH_EXT_)
+    COINGECKO_API_KEY: z.preprocess((val) => process.env.GH_EXT_COINGECKO_API_KEY || val, z.string().optional()),
+    FINNHUB_API_KEY: z.preprocess((val) => process.env.GH_EXT_FINNHUB_API_KEY || val, z.string().optional()),
+    HUGGINGFACE_API_KEY: z.preprocess((val) => process.env.GH_EXT_HUGGINGFACE_API_KEY || val, z.string().optional()),
 
     // Scheduler Parameters
-    UMF_SCHEDULER: z.string().transform((val: string | undefined) => val === "1").default("0"),
-    GURU_SCHEDULER: z.string().transform((val: string | undefined) => val === "1").default("0"),
+    UMF_SCHEDULER: z.string().transform((val) => val === "1").default("0"),
+    GURU_SCHEDULER: z.string().transform((val) => val === "1").default("0"),
     ADMIN_EMAILS: z.string().default(""),
 });
 
@@ -62,9 +76,9 @@ export const config = parsed.data;
 export const dbConfig = {
     url: config.DATABASE_URL,
     firebase: {
-        projectId: config.FIREBASE_PROJECT_ID,
-        clientEmail: config.FIREBASE_CLIENT_EMAIL,
-        privateKey: config.FIREBASE_PRIVATE_KEY,
+        projectId: config.FB_PROJECT_ID,
+        clientEmail: config.FB_CLIENT_EMAIL,
+        privateKey: config.FB_PRIVATE_KEY,
     }
 };
 
@@ -80,6 +94,12 @@ export const integrationConfig = {
     },
     coingecko: {
         apiKey: config.COINGECKO_API_KEY,
+    },
+    finnhub: {
+        apiKey: config.FINNHUB_API_KEY,
+    },
+    huggingface: {
+        apiKey: config.HUGGINGFACE_API_KEY,
     }
 };
 

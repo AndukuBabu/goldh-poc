@@ -14,11 +14,11 @@ export async function apiRequest(
 ): Promise<Response> {
   const sessionId = localStorage.getItem("sessionId");
   const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
-  
+
   if (sessionId) {
     headers["Authorization"] = `Bearer ${sessionId}`;
   }
-  
+
   const res = await fetch(url, {
     method,
     headers,
@@ -35,18 +35,22 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
-      credentials: "include",
-    });
+    async ({ queryKey }) => {
+      const sessionId = localStorage.getItem("sessionId");
+      const headers: Record<string, string> = sessionId ? { "Authorization": `Bearer ${sessionId}` } : {};
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
+      const res = await fetch(queryKey.join("/") as string, {
+        headers,
+        credentials: "include",
+      });
 
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      return await res.json();
+    };
 
 export const queryClient = new QueryClient({
   defaultOptions: {

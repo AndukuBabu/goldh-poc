@@ -28,6 +28,7 @@
  */
 
 import { updateGuruDigest } from './updater';
+import { schedulerConfig } from '../config';
 
 /**
  * Scheduler Configuration
@@ -82,12 +83,12 @@ function randomJitter(jitter: number): number {
  */
 async function tick(): Promise<void> {
   const startTime = Date.now();
-  
+
   try {
     // Rate limit guard: prevent calls within 2.4 hours
     if (lastUpdateAt !== null) {
       const timeSinceLastUpdate = Date.now() - lastUpdateAt;
-      
+
       if (timeSinceLastUpdate < MIN_CALL_INTERVAL_MS) {
         const hoursSince = (timeSinceLastUpdate / (60 * 60 * 1000)).toFixed(1);
         console.warn(
@@ -96,33 +97,33 @@ async function tick(): Promise<void> {
         return;
       }
     }
-    
+
     // Update last update timestamp BEFORE calling updater
     // This prevents race conditions if tick() is called concurrently
     lastUpdateAt = Date.now();
-    
+
     console.log(`${LOG_PREFIX} Starting tick...`);
-    
+
     // Update Guru Digest (clear old entries first)
     const result = await updateGuruDigest({
       clearFirst: true,
       logPrefix: LOG_PREFIX,
     });
-    
+
     // Log performance metrics
     const duration = Date.now() - startTime;
     const durationSec = (duration / 1000).toFixed(2);
-    
+
     console.log(
       `${LOG_PREFIX} ✓ Tick complete in ${durationSec}s`,
       `(${result.successfulEntries}/${result.totalArticles} articles, ${result.deletedEntries} deleted)`
     );
-    
+
     // Schedule next tick with jitter
     scheduleNextTick();
   } catch (error) {
     console.error(`${LOG_PREFIX} Tick failed:`, error);
-    
+
     // Schedule retry with full interval
     scheduleNextTick();
   }
@@ -139,14 +140,14 @@ function scheduleNextTick(): void {
   if (intervalId) {
     clearTimeout(intervalId);
   }
-  
+
   // Calculate next interval with jitter
   const jitter = randomJitter(SCHEDULER_JITTER_MS);
   const nextInterval = SCHEDULER_INTERVAL_MS + jitter;
   const nextIntervalMin = (nextInterval / (60 * 1000)).toFixed(1);
-  
+
   console.log(`${LOG_PREFIX} Next tick in ${nextIntervalMin} minutes`);
-  
+
   // Schedule next tick
   intervalId = setTimeout(() => {
     tick();
@@ -169,22 +170,22 @@ export function startGuruScheduler(): boolean {
     console.warn(`${LOG_PREFIX} Already running`);
     return false;
   }
-  
+
   console.log(`${LOG_PREFIX} Starting...`);
   console.log(`${LOG_PREFIX} Update interval: ${SCHEDULER_INTERVAL_MS / (60 * 1000)} minutes (2.5 hours)`);
   console.log(`${LOG_PREFIX} Jitter: ±${SCHEDULER_JITTER_MS / 1000} seconds`);
-  
+
   // Initial jitter (0-30s) to prevent thundering herd
   const initialJitter = Math.floor(Math.random() * SCHEDULER_JITTER_MS);
   const initialDelaySec = (initialJitter / 1000).toFixed(1);
-  
+
   console.log(`${LOG_PREFIX} First tick in ${initialDelaySec} seconds`);
-  
+
   // Schedule first tick
   setTimeout(() => {
     tick();
   }, initialJitter);
-  
+
   return true;
 }
 
@@ -200,10 +201,25 @@ export function stopGuruScheduler(): boolean {
     console.warn(`${LOG_PREFIX} Not running`);
     return false;
   }
-  
+
   clearTimeout(intervalId);
   intervalId = null;
-  
+
   console.log(`${LOG_PREFIX} Stopped`);
   return true;
+}
+
+/**
+ * Get Guru Scheduler Status
+ * 
+ * Returns current status of the Guru news updater.
+ */
+export function getGuruSchedulerStatus() {
+  return {
+    enabled: schedulerConfig.guruEnabled,
+    running: intervalId !== null,
+    lastUpdateAt: lastUpdateAt ? new Date(lastUpdateAt).toISOString() : null,
+    timeSinceLastUpdate: lastUpdateAt ? Date.now() - lastUpdateAt : null,
+    intervalMs: SCHEDULER_INTERVAL_MS,
+  };
 }

@@ -6,6 +6,11 @@ import { CANONICAL_SYMBOLS, extractAssetSymbols } from "@shared/constants";
 import { econEventSchema } from "@shared/schema";
 import { db } from "../firebase";
 import admin from "firebase-admin";
+import { getSchedulerStatus as getUmfStatus } from "../umf/scheduler";
+import { getGuruSchedulerStatus as getGuruStatus } from "../guru/scheduler";
+import { integrationConfig, config } from "../config";
+import { getFresh } from "../umf/lib/cache";
+import { readLiveSnapshot } from "../umf/lib/firestoreUmf";
 
 const router = Router();
 
@@ -100,7 +105,7 @@ router.post("/econ-events/upload", async (req: Request, res: Response) => {
             if (eventData.country) {
                 eventData.country = currencyToCountryCode(eventData.country);
             }
-            return econEventSchema.omit({ id: true }).parse(eventData);
+            return econEventSchema.parse(eventData);
         });
 
         // Cleanup old events (2 months)
@@ -142,6 +147,93 @@ router.post("/econ-events/upload", async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error("[Admin] Failed to upload Economic Calendar events:", error);
         res.status(500).json({ error: `Failed to upload events: ${error.message}` });
+    }
+});
+
+router.get("/health", async (req: Request, res: Response) => {
+    try {
+        // 1. Database Health (Drizzle/Neon)
+        let dbHealth = { status: "unknown", userCount: 0, error: null as string | null };
+        try {
+            const { db: postgresDb } = await import("../db");
+            const { users } = await import("@shared/schema");
+            const { sql } = await import("drizzle-orm");
+            const result = await postgresDb.select({ count: sql<number>`count(*)` }).from(users);
+            dbHealth = { status: "connected", userCount: Number(result[0].count), error: null };
+        } catch (e: any) {
+            dbHealth = { status: "error", userCount: 0, error: e.message };
+        }
+
+        // 2. Integration Health (Zoho)
+        let zohoHealth = { status: "unknown", authenticated: false, error: null as string | null };
+        try {
+            const { ZohoClient } = await import("../zoho/client");
+            if (integrationConfig.zoho.clientId) {
+                const client = new ZohoClient();
+                await client.getAccessToken();
+                zohoHealth = { status: "connected", authenticated: true, error: null };
+            } else {
+                zohoHealth = { status: "not_configured", authenticated: false, error: "Missing Client ID" };
+            }
+        } catch (e: any) {
+            zohoHealth = { status: "error", authenticated: false, error: e.message };
+        }
+
+        // 3. Data Freshness (UMF & News)
+        const cachedUmf = getFresh<any>('umf:snapshot');
+        const firestoreUmf = await readLiveSnapshot();
+
+        const guruSnapshot = await db.collection("guruDigest").orderBy("date", "desc").limit(1).get();
+        const lastGuruEntry = guruSnapshot.empty ? null : guruSnapshot.docs[0].data();
+
+        const econSnapshot = await db.collection("econEvents").orderBy("date", "desc").limit(1).get();
+        const lastEconEntry = econSnapshot.empty ? null : econSnapshot.docs[0].data();
+
+        // 4. Scheduler Status
+        const umfScheduler = getUmfStatus();
+        const guruScheduler = getGuruStatus();
+
+        // 5. Config Verification
+        const secretsStatus = {
+            DATABASE_URL: !!process.env.GH_CORE_DATABASE_URL || !!process.env.DATABASE_URL,
+            FB_PROJECT_ID: !!process.env.GH_FB_PROJECT_ID || !!process.env.FB_PROJECT_ID,
+            FB_CLIENT_EMAIL: !!process.env.GH_FB_CLIENT_EMAIL || !!process.env.FB_CLIENT_EMAIL,
+            FB_PRIVATE_KEY: !!process.env.GH_FB_PRIVATE_KEY || !!process.env.FB_PRIVATE_KEY,
+            ZOHO_CLIENT_ID: !!integrationConfig.zoho.clientId,
+            COINGECKO_KEY: !!integrationConfig.coingecko.apiKey,
+        };
+
+        res.json({
+            status: "ready",
+            timestamp: new Date().toISOString(),
+            version: "1.1.2",
+            node_env: config.NODE_ENV,
+            db: dbHealth,
+            zoho: zohoHealth,
+            data: {
+                umf: {
+                    cache_assets: cachedUmf?.assets?.length || 0,
+                    firestore_assets: firestoreUmf?.assets?.length || 0,
+                    last_update: firestoreUmf?.timestamp_utc || null,
+                },
+                news: {
+                    total_entries: (await db.collection("guruDigest").get()).size,
+                    last_update: lastGuruEntry?.date || null,
+                },
+                events: {
+                    total_entries: (await db.collection("econEvents").get()).size,
+                    last_update: lastEconEntry?.date || null,
+                }
+            },
+            schedulers: {
+                umf: umfScheduler,
+                news: guruScheduler,
+            },
+            secrets: secretsStatus
+        });
+    } catch (error: any) {
+        console.error("[Admin Health] Global error:", error);
+        res.status(500).json({ error: error.message });
     }
 });
 

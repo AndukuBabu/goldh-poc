@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { getGuruDigest } from "../lib/getGuruDigest";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Loader2, TrendingUp, ArrowRight } from "lucide-react";
@@ -24,7 +23,11 @@ export default function GuruDigestList({ showAll = false, truncateSummary = fals
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    getGuruDigest()
+    fetch(`${window.location.origin}/api/news/guru-digest`)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
         setDigests(data as DigestEntry[]);
         setIsLoading(false);
@@ -98,7 +101,7 @@ export default function GuruDigestList({ showAll = false, truncateSummary = fals
           </CardContent>
         </Card>
       ))}
-      
+
       {!showAll && digests.length > 5 && (
         <Button
           onClick={() => setLocation("/features/guru")}

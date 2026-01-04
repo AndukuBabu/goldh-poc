@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { User, LogOut, Shield, Menu } from "lucide-react";
+import { User, LogOut, Shield, Menu, Activity } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -16,7 +16,7 @@ export function Header() {
   const [location, setLocation] = useLocation();
   const { user, signout, isLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   const isActive = (path: string) => {
     if (path === "/features") {
       return location === path || location.startsWith("/features/");
@@ -39,46 +39,46 @@ export function Header() {
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
         <Link href="/">
           <div className="flex items-center gap-3 hover-elevate cursor-pointer px-3 py-2 rounded-md transition-all">
-            <img 
-              src={logoImage} 
-              alt="GOLDH Logo" 
-              className="h-12 md:h-14 lg:h-16 w-auto" 
+            <img
+              src={logoImage}
+              alt="GOLDH Logo"
+              className="h-12 md:h-14 lg:h-16 w-auto"
             />
           </div>
         </Link>
 
         <nav className="hidden md:flex items-center gap-2">
           <Link href="/about">
-            <Button 
-              variant={isActive("/about") ? "default" : "ghost"} 
-              data-testid="button-nav-about" 
+            <Button
+              variant={isActive("/about") ? "default" : "ghost"}
+              data-testid="button-nav-about"
               className={isActive("/about") ? "" : "text-foreground"}
             >
               About
             </Button>
           </Link>
           <Link href="/features">
-            <Button 
-              variant={isActive("/features") ? "default" : "ghost"} 
-              data-testid="button-nav-features" 
+            <Button
+              variant={isActive("/features") ? "default" : "ghost"}
+              data-testid="button-nav-features"
               className={isActive("/features") ? "" : "text-foreground"}
             >
               Features
             </Button>
           </Link>
           <Link href="/dashboard">
-            <Button 
-              variant={isActive("/dashboard") ? "default" : "ghost"} 
-              data-testid="button-nav-dashboard" 
+            <Button
+              variant={isActive("/dashboard") ? "default" : "ghost"}
+              data-testid="button-nav-dashboard"
               className={isActive("/dashboard") ? "" : "text-foreground"}
             >
               Dashboard
             </Button>
           </Link>
           <Link href="/learn">
-            <Button 
-              variant={isActive("/learn") ? "default" : "ghost"} 
-              data-testid="button-nav-learn" 
+            <Button
+              variant={isActive("/learn") ? "default" : "ghost"}
+              data-testid="button-nav-learn"
               className={isActive("/learn") ? "" : "text-foreground"}
             >
               Learn
@@ -89,8 +89,8 @@ export function Header() {
           ) : user ? (
             <>
               <Link href="/profile">
-                <Button 
-                  variant={isActive("/profile") ? "default" : "ghost"} 
+                <Button
+                  variant={isActive("/profile") ? "default" : "ghost"}
                   data-testid="button-nav-profile"
                   className={isActive("/profile") ? "" : "text-foreground"}
                 >
@@ -99,19 +99,31 @@ export function Header() {
                 </Button>
               </Link>
               {user.isAdmin && (
-                <Link href="/admin/guru-digest">
-                  <Button 
-                    variant={isActive("/admin/guru-digest") ? "default" : "ghost"} 
-                    data-testid="button-nav-admin"
-                    className={isActive("/admin/guru-digest") ? "border-[#C7AE6A]" : "text-[#C7AE6A] border-[#C7AE6A]/30 border"}
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Admin
-                  </Button>
-                </Link>
+                <>
+                  <Link href="/admin/guru-digest">
+                    <Button
+                      variant={isActive("/admin/guru-digest") ? "default" : "ghost"}
+                      data-testid="button-nav-admin"
+                      className={isActive("/admin/guru-digest") ? "border-[#C7AE6A]" : "text-[#C7AE6A] border-[#C7AE6A]/30 border"}
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                  <Link href="/admin/health">
+                    <Button
+                      variant={isActive("/admin/health") ? "default" : "ghost"}
+                      data-testid="button-nav-health"
+                      className={isActive("/admin/health") ? "border-[#C7AE6A]" : "text-[#C7AE6A] border-[#C7AE6A]/30 border"}
+                    >
+                      <Activity className="w-4 h-4 mr-2" />
+                      Health
+                    </Button>
+                  </Link>
+                </>
               )}
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={handleSignOut}
                 data-testid="button-nav-signout"
                 className="text-foreground"
@@ -123,7 +135,7 @@ export function Header() {
           ) : (
             <>
               <Link href="/signup">
-                <Button 
+                <Button
                   variant="default"
                   className="bg-gradient-to-r from-[#C7AE6A] to-[#b99a45] hover:from-[#b99a45] hover:to-[#C7AE6A] text-black font-semibold border-[#C7AE6A]/20"
                   data-testid="button-nav-signup"
@@ -143,8 +155,8 @@ export function Header() {
         {/* Mobile Navigation */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="md:hidden"
               aria-label="Open navigation menu"
@@ -190,7 +202,7 @@ export function Header() {
               >
                 Learn
               </Button>
-              
+
               {isLoading ? (
                 <div className="w-full h-9 bg-muted/50 rounded-md animate-pulse" />
               ) : user ? (
@@ -205,15 +217,26 @@ export function Header() {
                     Profile
                   </Button>
                   {user.isAdmin && (
-                    <Button
-                      variant={isActive("/admin/guru-digest") ? "default" : "ghost"}
-                      onClick={() => handleNavClick("/admin/guru-digest")}
-                      className={`justify-start ${isActive("/admin/guru-digest") ? "border-[#C7AE6A]" : "text-[#C7AE6A] border-[#C7AE6A]/30 border"}`}
-                      data-testid="button-mobile-nav-admin"
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin
-                    </Button>
+                    <>
+                      <Button
+                        variant={isActive("/admin/guru-digest") ? "default" : "ghost"}
+                        onClick={() => handleNavClick("/admin/guru-digest")}
+                        className={`justify-start ${isActive("/admin/guru-digest") ? "border-[#C7AE6A]" : "text-[#C7AE6A] border-[#C7AE6A]/30 border"}`}
+                        data-testid="button-mobile-nav-admin"
+                      >
+                        <Shield className="w-4 h-4 mr-2" />
+                        Admin
+                      </Button>
+                      <Button
+                        variant={isActive("/admin/health") ? "default" : "ghost"}
+                        onClick={() => handleNavClick("/admin/health")}
+                        className={`justify-start ${isActive("/admin/health") ? "border-[#C7AE6A]" : "text-[#C7AE6A] border-[#C7AE6A]/30 border"}`}
+                        data-testid="button-mobile-nav-health"
+                      >
+                        <Activity className="w-4 h-4 mr-2" />
+                        Health
+                      </Button>
+                    </>
                   )}
                   <Button
                     variant="ghost"
