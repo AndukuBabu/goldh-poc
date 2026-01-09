@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Eye, EyeOff, CheckCircle2, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +34,10 @@ export default function SignUp() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { setSession } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   const form = useForm<SignUpData>({
     resolver: zodResolver(signUpSchema),
@@ -65,16 +71,20 @@ export default function SignUp() {
       if (result.sessionId && result.user) {
         setSession(result.user, result.sessionId);
       }
-      
-      toast({
-        title: "Welcome to GOLDH!",
-        description: "Your account has been created successfully.",
-      });
-      
-      // Small delay to ensure auth state is updated before navigation
-      setTimeout(() => {
-        setLocation("/dashboard");
-      }, 100);
+
+      setSignupSuccess(true);
+
+      // Start countdown
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setLocation("/dashboard");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     },
     onError: (error: Error) => {
       toast({
@@ -92,7 +102,7 @@ export default function SignUp() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="flex items-center justify-center px-6 pt-24 pb-16">
         <div className="w-full max-w-md">
           <div className="text-center mb-8 space-y-3">
@@ -152,13 +162,27 @@ export default function SignUp() {
                   <FormItem>
                     <FormLabel className="text-[#C7AE6A]">Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Create a strong password"
-                        {...field}
-                        data-testid="input-password"
-                        className="bg-background border-border"
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Create a strong password"
+                          {...field}
+                          data-testid="input-password"
+                          className="bg-background border-border pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          data-testid="toggle-password"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -172,13 +196,27 @@ export default function SignUp() {
                   <FormItem>
                     <FormLabel className="text-[#C7AE6A]">Confirm Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Re-enter your password"
-                        {...field}
-                        data-testid="input-confirm-password"
-                        className="bg-background border-border"
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Re-enter your password"
+                          {...field}
+                          data-testid="input-confirm-password"
+                          className="bg-background border-border pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          data-testid="toggle-confirm-password"
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -277,6 +315,54 @@ export default function SignUp() {
           </Form>
         </div>
       </div>
+
+      <AnimatePresence>
+        {signupSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md"
+            data-testid="signup-success-overlay"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="w-full max-w-sm p-8 text-center space-y-6"
+            >
+              <div className="relative inline-block">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", delay: 0.2 }}
+                  className="w-20 h-20 rounded-full bg-gradient-to-br from-[#C7AE6A] to-[#F5E6C8] flex items-center justify-center mx-auto"
+                >
+                  <CheckCircle2 className="w-10 h-10 text-black" />
+                </motion.div>
+                <Sparkles className="absolute -top-2 -right-2 text-[#C7AE6A] w-6 h-6 animate-pulse" />
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold text-[#C7AE6A]">Welcome to GOLDH!</h2>
+                <p className="text-muted-foreground">
+                  Your account has been created successfully.
+                </p>
+              </div>
+
+              <div className="pt-4">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Redirecting to your dashboard in {countdown}s...
+                </p>
+                <Button
+                  onClick={() => setLocation("/dashboard")}
+                  className="w-full bg-gradient-to-r from-[#C7AE6A] to-[#b99a45] text-black font-semibold"
+                >
+                  Go to Dashboard Now
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

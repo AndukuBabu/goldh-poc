@@ -19,7 +19,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { 
+import {
   getUmfSnapshotLatest,
   getUmfMovers as getUmfMoversMock,
   type UmfSnapshot,
@@ -85,73 +85,102 @@ export function useUmfSnapshot() {
   return useQuery<UmfSnapshotExtended, Error>({
     queryKey: ['/api/umf/snapshot'],
     queryFn: async () => {
-      let snapshot: UmfSnapshotLive | null = null;
-      let source: 'cache' | 'firestore' | 'empty' | 'mock' = 'empty';
-      let degraded = true;
-      
-      // Step 1: Try API route first
-      try {
-        const response = await fetch('/api/umf/snapshot');
-        
-        if (response.ok) {
-          // Read x-umf-source header
-          const headerSource = response.headers.get('x-umf-source') as 'cache' | 'firestore' | 'empty' | null;
-          source = headerSource || 'empty';
-          
-          const data = await response.json();
-          
-          // Check if we got actual data (not empty fallback)
-          if (data.assets && data.assets.length > 0) {
-            snapshot = data;
-            degraded = data.degraded || false;
-          }
-        }
-      } catch (error) {
-        console.warn('[useUmfSnapshot] API route failed:', error);
-      }
-      
-      // Step 2: If API returned empty, try direct Firestore
-      if (!snapshot || snapshot.assets.length === 0) {
-        try {
-          const firestoreSnapshot = await getUmfSnapshotLive();
-          
-          if (firestoreSnapshot && firestoreSnapshot.assets.length > 0) {
-            snapshot = firestoreSnapshot;
-            source = 'firestore';
-            degraded = true; // Direct Firestore = degraded
-          }
-        } catch (error) {
-          console.warn('[useUmfSnapshot] Direct Firestore failed:', error);
-        }
-      }
-      
-      // Step 3: If still empty, fallback to mock
-      if (!snapshot || snapshot.assets.length === 0) {
-        try {
-          const mockSnapshot = await getUmfSnapshotLatest();
-          
-          snapshot = {
-            timestamp_utc: mockSnapshot.timestamp_utc,
-            assets: mockSnapshot.assets as UmfAssetLive[], // Cast to live schema
-            degraded: true,
+      // Create a helper that resolves with the first non-empty snapshot
+      const fetchWithRace = (): Promise<{ data: UmfSnapshotLive, source: string, degraded: boolean }> => {
+        return new Promise((resolve, reject) => {
+          let resolved = false;
+          let failures = 0;
+          const totalProducers = 2;
+
+          // Safety timeout: If nothing resolves in 5 seconds, reject to force mock fallback
+          const safetyTimeout = setTimeout(() => {
+            if (!resolved) {
+              console.warn('[useUmfSnapshot] Race timed out after 5000ms');
+              reject(new Error('Data fetch timed out'));
+            }
+          }, 5000);
+
+          const handleSuccess = (data: UmfSnapshotLive, source: string, degraded: boolean) => {
+            if (!resolved && data && data.assets && data.assets.length > 0) {
+              resolved = true;
+              clearTimeout(safetyTimeout);
+              resolve({ data, source, degraded });
+            } else {
+              handleFailure();
+            }
           };
-          source = 'mock';
-          degraded = true;
-        } catch (error) {
-          console.error('[useUmfSnapshot] All data sources failed:', error);
-          throw new Error('Failed to fetch market snapshot from all sources');
-        }
+
+          const handleFailure = () => {
+            failures++;
+            if (failures >= totalProducers && !resolved) {
+              clearTimeout(safetyTimeout);
+              reject(new Error('All primary data sources failed'));
+            }
+          };
+
+          // Producer 1: API Route (with 4s timeout)
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+          fetch('/api/umf/snapshot', { signal: controller.signal }).then(async (response) => {
+            clearTimeout(timeoutId);
+            if (response.ok) {
+              const headerSource = response.headers.get('x-umf-source') || 'empty';
+              const data = await response.json();
+              handleSuccess(data, headerSource, data.degraded || false);
+            } else {
+              handleFailure();
+            }
+          }).catch(() => {
+            clearTimeout(timeoutId);
+            handleFailure();
+          });
+
+          // Producer 2: Direct Firestore
+          getUmfSnapshotLive().then(async (data) => {
+            if (data) {
+              const dataAgeMs = Date.now() - new Date(data.timestamp_utc).getTime();
+              const isStale = dataAgeMs > (90 * 60 * 1000); // 90 minutes buffer
+
+              // Give API a 300ms window to win (prefer 'Live' status for healthy API)
+              await new Promise(r => setTimeout(r, 300));
+
+              handleSuccess(data, 'firestore', isStale);
+            } else {
+              handleFailure();
+            }
+          }).catch(handleFailure);
+        });
+      };
+
+      let snapshotResult;
+      try {
+        snapshotResult = await fetchWithRace();
+      } catch (e) {
+        // Step 3: Fallback to mock if all else fails
+        const mockSnapshot = await getUmfSnapshotLatest();
+        snapshotResult = {
+          data: {
+            timestamp_utc: mockSnapshot.timestamp_utc,
+            assets: mockSnapshot.assets as UmfAssetLive[],
+            degraded: true,
+          },
+          source: 'mock',
+          degraded: true
+        };
       }
-      
+
+      const { data: snapshot, source, degraded } = snapshotResult;
+
       // Compute age in minutes
       const ageMinutes = (Date.now() - new Date(snapshot.timestamp_utc).getTime()) / 60000;
-      
+
       // Map source to UI-friendly label
-      const sourceUi: 'Live' | 'Firestore' | 'Mock' = 
+      const sourceUi: 'Live' | 'Firestore' | 'Mock' =
         source === 'cache' ? 'Live' :
-        source === 'firestore' ? 'Firestore' :
-        'Mock';
-      
+          source === 'firestore' ? 'Firestore' :
+            'Mock';
+
       return {
         data: snapshot,
         degraded,
@@ -161,7 +190,7 @@ export function useUmfSnapshot() {
     },
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 60 * 1000, // Refetch every minute
+    refetchInterval: false, // Disabled for POC to save reads
     retry: 2,
   });
 }
@@ -219,120 +248,104 @@ export function useUmfMovers() {
   return useQuery<UmfMoversExtended, Error>({
     queryKey: ['/api/umf/movers'],
     queryFn: async () => {
-      let gainers: UmfAssetLive[] = [];
-      let losers: UmfAssetLive[] = [];
-      let source: 'cache' | 'firestore' | 'empty' | 'mock' = 'empty';
-      let degraded = true;
-      
-      // Step 1: Try API route first
-      try {
-        const response = await fetch('/api/umf/movers');
-        
-        if (response.ok) {
-          // Read x-umf-source header
-          const headerSource = response.headers.get('x-umf-source') as 'cache' | 'firestore' | 'empty' | null;
-          source = headerSource || 'empty';
-          
-          const data = await response.json();
-          
-          // Check if we got actual data (not empty fallback)
-          if (data.gainers && data.gainers.length > 0) {
-            gainers = data.gainers;
-            losers = data.losers || [];
-            degraded = data.degraded || false;
-          }
-        }
-      } catch (error) {
-        console.warn('[useUmfMovers] API route failed:', error);
-      }
-      
-      // Step 2: If API returned empty, compute from snapshot
-      if (gainers.length === 0) {
-        try {
-          // Try getting snapshot from API first
-          const snapshotResponse = await fetch('/api/umf/snapshot');
-          let snapshot: UmfSnapshotLive | null = null;
-          
-          if (snapshotResponse.ok) {
-            const snapshotData = await snapshotResponse.json();
-            if (snapshotData.assets && snapshotData.assets.length > 0) {
-              snapshot = snapshotData;
+      // Helper to race API and fallback
+      const fetchWithRace = (): Promise<{ gainers: UmfAssetLive[], losers: UmfAssetLive[], source: string, degraded: boolean }> => {
+        return new Promise((resolve, reject) => {
+          let resolved = false;
+          let failures = 0;
+          const totalProducers = 2;
+
+          // Safety timeout
+          const safetyTimeout = setTimeout(() => {
+            if (!resolved) {
+              console.warn('[useUmfMovers] Race timed out after 5000ms');
+              reject(new Error('Data fetch timed out'));
             }
-          }
-          
-          // If snapshot API failed, try direct Firestore
-          if (!snapshot) {
-            snapshot = await getUmfSnapshotLive();
-          }
-          
-          if (snapshot && snapshot.assets.length > 0) {
-            // Compute movers from snapshot
-            const assetsWithChange = snapshot.assets.filter(
-              (asset) => asset.changePct24h !== null
-            );
-            
-            const sorted = [...assetsWithChange].sort(
-              (a, b) => (b.changePct24h || 0) - (a.changePct24h || 0)
-            );
-            
-            gainers = sorted.slice(0, 5);
-            losers = sorted.slice(-5).reverse();
-            source = 'firestore';
-            degraded = true;
-          }
-        } catch (error) {
-          console.warn('[useUmfMovers] Snapshot fallback failed:', error);
-        }
+          }, 5000);
+
+          const handleSuccess = (gainers: UmfAssetLive[], losers: UmfAssetLive[], source: string, degraded: boolean) => {
+            if (!resolved && gainers && gainers.length > 0) {
+              resolved = true;
+              clearTimeout(safetyTimeout);
+              resolve({ gainers, losers, source, degraded });
+            } else {
+              handleFailure();
+            }
+          };
+
+          const handleFailure = () => {
+            failures++;
+            if (failures >= totalProducers && !resolved) {
+              clearTimeout(safetyTimeout);
+              reject(new Error('All movers sources failed'));
+            }
+          };
+
+          // Producer 1: Movers API (with 4s timeout)
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+          fetch('/api/umf/movers', { signal: controller.signal }).then(async (response) => {
+            clearTimeout(timeoutId);
+            if (response.ok) {
+              const headerSource = response.headers.get('x-umf-source') || 'empty';
+              const data = await response.json();
+              handleSuccess(data.gainers, data.losers || [], headerSource, data.degraded || false);
+            } else {
+              handleFailure();
+            }
+          }).catch(() => {
+            clearTimeout(timeoutId);
+            handleFailure();
+          });
+
+          // Producer 2: Compute from Firestore Snapshot
+          getUmfSnapshotLive().then(async (snapshot) => {
+            if (snapshot && snapshot.assets.length > 0) {
+              const dataAgeMs = Date.now() - new Date(snapshot.timestamp_utc).getTime();
+              const isStale = dataAgeMs > (90 * 60 * 1000); // 90 minutes buffer
+
+              const assetsWithChange = snapshot.assets.filter(a => a.changePct24h !== null);
+              const sorted = [...assetsWithChange].sort((a, b) => (b.changePct24h || 0) - (a.changePct24h || 0));
+
+              // Give API a 300ms window to win
+              await new Promise(r => setTimeout(r, 300));
+
+              handleSuccess(sorted.slice(0, 5), sorted.slice(-5).reverse(), 'firestore', isStale);
+            } else {
+              handleFailure();
+            }
+          }).catch(handleFailure);
+        });
+      };
+
+      let result;
+      try {
+        result = await fetchWithRace();
+      } catch (e) {
+        // Fallback to mock
+        const mockMovers = await getUmfMoversMock(10);
+        const gainers = mockMovers.filter(m => m.direction === 'gainer').map(m => ({
+          id: m.symbol.toLowerCase(), symbol: m.symbol, name: m.name, class: m.class,
+          price: m.price, changePct24h: m.changePct24h, volume24h: null, marketCap: null,
+          updatedAt_utc: m.updatedAt_utc,
+        }));
+        const losers = mockMovers.filter(m => m.direction === 'loser').map(m => ({
+          id: m.symbol.toLowerCase(), symbol: m.symbol, name: m.name, class: m.class,
+          price: m.price, changePct24h: m.changePct24h, volume24h: null, marketCap: null,
+          updatedAt_utc: m.updatedAt_utc,
+        }));
+        result = { gainers, losers, source: 'mock', degraded: true };
       }
-      
-      // Step 3: If still empty, fallback to mock
-      if (gainers.length === 0) {
-        try {
-          const mockMovers = await getUmfMoversMock(10);
-          
-          // Convert UmfMover[] to gainers/losers format
-          gainers = mockMovers
-            .filter(m => m.direction === 'gainer')
-            .map(m => ({
-              id: m.symbol.toLowerCase(),
-              symbol: m.symbol,
-              name: m.name,
-              class: m.class,
-              price: m.price,
-              changePct24h: m.changePct24h,
-              volume24h: null,
-              marketCap: null,
-              updatedAt_utc: m.updatedAt_utc,
-            }));
-          
-          losers = mockMovers
-            .filter(m => m.direction === 'loser')
-            .map(m => ({
-              id: m.symbol.toLowerCase(),
-              symbol: m.symbol,
-              name: m.name,
-              class: m.class,
-              price: m.price,
-              changePct24h: m.changePct24h,
-              volume24h: null,
-              marketCap: null,
-              updatedAt_utc: m.updatedAt_utc,
-            }));
-          
-          source = 'mock';
-          degraded = true;
-        } catch (error) {
-          console.error('[useUmfMovers] All data sources failed:', error);
-          throw new Error('Failed to fetch market movers from all sources');
-        }
-      }
-      
+
+      const { gainers, losers, degraded, source } = result;
+
       // Map source to UI-friendly label
-      const sourceUi: 'Live' | 'Firestore' | 'Mock' = 
+      const sourceUi: 'Live' | 'Firestore' | 'Mock' =
         source === 'cache' ? 'Live' :
-        source === 'firestore' ? 'Firestore' :
-        'Mock';
-      
+          source === 'firestore' ? 'Firestore' :
+            'Mock';
+
       return {
         gainers,
         losers,
@@ -342,7 +355,7 @@ export function useUmfMovers() {
     },
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 60 * 1000, // Refetch every minute
+    refetchInterval: false, // Disabled for POC to save reads
     retry: 2,
   });
 }
@@ -380,14 +393,14 @@ export function useUmfMovers() {
  */
 export function useCryptoByMarketCap(limit: number = 20) {
   const { data: extended, ...queryState } = useUmfSnapshot();
-  
+
   const topCrypto = extended?.data.assets
-    .filter((asset): asset is UmfAssetLive & { marketCap: number } => 
+    .filter((asset): asset is UmfAssetLive & { marketCap: number } =>
       asset.class === 'crypto' && asset.marketCap !== null
     )
     .sort((a, b) => b.marketCap - a.marketCap)
     .slice(0, limit);
-  
+
   return {
     data: topCrypto,
     ...queryState,
@@ -420,9 +433,9 @@ export function useCryptoByMarketCap(limit: number = 20) {
  */
 export function useIndices() {
   const { data: extended, ...queryState } = useUmfSnapshot();
-  
+
   const indices = extended?.data.assets.filter(asset => asset.class === 'index');
-  
+
   return {
     data: indices,
     ...queryState,
@@ -458,11 +471,11 @@ export function useIndices() {
  */
 export function useDXY() {
   const { data: extended, ...queryState } = useUmfSnapshot();
-  
+
   const dxy = extended?.data.assets.find(
     asset => asset.symbol === 'DXY' || asset.id === 'dxy'
   );
-  
+
   return {
     data: dxy,
     ...queryState,
@@ -513,15 +526,15 @@ export function useDXY() {
  */
 export function useBtcEth() {
   const { data: extended, ...queryState } = useUmfSnapshot();
-  
+
   const btc = extended?.data.assets.find(
     asset => asset.symbol === 'BTC' || asset.id === 'bitcoin'
   );
-  
+
   const eth = extended?.data.assets.find(
     asset => asset.symbol === 'ETH' || asset.id === 'ethereum'
   );
-  
+
   return {
     data: { btc, eth },
     ...queryState,
@@ -556,11 +569,11 @@ export function useBtcEth() {
  */
 export function useAssetBySymbol(symbol: string) {
   const { data: extended, ...queryState } = useUmfSnapshot();
-  
+
   const asset = extended?.data.assets.find(
     asset => asset.symbol.toLowerCase() === symbol.toLowerCase()
   );
-  
+
   return {
     data: asset,
     ...queryState,
@@ -595,9 +608,9 @@ export function useAssetBySymbol(symbol: string) {
  */
 export function useAssetsByClass(assetClass: 'crypto' | 'index' | 'forex' | 'commodity' | 'etf') {
   const { data: extended, ...queryState } = useUmfSnapshot();
-  
+
   const assets = extended?.data.assets.filter(asset => asset.class === assetClass);
-  
+
   return {
     data: assets,
     ...queryState,

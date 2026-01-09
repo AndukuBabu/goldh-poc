@@ -596,7 +596,7 @@ export const umfAssetLiveSchema = z.object({
     .describe("24-hour trading volume in USD (null if unavailable, 0 for low-activity assets)"),
 
   marketCap: z.number()
-    .positive("Market cap must be positive")
+    .nonnegative("Market cap cannot be negative")
     .nullable()
     .describe("Total market capitalization in USD (null if unavailable)"),
 
@@ -608,13 +608,13 @@ export const umfAssetLiveSchema = z.object({
     .describe("Market cap rank (1 = largest, null if unavailable)"),
 
   high24h: z.number()
-    .positive("High price must be positive")
+    .nonnegative("High price cannot be negative")
     .nullable()
     .optional()
     .describe("24-hour high price in USD (null if unavailable)"),
 
   low24h: z.number()
-    .positive("Low price must be positive")
+    .nonnegative("Low price cannot be negative")
     .nullable()
     .optional()
     .describe("24-hour low price in USD (null if unavailable)"),

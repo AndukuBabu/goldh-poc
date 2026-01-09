@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
-import { getFresh } from "../umf/lib/cache";
+import { getFresh, setFresh } from "../umf/lib/cache";
 import { readLiveSnapshot } from "../umf/lib/firestoreUmf";
+import { CACHE_TTL_S } from "../umf/config";
 import type { UmfSnapshotLive, UmfAssetLive } from "@shared/schema";
 
 const router = Router();
@@ -14,13 +15,20 @@ router.get("/snapshot", async (req: Request, res: Response) => {
             return res.json(cached);
         }
 
+        const start = Date.now();
         const firestore = await readLiveSnapshot();
+        const end = Date.now();
+        console.log(`[UMF Snapshot] Firestore read took ${end - start}ms`);
 
         if (firestore) {
+            // Lazy pre-warm: populate cache so next request is faster
+            setFresh('umf:snapshot', firestore, CACHE_TTL_S);
+
             const dataAgeMs = Date.now() - new Date(firestore.timestamp_utc).getTime();
             const isStale = dataAgeMs > (90 * 60 * 1000); // 90 minutes buffer
 
             res.setHeader('x-umf-source', 'firestore');
+            console.log(`[UMF Snapshot] Returning from Firestore (${firestore.assets.length} assets)`);
             return res.json({
                 ...firestore,
                 degraded: isStale,

@@ -58,11 +58,22 @@ function Router() {
   );
 }
 
+
+import { useUmfSnapshot, useUmfMovers } from "@/hooks/useUmf";
+
+function DataPrefetcher() {
+  // Silently pre-fetch data in the background so it's ready when user visits Dashboard
+  useUmfSnapshot();
+  useUmfMovers();
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
+          <DataPrefetcher />
           <WelcomeAnimation />
           <ExitIntentModal />
           <Toaster />

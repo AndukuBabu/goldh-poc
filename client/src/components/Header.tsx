@@ -37,7 +37,7 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href="/">
+        <Link href={user ? "/dashboard" : "/"}>
           <div className="flex items-center gap-3 hover-elevate cursor-pointer px-3 py-2 rounded-md transition-all">
             <img
               src={logoImage}

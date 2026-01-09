@@ -6,13 +6,13 @@ export default function AboutUs() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       {/* Hero Section */}
       <div className="pt-32 pb-20 px-6">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center space-y-6 mb-16">
-            <h1 
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[#e3d6b4] via-[#C7AE6A] to-[#b99a45] bg-clip-text text-transparent" 
+            <h1
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[#e3d6b4] via-[#C7AE6A] to-[#b99a45] bg-clip-text text-transparent"
               data-testid="text-about-title"
             >
               About GOLDH
@@ -33,7 +33,7 @@ export default function AboutUs() {
               </div>
               <h3 className="text-2xl font-bold text-foreground">The Problem</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Today's financial world is fragmented. Apps everywhere. Noise everywhere. Complexity everywhere. 
+                Today's financial world is fragmented. Apps everywhere. Noise everywhere. Complexity everywhere.
                 Tools built for traders, not humans. Markets built for insiders, not everyone.
               </p>
             </Card>
@@ -44,7 +44,7 @@ export default function AboutUs() {
               </div>
               <h3 className="text-2xl font-bold text-foreground">Our Solution</h3>
               <p className="text-muted-foreground leading-relaxed">
-                A single, unified platform to understand what's happening across crypto, equities, commodities, 
+                A single, unified platform to understand what's happening across crypto, equities, commodities,
                 and macro events — with AI-driven insight and human-level clarity.
               </p>
             </Card>
@@ -55,7 +55,7 @@ export default function AboutUs() {
             <h2 className="text-4xl sm:text-5xl font-bold text-center bg-gradient-to-r from-[#e3d6b4] via-[#C7AE6A] to-[#b99a45] bg-clip-text text-transparent mb-12">
               Who We Are
             </h2>
-            
+
             <Card className="p-8 md:p-12 space-y-6 bg-card/50 backdrop-blur">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -63,12 +63,12 @@ export default function AboutUs() {
                 </div>
                 <div className="space-y-4">
                   <p className="text-lg text-foreground leading-relaxed">
-                    GOLDH is built by a global team of technologists, analysts, and transformation leaders 
+                    GOLDH is built by a global team of technologists, analysts, and transformation leaders
                     with decades of experience inside asset management, fintech, AI, and digital innovation.
                   </p>
                   <p className="text-lg text-muted-foreground leading-relaxed">
-                    We've lived the challenges firsthand, and we built GOLDH to solve a simple problem: 
-                    <span className="text-primary font-semibold"> Make intelligent finance available to everyone</span> — 
+                    We've lived the challenges firsthand, and we built GOLDH to solve a simple problem:
+                    <span className="text-primary font-semibold"> Make intelligent finance available to everyone</span> —
                     without compromising on quality, truth, or trust.
                   </p>
                 </div>
@@ -138,9 +138,10 @@ export default function AboutUs() {
                   The Next Era of Intelligent Finance
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  We're building more than a platform. We're building a new bridge between traditional finance, 
+                  We're building more than a platform. We're building a new bridge between traditional finance,
                   digital assets, and the everyday investor.
                 </p>
+
                 <p className="text-xl font-semibold text-primary">
                   And you're early.
                 </p>

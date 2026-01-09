@@ -6,7 +6,7 @@ import { CANONICAL_SYMBOLS, extractAssetSymbols } from "@shared/constants";
 import { econEventSchema } from "@shared/schema";
 import { db } from "../firebase";
 import admin from "firebase-admin";
-import { getSchedulerStatus as getUmfStatus } from "../umf/scheduler";
+import { getSchedulerStatus as getUmfStatus, triggerTick as triggerUmfTick } from "../umf/scheduler";
 import { getGuruSchedulerStatus as getGuruStatus } from "../guru/scheduler";
 import { integrationConfig, config } from "../config";
 import { getFresh } from "../umf/lib/cache";
@@ -90,6 +90,16 @@ router.post("/guru-digest/refresh", async (req: Request, res: Response) => {
     } catch (error) {
         console.error("[Admin] Failed to refresh RSS feed:", error);
         res.status(500).json({ error: "Failed to refresh RSS feed" });
+    }
+});
+
+router.post("/umf/refresh", async (req: Request, res: Response) => {
+    try {
+        const result = await triggerUmfTick();
+        res.json(result);
+    } catch (error: any) {
+        console.error("[Admin] Failed to refresh UMF data:", error);
+        res.status(500).json({ error: error.message });
     }
 });
 

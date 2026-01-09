@@ -1,0 +1,11 @@
+{
+  "newUser": {
+    "totalDuration": 2889,
+    "dataLoadDuration": 144,
+    "timestamp": "2026-01-05T12:55:32.073Z"
+  },
+  "returningUser": {
+    "loadDuration": 381,
+    "timestamp": "2026-01-05T12:55:39.220Z"
+  }
+}

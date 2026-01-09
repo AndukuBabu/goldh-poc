@@ -18,6 +18,7 @@
 import { z } from 'zod';
 import type { UmfAssetLive } from '@shared/schema';
 import { umfAssetLiveSchema } from '@shared/schema';
+import { addLogEntry } from '../scheduler';
 
 /**
  * CoinGecko API Configuration
@@ -139,19 +140,26 @@ export async function fetchTopCoinsByMarketCap(
   const assets: UmfAssetLive[] = coinsData.map(transformCoinGeckoToUmfAsset);
 
   // Validate each transformed asset
+  const validatedAssets: UmfAssetLive[] = [];
   assets.forEach((asset, index) => {
     try {
       umfAssetLiveSchema.parse(asset);
+      validatedAssets.push(asset);
     } catch (error) {
-      throw new Error(
-        `Asset validation failed for ${asset.symbol} (index ${index}): ${error instanceof Error ? error.message : String(error)}`
-      );
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const logMsg = `Skipping invalid asset ${asset.symbol}: ${errorMsg}`;
+      console.warn(`[CoinGecko] ${logMsg}`);
+      addLogEntry('warn', logMsg);
     }
   });
 
+  if (validatedAssets.length === 0 && assets.length > 0) {
+    throw new Error('All fetched assets failed validation');
+  }
+
   // Return validated result
   return {
-    assets,
+    assets: validatedAssets,
     timestamp_utc: new Date().toISOString(), // Always ends with 'Z'
   };
 }
@@ -303,7 +311,7 @@ function ensureIsoWithZ(timestamp: string): string {
   if (timestamp.endsWith('Z')) {
     return timestamp;
   }
-  
+
   // Parse and re-serialize to ensure proper format
   const date = new Date(timestamp);
   return date.toISOString(); // Always ends with 'Z'
@@ -360,7 +368,7 @@ async function fetchWithRetry(
       return response;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      
+
       // Don't retry on last attempt
       if (attempt < maxAttempts - 1) {
         console.warn(

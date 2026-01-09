@@ -6,7 +6,7 @@ import { SignInPrompt } from "@/components/SignInPrompt";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AssetCard } from "@/components/AssetCard";
+import { AssetCard, AssetCardSkeleton } from "@/components/AssetCard";
 import { useToast } from "@/hooks/use-toast";
 import { useUmfSnapshot } from "@/hooks/useUmf";
 import { Sparkles, TrendingUp, Loader2, Rocket, ChevronDown, ChevronUp } from "lucide-react";
@@ -50,82 +50,76 @@ export default function Dashboard() {
   });
 
   // Map UMF snapshot data + fallback data to AssetOverview format
-  const assetDisplayData = displayedAssets.map(symbol => {
-    if (isLoadingUmf || !umfData?.data) {
+  const assetDisplayData = useMemo(() => {
+    return displayedAssets.map(symbol => {
+      if (isLoadingUmf || !umfData?.data) {
+        return {
+          symbol,
+          data: undefined,
+          isLoading: true,
+          isError: false,
+        };
+      }
+
+      // Try to find asset in UMF snapshot first
+      const asset = umfData.data.assets.find(a => a.symbol === symbol);
+
+      if (asset) {
+        // Found in UMF snapshot - use it
+        const assetOverview: AssetOverview = {
+          symbol,
+          name: ASSET_DISPLAY_NAMES[symbol] || symbol,
+          class: ASSET_CLASSES[symbol] || 'crypto',
+          image: null,
+          priceSummary: {
+            price: asset.price,
+            changePct24h: asset.changePct24h ?? 0,
+            volume24h: asset.volume24h ?? null,
+            marketCap: asset.marketCap ?? null,
+            updatedAt_utc: umfData.data.timestamp_utc,
+          },
+          news: [],
+          events: [],
+          degraded: {
+            price: false, // Show price even if data is from fallback/mock
+            news: false,
+            events: true,
+          },
+        };
+
+        return {
+          symbol,
+          data: assetOverview,
+          isLoading: false,
+          isError: false,
+        };
+      }
+
+      // Not in UMF snapshot - check fallback query
+      const fallbackIndex = missingAssets.indexOf(symbol);
+      if (fallbackIndex >= 0) {
+        const fallbackQuery = fallbackQueries[fallbackIndex];
+        return {
+          symbol,
+          data: fallbackQuery.data as AssetOverview | undefined,
+          isLoading: fallbackQuery.isLoading,
+          isError: fallbackQuery.isError,
+        };
+      }
+
+      // Should never reach here, but return error state as fallback
       return {
         symbol,
         data: undefined,
-        isLoading: true,
-        isError: false,
-      };
-    }
-
-    // Try to find asset in UMF snapshot first
-    const asset = umfData.data.assets.find(a => a.symbol === symbol);
-
-    if (asset) {
-      // Found in UMF snapshot - use it
-      const assetOverview: AssetOverview = {
-        symbol,
-        name: ASSET_DISPLAY_NAMES[symbol] || symbol,
-        class: ASSET_CLASSES[symbol] || 'crypto',
-        image: null,
-        priceSummary: {
-          price: asset.price,
-          changePct24h: asset.changePct24h ?? 0,
-          volume24h: asset.volume24h ?? null,
-          marketCap: asset.marketCap ?? null,
-          updatedAt_utc: umfData.data.timestamp_utc,
-        },
-        news: [],
-        events: [],
-        degraded: {
-          price: umfData.degraded,
-          news: false,
-          events: true,
-        },
-      };
-
-      return {
-        symbol,
-        data: assetOverview,
         isLoading: false,
-        isError: false,
+        isError: true,
       };
-    }
-
-    // Not in UMF snapshot - check fallback query
-    const fallbackIndex = missingAssets.indexOf(symbol);
-    if (fallbackIndex >= 0) {
-      const fallbackQuery = fallbackQueries[fallbackIndex];
-      return {
-        symbol,
-        data: fallbackQuery.data as AssetOverview | undefined,
-        isLoading: fallbackQuery.isLoading,
-        isError: fallbackQuery.isError,
-      };
-    }
-
-    // Should never reach here, but return error state as fallback
-    return {
-      symbol,
-      data: undefined,
-      isLoading: false,
-      isError: true,
-    };
-  });
+    });
+  }, [displayedAssets, isLoadingUmf, umfData, missingAssets, fallbackQueries]);
 
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </div>
-    );
-  }
+  // No blocking on authLoading - Header and SignInPrompt handle their own states
+  // This allows market overview skeletons to show immediately
 
   return (
     <div className="min-h-screen bg-background">
@@ -178,13 +172,7 @@ export default function Dashboard() {
             >
               {assetDisplayData.map(({ symbol, data, isLoading: loading, isError }) => {
                 if (loading) {
-                  return (
-                    <Card key={symbol} className="h-full" data-testid={`card-asset-loading-${symbol}`}>
-                      <CardContent className="flex items-center justify-center py-12">
-                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                      </CardContent>
-                    </Card>
-                  );
+                  return <AssetCardSkeleton key={symbol} />;
                 }
 
                 if (isError || !data) {

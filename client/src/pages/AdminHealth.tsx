@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface HealthData {
     status: string;
@@ -50,7 +53,17 @@ interface HealthData {
     schedulers: {
         umf: {
             enabled: boolean;
-            lastCallAt: string | null;
+            running: boolean;
+            lastAttemptAt: string | null;
+            lastSuccessAt: string | null;
+            lastFailureAt: string | null;
+            lastErrorMessage: string | null;
+            nextTickAt: string | null;
+            recentEvents: Array<{
+                timestamp: string;
+                type: 'info' | 'warn' | 'error' | 'success';
+                message: string;
+            }>;
         };
         news: {
             enabled: boolean;
@@ -66,6 +79,36 @@ export default function AdminHealth() {
         queryKey: ["/api/admin/health"],
     });
 
+    const [isTriggering, setIsTriggering] = useState(false);
+    const { toast } = useToast();
+
+    const handleTriggerRefresh = async () => {
+        try {
+            setIsTriggering(true);
+            const response = await apiRequest("POST", "/api/admin/umf/refresh");
+            const result = await response.json();
+
+            if (result.success) {
+                toast({
+                    title: "Refresh Triggered",
+                    description: result.message || "Manual UMF tick started successfully.",
+                });
+                // Small delay to allow scheduler to start before refetching status
+                setTimeout(() => refetch(), 1000);
+            } else {
+                throw new Error(result.message || "Failed to trigger refresh");
+            }
+        } catch (error: any) {
+            toast({
+                title: "Refresh Failed",
+                description: error.message || "There was an error triggering the manual refresh.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsTriggering(false);
+        }
+    };
+
     const getStatusIcon = (status: string) => {
         switch (status) {
             case "ready":
@@ -80,7 +123,7 @@ export default function AdminHealth() {
         }
     };
 
-    const formatLastUpdate = (isoString: string | null) => {
+    const formatTimeStatus = (isoString: string | null) => {
         if (!isoString) return "Never";
         try {
             const date = new Date(isoString);
@@ -88,9 +131,17 @@ export default function AdminHealth() {
 
             const now = new Date();
             const diffMs = now.getTime() - date.getTime();
-            const diffMins = Math.floor(diffMs / 60000);
+            const diffSeconds = Math.floor(diffMs / 1000);
+            const diffMins = Math.floor(Math.abs(diffMs) / 60000);
 
-            if (diffMins < 0) return "Just now"; // Handle slight clock skews
+            // Handle Future Times (e.g., Next Tick)
+            if (diffMs < 0) {
+                if (diffMins < 1) return "In < 1m";
+                if (diffMins < 60) return `In ${diffMins}m`;
+                return `In ${Math.floor(diffMins / 60)}h`;
+            }
+
+            // Handle Past Times (e.g., Last Tick)
             if (diffMins < 1) return "Just now";
             if (diffMins < 60) return `${diffMins}m ago`;
             if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
@@ -225,10 +276,34 @@ export default function AdminHealth() {
                                             {health?.schedulers.umf.enabled ? "ACTIVE" : "DISABLED"}
                                         </Badge>
                                     </div>
-                                    <div className="flex items-center gap-2 text-[10px] text-gray-500 italic">
-                                        <Zap className="h-3 w-3" />
-                                        Last Tick: {formatLastUpdate(health?.schedulers.umf.lastCallAt || null)}
+                                    <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                                        <Clock className="h-3 w-3" />
+                                        Last Attempt: {formatTimeStatus(health?.schedulers.umf.lastAttemptAt || null)}
                                     </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-green-500 italic">
+                                        <Zap className="h-3 w-3" />
+                                        Last Success: {formatTimeStatus(health?.schedulers.umf.lastSuccessAt || null)}
+                                    </div>
+                                    {health?.schedulers.umf.lastFailureAt && (
+                                        <div className="flex items-center gap-2 text-[10px] text-red-500 italic">
+                                            <AlertCircle className="h-3 w-3" />
+                                            Last Failure: {formatTimeStatus(health?.schedulers.umf.lastFailureAt || null)}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2 text-[10px] text-purple-400">
+                                        <RefreshCw className="h-3 w-3" />
+                                        Next Tick: {formatTimeStatus(health?.schedulers.umf.nextTickAt || null)}
+                                    </div>
+                                    <Button
+                                        onClick={handleTriggerRefresh}
+                                        disabled={isTriggering || !health?.schedulers.umf.enabled}
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full mt-2 h-7 text-[10px] border-purple-500/30 text-purple-400 hover:bg-purple-500 hover:text-white"
+                                    >
+                                        <Zap className={`h-3 w-3 mr-1 ${isTriggering ? "animate-spin" : ""}`} />
+                                        {isTriggering ? "Refreshing..." : "Trigger Market Refresh"}
+                                    </Button>
                                 </div>
                                 <div className="p-3 bg-[#0f0f0f] rounded-lg border border-[#2a2a2a] space-y-2">
                                     <div className="flex items-center justify-between">
@@ -239,7 +314,7 @@ export default function AdminHealth() {
                                     </div>
                                     <div className="flex items-center gap-2 text-[10px] text-gray-500 italic">
                                         <Zap className="h-3 w-3" />
-                                        Last Tick: {formatLastUpdate(health?.schedulers.news.lastUpdateAt || null)}
+                                        Last Tick: {formatTimeStatus(health?.schedulers.news.lastUpdateAt || null)}
                                     </div>
                                 </div>
                             </CardContent>
@@ -259,17 +334,17 @@ export default function AdminHealth() {
                                     <div className="p-4 bg-[#0f0f0f] rounded-lg border border-[#2a2a2a]">
                                         <p className="text-gray-500 text-xs mb-1 uppercase tracking-tight">Market Overview</p>
                                         <p className="text-2xl font-bold text-white">{health?.data.umf.firestore_assets}</p>
-                                        <p className="text-[10px] text-gray-400 mt-1">Sync: {formatLastUpdate(health?.data.umf.last_update || null)}</p>
+                                        <p className="text-[10px] text-gray-400 mt-1">Sync: {formatTimeStatus(health?.data.umf.last_update || null)}</p>
                                     </div>
                                     <div className="p-4 bg-[#0f0f0f] rounded-lg border border-[#2a2a2a]">
                                         <p className="text-gray-500 text-xs mb-1 uppercase tracking-tight">Guru Talk Articles</p>
                                         <p className="text-2xl font-bold text-white">{health?.data.news.total_entries}</p>
-                                        <p className="text-[10px] text-gray-400 mt-1">Sync: {formatLastUpdate(health?.data.news.last_update || null)}</p>
+                                        <p className="text-[10px] text-gray-400 mt-1">Sync: {formatTimeStatus(health?.data.news.last_update || null)}</p>
                                     </div>
                                     <div className="p-4 bg-[#0f0f0f] rounded-lg border border-[#2a2a2a]">
                                         <p className="text-gray-500 text-xs mb-1 uppercase tracking-tight">Market Events</p>
                                         <p className="text-2xl font-bold text-white">{health?.data.events.total_entries}</p>
-                                        <p className="text-[10px] text-gray-400 mt-1">Sync: {formatLastUpdate(health?.data.events.last_update || null)}</p>
+                                        <p className="text-[10px] text-gray-400 mt-1">Sync: {formatTimeStatus(health?.data.events.last_update || null)}</p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -293,6 +368,59 @@ export default function AdminHealth() {
                                             <span className="text-[10px] font-mono text-gray-400 truncate">{key}</span>
                                         </div>
                                     ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* 6. Scheduler Logs (Full Width) */}
+                    <div className="mt-8">
+                        <Card className="bg-[#1a1a1a] border-[#2a2a2a] overflow-hidden">
+                            <div className="h-1 bg-gradient-to-r from-gray-700 to-gray-500" />
+                            <CardHeader>
+                                <CardTitle className="text-lg flex items-center gap-2 text-gray-300">
+                                    <Clock className="h-5 w-5" />
+                                    Scheduler Diagnostic Logs (Recent Events)
+                                </CardTitle>
+                                <CardDescription className="text-xs text-gray-500">
+                                    Real-time event stream from the UMF background scheduler
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="bg-[#0f0f0f] rounded-lg border border-[#2a2a2a] overflow-hidden">
+                                    <div className="max-h-[300px] overflow-y-auto p-2 font-mono text-xs">
+                                        {health?.schedulers.umf.recentEvents && health.schedulers.umf.recentEvents.length > 0 ? (
+                                            <div className="space-y-1">
+                                                {health.schedulers.umf.recentEvents.map((event, idx) => (
+                                                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-2 border-b border-[#1a1a1a] last:border-0 hover:bg-[#1a1a1a]/50">
+                                                        <span className="text-gray-600 font-mono whitespace-nowrap">
+                                                            [{new Date(event.timestamp).toLocaleTimeString()}]
+                                                        </span>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={`text-[9px] h-4 py-0 w-fit ${event.type === 'success' ? 'border-green-500 text-green-500' :
+                                                                event.type === 'error' ? 'border-red-500 text-red-500' :
+                                                                    event.type === 'warn' ? 'border-yellow-500 text-yellow-500' :
+                                                                        'border-blue-500 text-blue-500'
+                                                                }`}
+                                                        >
+                                                            {event.type.toUpperCase()}
+                                                        </Badge>
+                                                        <span className={`${event.type === 'error' ? 'text-red-400' :
+                                                            event.type === 'warn' ? 'text-yellow-400' :
+                                                                'text-gray-300'
+                                                            }`}>
+                                                            {event.message}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-8 text-center text-gray-600 italic">
+                                                No recent events recorded. Start the scheduler to see activity.
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

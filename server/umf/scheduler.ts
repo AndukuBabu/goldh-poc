@@ -20,7 +20,7 @@
 
 import { fetchTopCoinsByMarketCap } from './providers/coingecko';
 import { setFresh } from './lib/cache';
-import { writeLiveSnapshot, appendHistorySnapshot, trimHistory } from './lib/firestoreUmf';
+import { readLiveSnapshot, writeLiveSnapshot, appendHistorySnapshot, trimHistory } from './lib/firestoreUmf';
 import { integrationConfig } from '../config';
 import type { UmfSnapshotLive } from '@shared/schema';
 import {
@@ -62,6 +62,26 @@ const MIN_CALL_INTERVAL_MS = 55 * 60 * 1000; // 55 minutes
  * Used by rate limit guard.
  */
 let lastCallAt: number | null = null;
+let lastAttemptAt: number | null = null;
+let lastSuccessAt: number | null = null;
+let lastFailureAt: number | null = null;
+let lastErrorMessage: string | null = null;
+let isRunning = false;
+let nextTickTimeoutId: NodeJS.Timeout | null = null;
+let nextTickAt: number | null = null;
+
+interface LogEntry {
+  timestamp: string;
+  type: 'info' | 'warn' | 'error' | 'success';
+  message: string;
+}
+const eventLog: LogEntry[] = [];
+
+export function addLogEntry(type: LogEntry['type'], message: string) {
+  const entry = { timestamp: new Date().toISOString(), type, message };
+  eventLog.unshift(entry);
+  if (eventLog.length > 20) eventLog.pop();
+}
 
 /**
  * Scheduler Tick
@@ -89,9 +109,9 @@ async function tick(): Promise<void> {
 
       if (timeSinceLastCall < MIN_CALL_INTERVAL_MS) {
         const minutesSince = Math.floor(timeSinceLastCall / 60000);
-        console.warn(
-          `${LOG_PREFIX_SCHEDULER} TooSoon - Last call ${minutesSince} minutes ago (minimum: 55 minutes). Skipping.`
-        );
+        const msg = `TooSoon - Last call ${minutesSince} minutes ago (minimum: 55 minutes). Skipping.`;
+        console.warn(`${LOG_PREFIX_SCHEDULER} ${msg}`);
+        addLogEntry('warn', msg);
         return;
       }
     }
@@ -99,7 +119,9 @@ async function tick(): Promise<void> {
     // Update last call timestamp BEFORE calling API
     // This prevents race conditions if tick() is called concurrently
     lastCallAt = Date.now();
+    lastAttemptAt = lastCallAt;
 
+    addLogEntry('info', 'Starting tick...');
     console.log(`${LOG_PREFIX_SCHEDULER} Starting tick...`);
 
     // Step 1: Fetch top coins by market cap from CoinGecko
@@ -129,26 +151,30 @@ async function tick(): Promise<void> {
     const duration_ms = Date.now() - startTime;
 
     // Step 7: Log success metrics
-    console.log(
-      `${LOG_PREFIX_SCHEDULER} Tick completed:`,
-      JSON.stringify({
-        provider: 'coingecko',
-        items: result.assets.length,
-        duration_ms,
-        cache_write: true,
-        firestore_write: true,
-        history_trimmed: deletedCount,
-        timestamp: snapshot.timestamp_utc,
-      })
-    );
+    lastSuccessAt = Date.now();
+    const metrics = {
+      provider: 'coingecko',
+      items: result.assets.length,
+      duration_ms,
+      cache_write: true,
+      firestore_write: true,
+      history_trimmed: deletedCount,
+      timestamp: snapshot.timestamp_utc,
+    };
+
+    console.log(`${LOG_PREFIX_SCHEDULER} Tick completed:`, JSON.stringify(metrics));
+    addLogEntry('success', `Tick completed: ${result.assets.length} assets updated in ${duration_ms}ms`);
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    lastFailureAt = Date.now();
+    lastErrorMessage = errorMsg;
+
     // Log error but don't throw (prevents scheduler from stopping)
-    console.error(
-      `${LOG_PREFIX_SCHEDULER} Tick failed:`,
-      error instanceof Error ? error.message : String(error)
-    );
+    console.error(`${LOG_PREFIX_SCHEDULER} Tick failed:`, errorMsg);
+    addLogEntry('error', `Tick failed: ${errorMsg}`);
 
     // Reset lastCallAt on error so we can retry on next tick
+    // However, we don't reset lastAttemptAt so it can be seen in status
     lastCallAt = null;
   }
 }
@@ -191,6 +217,12 @@ function getRandomJitter(jitter: number): number {
  * }
  */
 export function startScheduler(): void {
+  if (isRunning) {
+    console.warn(`${LOG_PREFIX_SCHEDULER} Already running`);
+    return;
+  }
+
+  isRunning = true;
   console.log(`${LOG_PREFIX_SCHEDULER} Initializing scheduler...`);
   console.log(`${LOG_PREFIX_SCHEDULER} Base interval: ${SCHEDULER_INTERVAL_MS}ms (${SCHEDULER_INTERVAL_MS / 60000} minutes)`);
   console.log(`${LOG_PREFIX_SCHEDULER} Jitter: ±${SCHEDULER_JITTER_MS}ms (±${SCHEDULER_JITTER_MS / 1000} seconds)`);
@@ -200,14 +232,36 @@ export function startScheduler(): void {
   const initialJitter = Math.floor(Math.random() * SCHEDULER_JITTER_MS);
   console.log(`${LOG_PREFIX_SCHEDULER} Initial delay: ${initialJitter}ms (${(initialJitter / 1000).toFixed(1)}s)`);
 
+  // Pre-warm cache from Firestore immediately
+  // This ensures that even if we are waiting for the first tick, 
+  // we have something in memory if Firestore has data.
+  readLiveSnapshot()
+    .then((snapshot) => {
+      if (snapshot) {
+        setFresh('umf:snapshot', snapshot, CACHE_TTL_S);
+        console.log(`${LOG_PREFIX_SCHEDULER} Cache pre-warmed with ${snapshot.assets.length} assets.`);
+      } else {
+        console.log(`${LOG_PREFIX_SCHEDULER} Pre-warm skipped: No snapshot found in Firestore.`);
+      }
+    })
+    .catch((error) => {
+      console.warn(
+        `${LOG_PREFIX_SCHEDULER} Pre-warm failed:`,
+        error instanceof Error ? error.message : String(error)
+      );
+    });
+
   // Wait initial jitter, then run first tick
-  setTimeout(async () => {
+  const initialTimeout = setTimeout(async () => {
     console.log(`${LOG_PREFIX_SCHEDULER} Running first tick after initial jitter...`);
     await tick();
 
     // Schedule periodic ticks with jitter
     scheduleNextTick();
   }, initialJitter);
+
+  nextTickTimeoutId = initialTimeout;
+  nextTickAt = Date.now() + initialJitter;
 }
 
 /**
@@ -229,12 +283,44 @@ function scheduleNextTick(): void {
   const intervalMinutes = (interval / 60000).toFixed(2);
   console.log(`${LOG_PREFIX_SCHEDULER} Next tick in ${interval}ms (${intervalMinutes} minutes)`);
 
-  setTimeout(async () => {
+  nextTickAt = Date.now() + interval;
+  nextTickTimeoutId = setTimeout(async () => {
     await tick();
 
     // Schedule next tick (recursive)
     scheduleNextTick();
   }, interval);
+}
+
+/**
+ * Trigger Manual Tick
+ * 
+ * Manually triggers a scheduler tick, respecting rate limits.
+ * Use for debugging or forcing an update.
+ * 
+ * @returns Status of the trigger operation
+ */
+export async function triggerTick(): Promise<{ success: boolean; message: string }> {
+  if (!isRunning) {
+    return { success: false, message: "Scheduler is not running" };
+  }
+
+  console.log(`${LOG_PREFIX_SCHEDULER} Manual tick triggered`);
+  addLogEntry('info', 'Manual tick triggered by admin');
+
+  // Actually run the tick (it has its own rate limit guard internally)
+  await tick();
+
+  // If successful (or at least attempted), we should reschedule the next tick
+  // to be 1 hour from NOW, instead of from the previous schedule.
+  if (nextTickTimeoutId) {
+    clearTimeout(nextTickTimeoutId);
+    console.log(`${LOG_PREFIX_SCHEDULER} Cancelled previous schedule due to manual trigger`);
+  }
+
+  scheduleNextTick();
+
+  return { success: true, message: "Tick execution attempted. Check logs for results." };
 }
 
 /**
@@ -247,10 +333,16 @@ function scheduleNextTick(): void {
 export function getSchedulerStatus() {
   return {
     enabled: schedulerConfig.umfEnabled,
-    lastCallAt: lastCallAt ? new Date(lastCallAt).toISOString() : null,
-    timeSinceLastCall: lastCallAt ? Date.now() - lastCallAt : null,
+    running: isRunning,
+    lastAttemptAt: lastAttemptAt ? new Date(lastAttemptAt).toISOString() : null,
+    lastSuccessAt: lastSuccessAt ? new Date(lastSuccessAt).toISOString() : null,
+    lastFailureAt: lastFailureAt ? new Date(lastFailureAt).toISOString() : null,
+    lastErrorMessage,
+    nextTickAt: nextTickAt ? new Date(nextTickAt).toISOString() : null,
+    timeSinceLastAttempt: lastAttemptAt ? Date.now() - lastAttemptAt : null,
     minCallInterval: MIN_CALL_INTERVAL_MS,
     baseInterval: SCHEDULER_INTERVAL_MS,
     jitter: SCHEDULER_JITTER_MS,
+    recentEvents: eventLog,
   };
 }
