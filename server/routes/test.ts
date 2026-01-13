@@ -65,20 +65,9 @@ router.get("/db", async (_req: Request, res: Response) => {
     }
 });
 
-router.get("/trigger-umf", async (_req: Request, res: Response) => {
-    try {
-        const { getSchedulerStatus } = await import("../umf/scheduler");
-        const status = getSchedulerStatus();
-
-        res.json({
-            message: "UMF scheduler status retrieved. Check logs for tick activity.",
-            status,
-            hint: "If you just deployed, wait 30s for the first automatic tick."
-        });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// router.get("/trigger-umf", async (_req: Request, res: Response) => {
+//     res.status(501).json({ error: "Removed. Use Admin Dashboard." });
+// });
 
 router.get("/status", async (_req: Request, res: Response) => {
     try {

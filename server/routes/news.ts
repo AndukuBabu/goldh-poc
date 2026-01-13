@@ -1,7 +1,5 @@
 import { Router, Request, Response } from "express";
 import { getAllGuruDigest } from "../guru/lib/firestore";
-import { updateGuruDigest } from "../guru/updater";
-
 const router = Router();
 
 router.get("/guru-digest", async (req: Request, res: Response) => {
@@ -26,21 +24,8 @@ router.get("/guru-digest", async (req: Request, res: Response) => {
     }
 });
 
-router.post("/update-guru-digest", async (req: Request, res: Response) => {
-    try {
-        const result = await updateGuruDigest({
-            clearFirst: req.body?.clearFirst || false,
-            logPrefix: '[API]',
-        });
-        res.status(200).json({
-            success: true,
-            ...result,
-            timestamp: new Date().toISOString(),
-        });
-    } catch (error: any) {
-        console.error("Guru Digest update error:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
+// router.post("/update-guru-digest", async (req: Request, res: Response) => {
+//     res.status(501).json({ error: "Manual update moved to Cloud Functions. Please use the Admin Dashboard." });
+// });
 
 export default router;

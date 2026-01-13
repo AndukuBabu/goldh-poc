@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Header } from "@/components/Header";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useAuth } from "@/lib/auth";
 
 const addEntrySchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -100,20 +101,38 @@ export default function AdminGuruDigest() {
     },
   });
 
+  const { sessionId } = useAuth();
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await apiRequest("POST", "/api/admin/guru-digest/refresh", { clearFirst: false });
+      const response = await fetch('/api/admin/guru-digest/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionId}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Failed to refresh");
+      }
+
       queryClient.invalidateQueries({ queryKey: ["/api/admin/guru-digest"] });
       queryClient.invalidateQueries({ queryKey: ["/api/news/guru-digest"] });
+
       toast({
         title: "Success",
-        description: "RSS feed refreshed successfully",
+        description: data.message || "RSS feed refreshed successfully via Direct API",
       });
-    } catch (error) {
+
+    } catch (error: any) {
+      console.error("[AdminGuru] Refresh error:", error);
       toast({
         title: "Error",
-        description: "Failed to refresh RSS feed",
+        description: error.message || "Failed to refresh RSS feed",
         variant: "destructive",
       });
     } finally {
@@ -181,8 +200,8 @@ export default function AdminGuruDigest() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-[#0f0f0f] text-white pt-20">
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="min-h-screen bg-[#0f0f0f] text-white pt-24 px-6">
+        <div className="container mx-auto py-8 max-w-6xl">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-4xl font-bold text-[#C7AE6A] mb-2">Admin Dashboard</h1>

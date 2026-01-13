@@ -1,18 +1,117 @@
 import { Router, Request, Response } from "express";
 import { requireAdmin } from "../middleware";
 import { getAllGuruDigestWithIds, deleteGuruDigestEntry, addGuruDigestEntry } from "../guru/lib/firestore";
-import { updateGuruDigest } from "../guru/updater";
+// import { updateGuruDigest } from "../guru/updater"; // Deleted
 import { CANONICAL_SYMBOLS, extractAssetSymbols } from "@shared/constants";
 import { econEventSchema } from "@shared/schema";
 import { db } from "../firebase";
 import admin from "firebase-admin";
-import { getSchedulerStatus as getUmfStatus, triggerTick as triggerUmfTick } from "../umf/scheduler";
-import { getGuruSchedulerStatus as getGuruStatus } from "../guru/scheduler";
+// import { getSchedulerStatus as getUmfStatus, triggerTick as triggerUmfTick } from "../umf/scheduler"; // Deleted
+// import { getGuruSchedulerStatus as getGuruStatus } from "../guru/scheduler"; // Deleted
 import { integrationConfig, config } from "../config";
 import { getFresh } from "../umf/lib/cache";
-import { readLiveSnapshot } from "../umf/lib/firestoreUmf";
+import { readLiveSnapshot, writeLiveSnapshot, appendHistorySnapshot, trimHistory } from "../umf/lib/firestoreUmf";
+import { fetchTopCoinsByMarketCap } from '../umf/providers/coingecko';
+import { updateGuruDigest } from '../guru/updater';
+import { logSchedulerEvent, updateSchedulerStatus } from '../lib/schedulerUtils';
 
 const router = Router();
+
+// Helper to serialize Firestore timestamps to ISO strings
+function serializeTimestamp(ts: any): string {
+    if (!ts) return new Date().toISOString();
+
+    // Handle rich Timestamp objects
+    if (typeof ts.toDate === 'function') return ts.toDate().toISOString();
+
+    // Handle plain emulator/JSON objects
+    const seconds = ts._seconds ?? ts.seconds ?? ts.secondsValue;
+    if (seconds !== undefined) return new Date(Number(seconds) * 1000).toISOString();
+
+    // Handle strings
+    if (typeof ts === 'string') {
+        const d = new Date(ts);
+        return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    }
+
+    // Fallback
+    try {
+        const d = new Date(ts);
+        return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    } catch {
+        return new Date().toISOString();
+    }
+}
+
+// Helper to get remote scheduler status from Firestore
+async function getRemoteSchedulerStatus(schedulerId: string) {
+    try {
+        const doc = await db.collection("scheduler_control").doc(schedulerId).get();
+        const data = doc.exists ? doc.data() : { enabled: true, status: "unknown" };
+
+        // Also fetch recent logs
+        let recentEvents: any[] = [];
+        try {
+            const logsSnapshot = await db.collection("scheduler_audit_log")
+                .where("scheduler", "==", schedulerId)
+                .orderBy("timestamp", "desc")
+                .limit(10)
+                .get();
+
+            recentEvents = logsSnapshot.docs.map(d => {
+                const docData = d.data();
+                const ts = docData.timestamp || docData.created_at || docData.date;
+                return {
+                    message: docData.message || "No message",
+                    type: docData.type || "info",
+                    timestamp: serializeTimestamp(ts)
+                };
+            });
+        } catch (queryError: any) {
+            // Handle missing index error by sorting in memory as fallback
+            if (queryError.message?.includes('requires an index') || queryError.code === 9) {
+                console.warn(`[Admin] Index missing for scheduler_audit_log, falling back to in-memory sort.`);
+                const fallbackSnapshot = await db.collection("scheduler_audit_log")
+                    .where("scheduler", "==", schedulerId)
+                    .get();
+
+                recentEvents = fallbackSnapshot.docs
+                    .map(d => {
+                        const docData = d.data() as any;
+                        const ts = docData.timestamp || docData.created_at || docData.date;
+                        const isoStr = serializeTimestamp(ts);
+                        return {
+                            ...docData,
+                            timestampStr: isoStr,
+                            timestampMillis: new Date(isoStr).getTime()
+                        };
+                    })
+                    .sort((a: any, b: any) => b.timestampMillis - a.timestampMillis)
+                    .slice(0, 10)
+                    .map(e => ({
+                        message: e.message || "No message",
+                        type: e.type || "info",
+                        scheduler: e.scheduler || schedulerId,
+                        timestamp: e.timestampStr
+                    }));
+            } else {
+                throw queryError;
+            }
+        }
+
+        return {
+            ...data,
+            recentEvents
+        };
+    } catch (e) {
+        console.error(`[Admin] Error reading scheduler ${schedulerId}:`, e);
+        return {
+            enabled: false,
+            status: "error",
+            error: e instanceof Error ? e.message : String(e)
+        };
+    }
+}
 
 // Currency to Country Code mapping
 function currencyToCountryCode(currencyCode: string): string {
@@ -82,24 +181,88 @@ router.delete("/guru-digest/:id", async (req: Request, res: Response) => {
 
 router.post("/guru-digest/refresh", async (req: Request, res: Response) => {
     try {
+        // Run logic synchronously (client waits)
+        await logSchedulerEvent('guru', 'info', `Manual refresh triggered by admin`);
+
         const result = await updateGuruDigest({
             clearFirst: req.body?.clearFirst || false,
-            logPrefix: '[Admin]',
+            logPrefix: '[Admin Manual]',
         });
-        res.json({ success: true, ...result, message: "RSS feed refreshed successfully" });
-    } catch (error) {
-        console.error("[Admin] Failed to refresh RSS feed:", error);
-        res.status(500).json({ error: "Failed to refresh RSS feed" });
+
+        await logSchedulerEvent('guru', 'success', `Manual refresh: ${result.successfulEntries} items`);
+        await updateSchedulerStatus('guru', 'success', `manual_${Date.now()}`);
+
+        res.json({ success: true, ...result, message: "News feed refreshed successfully" });
+    } catch (error: any) {
+        console.error("[Admin] Failed to refresh news:", error);
+        await logSchedulerEvent('guru', 'error', `Manual refresh failed: ${error.message}`);
+        res.status(500).json({ error: "Failed to refresh news feed" });
+    }
+});
+
+router.post("/scheduler/toggle", async (req: Request, res: Response) => {
+    try {
+        const { schedulerId, enabled } = req.body;
+        if (!schedulerId || typeof enabled !== 'boolean') {
+            return res.status(400).json({ error: "schedulerId and enabled (boolean) are required" });
+        }
+
+        if (!['umf', 'guru'].includes(schedulerId)) {
+            return res.status(400).json({ error: "Invalid schedulerId" });
+        }
+
+        await db.collection("scheduler_control").doc(schedulerId).set({
+            enabled,
+            updated_at: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Log the event
+        await db.collection("scheduler_audit_log").add({
+            scheduler: schedulerId,
+            type: "info",
+            message: `Automation ${enabled ? 'ENABLED' : 'DISABLED'} via Admin Dashboard`,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        res.json({ success: true, schedulerId, enabled, message: `Scheduler ${enabled ? 'started' : 'stopped'} successfully` });
+    } catch (error: any) {
+        console.error("[Admin] Failed to toggle scheduler:", error);
+        res.status(500).json({ error: error.message });
     }
 });
 
 router.post("/umf/refresh", async (req: Request, res: Response) => {
+    const runId = `manual_${Date.now()}`;
     try {
-        const result = await triggerUmfTick();
-        res.json(result);
+        await logSchedulerEvent('umf', 'info', `Manual refresh triggered by admin`, { runId });
+
+        const apiKey = integrationConfig.coingecko.apiKey;
+        const result = await fetchTopCoinsByMarketCap(100, apiKey);
+
+        const snapshot = {
+            timestamp_utc: result.timestamp_utc,
+            assets: result.assets,
+            degraded: false
+        };
+
+        // Write to Firestore
+        await writeLiveSnapshot(snapshot);
+        await appendHistorySnapshot(snapshot);
+        const trimmed = await trimHistory(48); // Keep 48 hours
+
+        const message = `Updated ${result.assets.length} assets. Trimmed ${trimmed} history docs.`;
+        await logSchedulerEvent('umf', 'success', message, {
+            items: result.assets.length,
+            runId
+        });
+        await updateSchedulerStatus('umf', 'success', runId);
+
+        res.json({ success: true, count: result.assets.length, message });
     } catch (error: any) {
-        console.error("[Admin] Failed to refresh UMF data:", error);
-        res.status(500).json({ error: error.message });
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error(`[Admin] UMF Manual Failed: ${msg}`);
+        await logSchedulerEvent('umf', 'error', `Manual run failed: ${msg}`, { error: msg });
+        res.status(500).json({ error: msg });
     }
 });
 
@@ -199,9 +362,9 @@ router.get("/health", async (req: Request, res: Response) => {
         const econSnapshot = await db.collection("econEvents").orderBy("date", "desc").limit(1).get();
         const lastEconEntry = econSnapshot.empty ? null : econSnapshot.docs[0].data();
 
-        // 4. Scheduler Status
-        const umfScheduler = getUmfStatus();
-        const guruScheduler = getGuruStatus();
+        // 4. Scheduler Status (Remote via Firestore)
+        const umfScheduler = await getRemoteSchedulerStatus('umf');
+        const guruScheduler = await getRemoteSchedulerStatus('guru');
 
         // 5. Config Verification
         const secretsStatus = {
@@ -216,7 +379,7 @@ router.get("/health", async (req: Request, res: Response) => {
         res.json({
             status: "ready",
             timestamp: new Date().toISOString(),
-            version: "1.1.2",
+            version: "1.2.0-cloud",
             node_env: config.NODE_ENV,
             db: dbHealth,
             zoho: zohoHealth,

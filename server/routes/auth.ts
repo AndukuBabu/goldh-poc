@@ -27,6 +27,7 @@ async function checkAndGrantAdminAccess(user: any): Promise<any> {
     return user;
 }
 
+
 router.post("/signup", async (req: Request, res: Response) => {
     try {
         const validatedData = serverSignUpSchema.parse(req.body);
@@ -47,6 +48,8 @@ router.post("/signup", async (req: Request, res: Response) => {
         });
 
         user = await checkAndGrantAdminAccess(user);
+        if (!user) throw new Error("Failed to process user after signup");
+
         const session = await sessionManager.createSession(user.id);
 
         createLeadFromUser(user).catch(error => {
@@ -90,6 +93,8 @@ router.post("/signin", async (req: Request, res: Response) => {
         }
 
         user = await checkAndGrantAdminAccess(user);
+        if (!user) throw new Error("Failed to process user after signin");
+
         const session = await sessionManager.createSession(user.id);
 
         res.json({

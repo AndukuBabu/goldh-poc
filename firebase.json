@@ -35,9 +35,39 @@
                 "scripts",
                 "attached_assets",
                 "docs",
+                "QA",
                 "firebase-debug.log"
             ],
-            "runtime": "nodejs20"
+            "runtime": "nodejs22"
+        },
+        {
+            "source": "functions",
+            "codebase": "schedulers",
+            "ignore": [
+                "node_modules",
+                ".git"
+            ],
+            "runtime": "nodejs22"
         }
-    ]
+    ],
+    "emulators": {
+        "auth": {
+            "port": 9099
+        },
+        "functions": {
+            "port": 5001
+        },
+        "firestore": {
+            "port": 8080
+        },
+        "hosting": {
+            "port": 5000
+        },
+        "pubsub": {
+            "port": 8085
+        },
+        "ui": {
+            "enabled": true
+        }
+    }
 }

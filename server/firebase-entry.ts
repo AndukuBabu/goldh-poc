@@ -1,9 +1,10 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { createApp } from "./app";
-import { startScheduler } from "./umf/scheduler";
-import { startGuruScheduler } from "./guru/scheduler";
-import { schedulerConfig, config } from "./config";
+// import { startScheduler } from "./umf/scheduler"; // Deleted
+// import { startGuruScheduler } from "./guru/scheduler"; // Deleted
+import { config } from "./config"; // removed schedulerConfig from import
 import { log } from "./utils/logger";
+import { setupCacheListeners } from "./listeners";
 
 /**
  * Firebase Cloud Function Entry Point
@@ -52,16 +53,10 @@ export const api = onRequest({
             const { app } = await createApp();
             log(`[Firebase] Express app instance created (NODE_ENV=${config.NODE_ENV})`);
 
-            // Start internal schedulers if enabled
-            if (schedulerConfig.umfEnabled) {
-                log('[Firebase] Starting UMF Scheduler');
-                startScheduler();
-            }
-
-            if (schedulerConfig.guruEnabled) {
-                log('[Firebase] Starting Guru Digest Scheduler');
-                startGuruScheduler();
-            }
+            // Initialize Cache Listeners (Hydration)
+            // Critical for serving fresh data on cold start
+            await setupCacheListeners();
+            log('[Firebase] Cache listeners initialized');
 
             appInstance = app;
         } catch (error) {

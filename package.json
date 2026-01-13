@@ -4,18 +4,28 @@
   "type": "module",
   "main": "dist/firebase.js",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
     "build:client": "vite build",
     "build:server": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:functions": "esbuild server/firebase-entry.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/firebase.js",
-    "build": "npm run build:client && npm run build:functions",
+    "build:schedulers": "npm run build --prefix functions",
+    "build": "npm run build:client && npm run build:server && npm run build:functions && npm run build:schedulers",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "deploy": "npm run build && firebase deploy",
     "check": "tsc",
     "db:push": "drizzle-kit push",
+    "db:init-schedulers": "tsx scripts/init-schedulers.ts",
+    "run:umf": "npm run run:local -- umf --manual --prefix functions",
+    "run:news": "npm run run:local -- guru --manual --prefix functions",
     "test": "playwright test --config QA/playwright.config.ts",
-    "test:report": "playwright show-report QA/reports"
+    "test:integration": "vitest run",
+    "test:report": "playwright show-report QA/reports",
+    "emulators": "firebase emulators:start",
+    "shell": "firebase functions:shell"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -122,7 +132,8 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
     "typescript": "^5.6.3",
-    "vite": "^5.4.20"
+    "vite": "^5.4.20",
+    "vitest": "^4.0.16"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

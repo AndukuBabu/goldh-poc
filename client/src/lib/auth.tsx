@@ -59,11 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signin = async (email: string, password: string) => {
     const res = await apiRequest("POST", "/api/auth/signin", { email, password });
     const data = await res.json();
-    
+
     if (!data.sessionId) {
       throw new Error("Invalid credentials");
     }
-    
+
     setUser(data.user);
     setSessionId(data.sessionId);
     localStorage.setItem("sessionId", data.sessionId);
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Signout error:", error);
       }
     }
-    
+
     setUser(null);
     setSessionId(null);
     localStorage.removeItem("sessionId");
